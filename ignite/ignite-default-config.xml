@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="workDirectory" value="/opt/storage"/>
+		<property name="igniteInstanceName" value="fusionFS" />
+		
+		<property name="dataStorageConfiguration">
+			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+				<property name="dataRegionConfigurations">
+					<list>
+						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+							<property name="name" value="PersistentRegion"/>
+							<property name="persistenceEnabled" value="true"/>
+						</bean>
+						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+							<property name="name" value="CacheRegion"/>
+						</bean>
+					</list>
+				</property>
+			</bean>
+		</property>
+
+        <property name="cacheConfiguration">
+			<list>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="fileChunks"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="dataRegionName" value="PersistentRegion"/>
+				</bean>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="cache"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="dataRegionName" value="CacheRegion"/>
+					<property name="expiryPolicyFactory">
+						<bean class="javax.cache.expiry.AccessedExpiryPolicy" factory-method="factoryOf">
+							<constructor-arg>
+								<bean class="javax.cache.expiry.Duration">
+									<constructor-arg value="MINUTES"/>
+									<constructor-arg value="15"/>
+								</bean>
+							</constructor-arg>
+						</bean>
+					</property>
+				</bean>
+			</list>
+        </property>
+    </bean>
+</beans>

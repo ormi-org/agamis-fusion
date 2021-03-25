@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  ignite:
+    name: apache-ignite
+    image: apacheignite/ignite
+    volumes:
+      - <rootdir>/scala-projects/ogdt-fusion/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
+      - ignite-persistence-volume:/opt/storage
+    environement:
+      - CONFIG_URI: /ignite-config/ignite-default-config.xml
+      
+  gridgain-control-center-frontend:
+    name: gridgain-control-center-frontend
+    image: gridgain/control-center-frontend:2021.02.00
+    depends_on:
+      - gridgain-control-center-backend
+    volumes:
+      - <rootdir>/scala-projects/ogdt-fusion/docker/gridgain-control-center/control-center.conf:/etc/nginx/control-center.conf
+    ports:
+      - 8008:8008
+    
+  gridgain-control-center-backend:
+    name: gridgain-control-center-backend
+    image: gridgain/control-center-backend:2021.02.00
