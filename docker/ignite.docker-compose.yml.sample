@@ -1,24 +1,43 @@
 version: "3.8"
+
+volumes:
+  ignite-persistence-volume-1:
+    external: true
+  ignite-persistence-volume-2:
+    external: true
+    
+networks:
+  default:
+    external:
+      name: ogdt-fusion-dev
+
 services:
-  ignite:
-    name: apache-ignite
+  ignite-instance-1:
+    container_name: apache-ignite-1
     image: apacheignite/ignite
     volumes:
-      - <rootdir>/scala-projects/ogdt-fusion/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
-      - ignite-persistence-volume:/opt/storage
-    environement:
-      - CONFIG_URI: /ignite-config/ignite-default-config.xml
-      
-  gridgain-control-center-frontend:
-    name: gridgain-control-center-frontend
-    image: gridgain/control-center-frontend:2021.02.00
-    depends_on:
-      - gridgain-control-center-backend
-    volumes:
-      - <rootdir>/scala-projects/ogdt-fusion/docker/gridgain-control-center/control-center.conf:/etc/nginx/control-center.conf
+      - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
+      - <rootdir>/ignite/control-center-agent/bin/management.sh:/opt/ignite/apache-ignite/bin/management.sh
+      - <rootdir>/ignite/control-center-agent/bin/management.bat:/opt/ignite/apache-ignite/bin/management.bat
+      - <rootdir>/ignite/control-center-agent/libs/control-center-agent:/opt/ignite/apache-ignite/libs/control-center-agent
+      - ignite-persistence-volume-1:/opt/storage
+    environment:
+      - CONFIG_URI=/ignite-config/ignite-default-config.xml
+      - OPTION_LIBS=control-center-agent
     ports:
-      - 8008:8008
-    
-  gridgain-control-center-backend:
-    name: gridgain-control-center-backend
-    image: gridgain/control-center-backend:2021.02.00
+      - 11211:11211
+      
+  ignite-instance-2:
+    container_name: apache-ignite-2
+    image: apacheignite/ignite
+    volumes:
+      - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
+      - <rootdir>/ignite/control-center-agent/bin/management.sh:/opt/ignite/apache-ignite/bin/management.sh
+      - <rootdir>/ignite/control-center-agent/bin/management.bat:/opt/ignite/apache-ignite/bin/management.bat
+      - <rootdir>/ignite/control-center-agent/libs/control-center-agent:/opt/ignite/apache-ignite/libs/control-center-agent
+      - ignite-persistence-volume-2:/opt/storage
+    environment:
+      - CONFIG_URI=/ignite-config/ignite-default-config.xml
+      - OPTION_LIBS=control-center-agent
+    ports:
+      - 11212:11211

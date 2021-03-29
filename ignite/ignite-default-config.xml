@@ -12,14 +12,30 @@
 		
 		<property name="dataStorageConfiguration">
 			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+				<property name="defaultDataRegionConfiguration">
+					<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+						<property name="name" value="DefaultRegion"/>
+						<property name="maxSize" value="#{10L * 1024 * 1024}"/>
+					</bean>
+				</property>
 				<property name="dataRegionConfigurations">
 					<list>
 						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
-							<property name="name" value="PersistentRegion"/>
+							<property name="name" value="Fusion"/>
 							<property name="persistenceEnabled" value="true"/>
+							<property name="initialSize" value="#{20L * 1024 * 1024}"/>
+							<property name="maxSize" value="#{70L * 1024 * 1024}"/>
+						</bean>
+						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+							<property name="name" value="FusionFS"/>
+							<property name="persistenceEnabled" value="true"/>
+							<property name="initialSize" value="#{50L * 1024 * 1024}"/>
+							<property name="maxSize" value="#{300L * 1024 * 1024}"/>
 						</bean>
 						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
 							<property name="name" value="CacheRegion"/>
+							<property name="initialSize" value="#{10L * 1024 * 1024}"/>
+							<property name="maxSize" value="#{50L * 1024 * 1024}"/>
 						</bean>
 					</list>
 				</property>
@@ -29,13 +45,17 @@
         <property name="cacheConfiguration">
 			<list>
 				<bean class="org.apache.ignite.configuration.CacheConfiguration">
-					<property name="name" value="fileChunks"/>
+					<property name="name" value="FusionFS"/>
 					<property name="cacheMode" value="PARTITIONED"/>
-					<property name="dataRegionName" value="PersistentRegion"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="dataRegionName" value="FusionFS"/>
 				</bean>
 				<bean class="org.apache.ignite.configuration.CacheConfiguration">
-					<property name="name" value="cache"/>
+					<property name="name" value="Cache"/>
 					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
 					<property name="dataRegionName" value="CacheRegion"/>
 					<property name="expiryPolicyFactory">
 						<bean class="javax.cache.expiry.AccessedExpiryPolicy" factory-method="factoryOf">
@@ -50,5 +70,30 @@
 				</bean>
 			</list>
         </property>
+
+		<property name="sqlConfiguration">
+			<bean class="org.apache.ignite.configuration.SqlConfiguration">
+				<property name="sqlSchemas">
+					<list>
+						<value>FUSION</value>
+					</list>
+				</property>
+			</bean>
+		</property>
+
+		<property name="discoverySpi">
+			<bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+				<property name="ipFinder">
+					<bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder">
+						<property name="addresses">
+							<list>
+								<value>ignite-instance-1</value>
+								<value>ignite-instance-2</value>
+							</list>
+						</property>
+					</bean>
+				</property>
+			</bean>
+		</property>
     </bean>
 </beans>
