@@ -15,6 +15,8 @@ import org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMultic
 import akka.actor.typed.ExtensionId
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.configuration.CacheConfiguration
+import org.apache.ignite.IgniteException
+import scala.util.Try
 
 class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     
@@ -27,20 +29,33 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     private val ipFinder: TcpDiscoveryMulticastIpFinder = new TcpDiscoveryMulticastIpFinder()
 
     try {
-        val nodeAddresses: java.util.List[String] = EnvContainer.getArray("IGNITE_CLIENT_NODES_ADDR")
+        val nodeAddresses: java.util.List[String] = EnvContainer.getArray("fusion.core.db.ignite.nodes")
         ipFinder.setAddresses(nodeAddresses)
     } catch {
         case e: ConfigException => {
-            throw new MissingIgniteConfException("IGNITE_CLIENT_NODES_ADDR Config is missing", e)
+            throw new MissingIgniteConfException("fusion.core.db.ignite.nodes Config is missing", e)
         }
         case _: Throwable => throw new UnknownError("An unkown error occured while setting ignite cluster's nodes addresses")
     }
 
     cfg.setDiscoverySpi(new TcpDiscoverySpi().setIpFinder(ipFinder))
 
-    private val _ignite: Ignite = Ignition.start(cfg)
+    private var _ignite: Ignite = null
+
+    try {
+        _ignite = Ignition.start(cfg)
+    } catch {
+        case e: IgniteException => {
+            system.log.error("An error occured with ignite node" + e.getCause())
+            println(e)
+            system.terminate()
+        }
+        case _: Throwable => throw new UnknownError("An unkown error occured while starting ignite client node")
+    }
 
     def ignite: Ignite = _ignite
+
+    def close = ignite.close()
     
     // Let make a cache config manually
     def makeCacheConfig[K, V](): CacheConfiguration[K, V] = {
@@ -54,7 +69,7 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
 
     // Get a cache from ignite cluster to play with
     def getCache[K, V](cache: String ): IgniteCache[K, V] = {
-        ignite.getOrCreateCache(cache)
+        ignite.cache(cache)
     }
 }
 

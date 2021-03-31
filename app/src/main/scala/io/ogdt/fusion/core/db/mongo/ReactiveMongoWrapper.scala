@@ -16,15 +16,15 @@ import reactivemongo.api.{ Cursor, DB, MongoConnection, AsyncDriver }
 
 class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 
-    var mongoUri: String = ""
+    var mongoUri: String = null
 
     import ExecutionContext.Implicits.global
 
     try {
-        mongoUri = EnvContainer.getString("MONGO_URI")
+        mongoUri = EnvContainer.getString("fusion.core.db.mongo.uri")
     } catch {
         case e: ConfigException => {
-            throw new MissingMongoConfException("MONGO_URI Config is missing", e)
+            throw new MissingMongoConfException("fusion.core.db.mongo.uri Config is missing", e)
         }
         case _: Throwable => throw new UnknownError("An unkown error occured while setting mongo uri")
     }
