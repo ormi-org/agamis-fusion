@@ -8,7 +8,12 @@
 
     <bean class="org.apache.ignite.configuration.IgniteConfiguration">
         <property name="workDirectory" value="/opt/storage"/>
-		<property name="igniteInstanceName" value="fusionFS" />
+		<property name="igniteInstanceName" value="FusionFS" />
+
+		<!-- Enable peer class loading. -->
+		<property name="peerClassLoadingEnabled" value="true"/>
+		<!-- Set deployment mode. -->
+		<property name="deploymentMode" value="CONTINUOUS"/>
 		
 		<property name="dataStorageConfiguration">
 			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
