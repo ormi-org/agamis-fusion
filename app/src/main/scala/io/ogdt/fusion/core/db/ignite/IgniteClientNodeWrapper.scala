@@ -17,6 +17,7 @@ import org.apache.ignite.IgniteCache
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.IgniteException
 import scala.util.Try
+import org.slf4j.LoggerFactory
 
 class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     
@@ -53,6 +54,8 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
         case _: Throwable => throw new UnknownError("An unkown error occured while starting ignite client node")
     }
 
+    val log = LoggerFactory.getLogger("io.ogdt.fusion.fs")
+
     def ignite: Ignite = _ignite
 
     def close = ignite.close()
@@ -68,8 +71,14 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     }
 
     // Get a cache from ignite cluster to play with
-    def getCache[K, V](cache: String ): IgniteCache[K, V] = {
+    def getCache[K, V](cache: String, transactional: Boolean = false): IgniteCache[K, V] = {
+        if (transactional) return ignite.cache(cache).withAllowAtomicOpsInTx()
         ignite.cache(cache)
+    }
+
+    def cacheExists(cache: String): Boolean = {
+        log.info(ignite.cacheNames().toString())
+        ignite.cacheNames().contains(cache)
     }
 }
 

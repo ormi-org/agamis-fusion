@@ -13,6 +13,10 @@ import io.ogdt.fusion.core.db.datastore.models.UserStore
 import org.apache.ignite.IgniteException
 import akka.actor.typed.ActorRef
 import akka.Done
+import scala.collection.parallel.mutable.ParArray
+import io.ogdt.fusion.core.db.datastore.models.User
+import scala.collection.immutable.ArraySeq
+import scala.collection.parallel.immutable.ParVector
 
 object FusionFS {
 
@@ -33,8 +37,14 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
 
     context.log.info("FusionFS Application started")
 
-    val userStore = new UserStore(igniteWrapper)
-    userStore.getUsers(new Array[String](0))
+    val userStore = UserStore.fromWrapper(igniteWrapper)
+    // userStore.getUsers(new Array[String](0))
+    // userStore.makeUser().setId(10).setFirstname("Daniel").setLastname("Copperfield").persist()
+
+    // userStore.bulkPersistUsers(Vector(
+    //     userStore.makeUser().setId(11).setFirstname("Daniel").setLastname("ForSureCopperfield"),
+    //     userStore.makeUser().setId(12).setFirstname("Daniel").setLastname("NotCopperfield")
+    // ))
 
     override def onMessage(msg: Command): Behavior[Command] = {
         msg match {
