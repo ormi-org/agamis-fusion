@@ -1,18 +1,22 @@
-package io.ogdt.fusion.core.db.mongo
+package io.ogdt.fusion.core.db.wrappers.mongo
 
 import io.ogdt.fusion.env.EnvContainer
-import io.ogdt.fusion.core.db.mongo.exceptions.MissingMongoConfException
+import io.ogdt.fusion.core.db.wrappers.mongo.exceptions.MissingMongoConfException
 
 import com.typesafe.config.ConfigException
 
+import scala.util.{Failure, Success}
 import scala.concurrent.{Future, ExecutionContext}
 
+import akka.event.Logging
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.Extension
 import akka.actor.typed.ExtensionId
 
 import reactivemongo.api.{ Cursor, DB, MongoConnection, AsyncDriver }
+import reactivemongo.api.bson.collection.BSONCollection
 
+import org.slf4j.Logger
 
 class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 
@@ -35,13 +39,28 @@ class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 
     private val _mongo: Future[MongoConnection] = parsedUri.flatMap(driver.connect(_))
 
+    def getLogger(): Logger = system.log
+
     def getDb(db: String): Future[DB] = {
         _mongo.flatMap(_.database(db))
     }
 
-    def getCollection(db: String, collection: String) = {
+    def getCollection(db: String, collection: String): Future[BSONCollection] = {
         getDb(db).map(_.collection(collection))
     }
+
+    // def collectionExists(db: String, collection: String): Unit = {
+    //     getCollection(db, collection).onComplete({
+    //         case Success(col) => {
+    //             system.log.info("Col fetched")
+    //             system.log.info(col.toString())
+    //         }
+    //         case Failure(exception) => {
+    //             system.log.info("Col fetching exception")
+    //             system.log.info(exception.toString())
+    //         }
+    //     })
+    // }
 }
 
 object ReactiveMongoWrapper extends ExtensionId[ReactiveMongoWrapper] {

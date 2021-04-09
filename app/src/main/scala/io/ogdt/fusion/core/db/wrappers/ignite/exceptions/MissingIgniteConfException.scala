@@ -1,4 +1,4 @@
-package io.ogdt.fusion.core.db.ignite.exceptions
+package io.ogdt.fusion.core.db.wrappers.ignite.exceptions
 
 import java.lang.Exception
 

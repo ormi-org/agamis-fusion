@@ -1,0 +1,27 @@
+services:
+    mongodbdev-1:
+        image: mongo:latest
+        container_name: mongodb1
+        command: /bin/bash -c "mongod --replSet rs1 --bind_ip localhost,mongodbdev-1 --port 27017"
+        volumes: 
+          - <rootdir>/mongo/db/:/data/db
+        depends_on: 
+          - mongodbdev-2
+          - mongodbdev-3
+        ports: 
+        - "27017:27017"
+        
+    mongodbdev-2:
+        image: mongo:latest
+        container_name: mongodb2
+        command: /bin/bash -c "mongod --replSet rs1 --bind_ip localhost,mongodbdev-2 --port 27017"
+        
+    mongodbdev-3:
+        image: mongo:latest
+        container_name: mongodb3
+        command: /bin/bash -c "mongod --replSet rs1 --bind_ip localhost,mongodbdev-3 --port 27017"
+        
+networks: 
+  default:
+    external: 
+      name: ogdt-fusion-dev

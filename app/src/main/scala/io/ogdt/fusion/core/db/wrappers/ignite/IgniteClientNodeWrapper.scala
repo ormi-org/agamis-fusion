@@ -1,23 +1,22 @@
-package io.ogdt.fusion.core.db.ignite
+package io.ogdt.fusion.core.db.wrappers.ignite
 
 import io.ogdt.fusion.env.EnvContainer
-import io.ogdt.fusion.core.db.ignite.exceptions.MissingIgniteConfException
+import io.ogdt.fusion.core.db.wrappers.ignite.exceptions.MissingIgniteConfException
 
 import com.typesafe.config.ConfigException
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.Extension
+import akka.actor.typed.{ActorSystem, Extension}
 
-import org.apache.ignite.{Ignite, Ignition}
-import org.apache.ignite.configuration.{IgniteConfiguration, DeploymentMode}
+import org.apache.ignite.{Ignite, Ignition, IgniteCache, IgniteException}
+import org.apache.ignite.configuration.{IgniteConfiguration, DeploymentMode, CacheConfiguration}
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi
 import org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder
+
 import akka.actor.typed.ExtensionId
-import org.apache.ignite.IgniteCache
-import org.apache.ignite.configuration.CacheConfiguration
-import org.apache.ignite.IgniteException
+
 import scala.util.Try
-import org.slf4j.LoggerFactory
+
+import org.slf4j.Logger
 
 class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     
@@ -54,7 +53,7 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
         case _: Throwable => throw new UnknownError("An unkown error occured while starting ignite client node")
     }
 
-    val log = LoggerFactory.getLogger("io.ogdt.fusion.fs")
+    def getLogger(): Logger = system.log
 
     def ignite: Ignite = _ignite
 
@@ -77,7 +76,7 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     }
 
     def cacheExists(cache: String): Boolean = {
-        log.info(ignite.cacheNames().toString())
+        getLogger().info(ignite.cacheNames().toString())
         ignite.cacheNames().contains(cache)
     }
 }

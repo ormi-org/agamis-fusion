@@ -1,4 +1,4 @@
-package io.ogdt.fusion.core.db.mongo.exceptions
+package io.ogdt.fusion.core.db.wrappers.mongo.exceptions
 
 import java.lang.Exception
 

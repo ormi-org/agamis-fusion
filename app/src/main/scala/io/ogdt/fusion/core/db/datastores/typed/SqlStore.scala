@@ -1,6 +1,4 @@
-package io.ogdt.fusion.db.drivers.typed
-
-import io.ogdt.fusion.core.db.ignite.IgniteClientNodeWrapper
+package io.ogdt.fusion.core.db.datastores.typed
 
 import scala.reflect._
 
@@ -10,60 +8,30 @@ import scala.collection.mutable.Buffer
 import scala.collection.JavaConverters._
 
 import org.apache.ignite.IgniteCache
-import org.apache.ignite.cache.query.SqlFieldsQuery
+import org.apache.ignite.transactions.Transaction
+import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.query.{SqlFieldsQuery, FieldsQueryCursor}
 
+import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.collection.parallel.mutable.ParArray
 
 import org.slf4j.LoggerFactory
-import org.apache.ignite.cache.query.FieldsQueryCursor
-import scala.collection.parallel.mutable.ParArray
-import org.apache.ignite.transactions.Transaction
+
 import java.util.UUID
-import org.apache.ignite.cache.CacheMode
+
 import io.ogdt.fusion.env.EnvContainer
+import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 
-object SqlStore {
-    trait Model {
-        // TODO : trouver un moyen de valider la covariance
-        // protected val store: SqlStore[UUID, Model]
-
-        genId()
-
-        protected var _id: UUID
-        private def genId() = {
-            _id = UUID.randomUUID()
-        }
-    }
-
-    class SqlStoreQuery(var query: String) {
-        var params: Array[_] = Array()
-
-        def setParam(newParams: Array[_]): SqlStoreQuery = {
-            params = newParams
-            this
-        }
-    }
-}
-
-abstract class SqlStore[K, M](wrapper: IgniteClientNodeWrapper) {
-
-    implicit val kTag: ClassTag[K]
-    implicit val mTag: ClassTag[M]
-
-    import SqlStore.SqlStoreQuery
+abstract class SqlStore[K: ClassTag, M: ClassTag](wrapper: IgniteClientNodeWrapper) {
 
     val schema: String
     val cache: String
     var igniteCache: IgniteCache[K, M]
 
-    val log = LoggerFactory.getLogger("io.ogdt.fusion.fs")
-
-    // Call init method
-    init()
-
-    def init() = {
+    protected def init() = {
         if(wrapper.cacheExists(cache)) {
             igniteCache = wrapper.getCache[K, M](cache)
         } else {
@@ -74,7 +42,7 @@ abstract class SqlStore[K, M](wrapper: IgniteClientNodeWrapper) {
             .setName(cache)
             .setSqlSchema(schema)
             .setBackups(EnvContainer.getString("fusion.core.db.ignite.backups").toInt)
-            .setIndexedTypes(kTag.runtimeClass, mTag.runtimeClass)
+            .setIndexedTypes(classTag[K].runtimeClass, classTag[M].runtimeClass)
             igniteCache = wrapper.createCache[K, M](userCacheCfg)
         }
     }
