@@ -25,7 +25,7 @@ import io.ogdt.fusion.env.EnvContainer
 import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 
-abstract class SqlStore[K: ClassTag, M: ClassTag](wrapper: IgniteClientNodeWrapper) {
+abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClientNodeWrapper) {
 
     val schema: String
     val cache: String

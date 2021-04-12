@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.util.UUID
 
-class UserStore(wrapper: IgniteClientNodeWrapper) extends SqlStore[UUID, User](wrapper: IgniteClientNodeWrapper) {
+class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlStore[UUID, User] {
 
     override val schema: String = "FUSION"
     override val cache: String = s"SQL_${schema}_USER"
@@ -69,11 +69,5 @@ class UserStore(wrapper: IgniteClientNodeWrapper) extends SqlStore[UUID, User](w
 
     def removeUser(user: User) {
 
-    }
-}
-
-object UserStore {
-    def fromWrapper(wrapper: IgniteClientNodeWrapper): Option[UserStore] = {
-        Some(new UserStore(wrapper))
     }
 }

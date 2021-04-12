@@ -1,29 +1,26 @@
 package io.ogdt.fusion.core.db.datastores.typed
 
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
 
+import scala.util.{Success, Failure, Try}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import reactivemongo.api.DB
 import reactivemongo.api.bson.BSONDocument
 import reactivemongo.api.commands.WriteResult
-import scala.util.Success
-import scala.util.Failure
-import scala.util.Try
 
-abstract class DocumentStore[M](wrapper: ReactiveMongoWrapper) {
+abstract class DocumentStore[M](implicit wrapper: ReactiveMongoWrapper) {
 
     val database: String
     val collection: String
 
-    def insert(docObject: M, db: Option[DB]): Future[WriteResult]
+    def insert(docObject: M): Future[WriteResult]
 
-    def insertMany(docObject: M, db: Option[DB]): Future[_]
+    def insertMany(docObject: List[M]): Future[_]
 
-    def find(docObject: M, db: Option[DB]): Future[Option[M]]
-
-    def findMany(docObject: M, db: Option[DB]): Future[Option[List[M]]]
+    def aggregate(pipeline: Pipeline): Future[List[_]]
 
     def startTransaction(): Future[DB] = {
         wrapper.getDb(database).transformWith {
@@ -36,16 +33,5 @@ abstract class DocumentStore[M](wrapper: ReactiveMongoWrapper) {
             }
             case Failure(cause) => throw new Exception(cause)
         }
-        // db => {
-        //         db.startSession().flatMap { dbWithSession =>
-        //             dbWithSession.startTransaction(None).flatMap {
-        //                 db => {
-        //                     Future.successful(db)
-        //                 }
-        //             }
-        //         }
-        //     }
     }
-
-
 }

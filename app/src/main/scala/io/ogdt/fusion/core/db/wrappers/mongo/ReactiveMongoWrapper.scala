@@ -17,6 +17,7 @@ import reactivemongo.api.{ Cursor, DB, MongoConnection, AsyncDriver }
 import reactivemongo.api.bson.collection.BSONCollection
 
 import org.slf4j.Logger
+import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
 
 class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 

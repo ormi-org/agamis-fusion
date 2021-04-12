@@ -29,6 +29,13 @@ import scala.collection.parallel.immutable.ParVector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.time.Instant
+import io.ogdt.fusion.core.db.datastores.documents.FileStore
+import io.ogdt.fusion.core.db.datastores.models.documents.File
+
+// DEBUG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+// end-DEBUG
 
 object FusionFS {
 
@@ -43,12 +50,27 @@ object FusionFS {
 class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior[FusionFS.Command](context) {
     import FusionFS._
 
-    // val igniteWrapper = IgniteClientNodeWrapper(context.system)
-    val mongoWrapper = ReactiveMongoWrapper(context.system)
+    implicit val igniteWrapper = IgniteClientNodeWrapper(context.system)
+    implicit val mongoWrapper = ReactiveMongoWrapper(context.system)
 
     context.setLoggerName("io.ogdt.fusion.fs")
 
     context.log.info("FusionFS Application started")
+
+    // DEBUG
+    var logger: Logger = LoggerFactory.getLogger(getClass());
+    // end-DEBUG
+
+    val fileStore = new FileStore()
+    fileStore.findByPath("/rootdir/file1").onComplete({
+        case Success(file) => {
+            logger.info(file.toString())
+        }
+        case Failure(exception) => {
+            logger.info("Failed to get file by path " + exception)
+            throw exception
+        }
+    })
 
     // val rootdirUuid = BSONObjectID.generate()
 
@@ -119,6 +141,8 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
     //     "Owner" -> "7f8e863a-49db-46a8-9a57-d38b4f51e60c"
     // )
 
+    // mongoWrapper.getCollection("fusiondb","fusiondb").insert(file1)
+
     // mongoWrapper.getCollection("fusiondb", "files").onComplete({
     //     case Success(collection) => {
     //         collection.insert.one(BSONDocument("_id" -> BSONObjectID.generate(),"test"->"test"))
@@ -144,7 +168,7 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
     //     }
     // })
 
-    // val userStore = UserStore.fromWrapper(igniteWrapper)
+    // val userStore = new UserStore()
     // userStore.getUsers(new Array[String](0))
     // userStore.makeUser().setId(10).setFirstname("Daniel").setLastname("Copperfield").persist()
 
@@ -155,7 +179,7 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
 
     // try {
     //     val query = BSONDocument("_id" -> BSONObjectID.parse("60701d763300002f00a0f366").get)
-    //     mongoWrapper.getCollection("fusiondb", "files").onComplete({
+    //     mongoWrapper.getCollection("fusiondb", "fusiondb").onComplete({
     //         case Success(collection) => {
     //             collection.find(query).one[BSONDocument].onComplete({
     //                 case Success(doc) => {

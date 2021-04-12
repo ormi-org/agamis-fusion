@@ -13,7 +13,7 @@ final case class File(
     name: String,
     `type`: String,
     path: Option[String],
-    parent: Option[String],
+    parent: Option[BSONObjectID],
     chunkList: Option[List[UUID]],
     metadata: Metadata,
     versioned: Boolean,
@@ -29,7 +29,7 @@ object File {
             `type` <- doc.getAsTry[String]("type")
             name <- doc.getAsTry[String]("name")
             path = doc.getAsOpt[String]("path")
-            parent = doc.getAsOpt[String]("parent")
+            parent = doc.getAsOpt[BSONObjectID]("parent")
             chunkList = doc.getAsOpt[List[UUID]]("chunkList")
             metadata <- doc.getAsTry[Metadata]("metadata")
             versioned <- doc.getAsTry[Boolean]("versioned")
@@ -45,7 +45,6 @@ object File {
                 "_id" -> file.id,
                 "name" -> file.name,
                 "type" -> file.`type`,
-                "path" -> file.path,
                 "parent" -> file.parent,
                 "chunkList" -> file.chunkList,
                 "metadata" -> file.metadata,
