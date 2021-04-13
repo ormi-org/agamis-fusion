@@ -20,6 +20,14 @@ abstract class DocumentStore[M](implicit wrapper: ReactiveMongoWrapper) {
 
     def insertMany(docObject: List[M]): Future[_]
 
+    def update(docObject: M): Future[Option[M]]
+
+    def updateMany(docObject: List[M]): Future[_]
+
+    def delete(docObject: M): Future[_]
+
+    def deleteMany(docObject: List[M]): Future[_]
+
     def aggregate(pipeline: Pipeline): Future[List[_]]
 
     def startTransaction(): Future[DB] = {

@@ -25,17 +25,113 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
     override val database: String = "fusiondb"
     override val collection: String = "files"
 
-    override def insert(docObject: File): Future[WriteResult] = {
+    override def insert(file: File): Future[WriteResult] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) => {
-                col.insert.one[File](docObject)
+                col.insert.one[File](file).transformWith({
+                    case Success(result) => {
+                        Future.successful(result)
+                    }
+                    case Failure(cause) => throw cause
+                })
             }
-            case Failure(cause) => throw new Exception(cause)
+            case Failure(cause) => throw cause
         })
     }
 
-    override def insertMany(docObject: List[File]): Future[_] = {
-        Future.successful()
+    override def insertMany(files: List[File]): Future[Int] = {
+        wrapper.getCollection(database,collection).transformWith({
+            case Success(col) => {
+                col.insert.many[File](files).transformWith({
+                    case Success(result) => {
+                        if (result.ok) {
+                            Future.successful(result.nModified)
+                        } else {
+                            throw new Exception(result.errmsg.get)
+                        }
+                    }
+                    case Failure(cause) => throw cause
+                })
+            }
+            case Failure(cause) => throw cause
+        })
+    }
+
+    override def update(file: File): Future[Option[File]] = {
+        wrapper.getCollection(database,collection).transformWith({
+            case Success(col) => {
+                col.findAndUpdate[BSONDocument, File](BSONDocument("_id" -> file.id), file, upsert = true)
+                .map(_.result[File])
+            }
+            case Failure(cause) => throw cause
+        })
+    }
+
+    override def updateMany(files: List[File]): Future[Int] = {
+        wrapper.getCollection(database, collection).transformWith({
+            case Success(col) => {
+                val updateBuilder = col.update(ordered = true)
+                val updates = Seq[Future[col.UpdateElement]]()
+                files.foreach(file => {
+                    updates :+ updateBuilder.element[BSONDocument, File](
+                        q = BSONDocument("_id" -> file.id),
+                        u = file,
+                        upsert = true,
+                        multi = false
+                    )
+                })
+                val bulkUpdateResult = Future.sequence(updates).flatMap { ops => updateBuilder.many(ops) }
+                bulkUpdateResult.transformWith({
+                    case Success(result) => {
+                        if (result.ok) {
+                            Future.successful(result.nModified)
+                        } else {
+                            throw new Exception(result.errmsg.get)
+                        }
+                    }
+                    case Failure(cause) => throw cause
+                })
+            }
+            case Failure(cause) => throw cause
+        })
+    }
+
+    override def delete(file: File): Future[Option[File]] = {
+        wrapper.getCollection(database,collection).transformWith({
+            case Success(col) => {
+                col.findAndRemove[BSONDocument](BSONDocument("_id" -> file.id))
+                .map(_.result[File])
+            }
+            case Failure(exception) => throw new Exception(exception) 
+        })
+    }
+
+    override def deleteMany(files: List[File]): Future[Int] = {
+        wrapper.getCollection(database,collection).transformWith({
+            case Success(col) => {
+                val deleteBuilder = col.delete(ordered = false)
+                val deletes = Seq[Future[col.DeleteElement]]()
+                files.foreach(file => {
+                    deletes :+ deleteBuilder.element[BSONDocument, File](
+                        q = BSONDocument("_id" -> file.id),
+                        limit = None,
+                        collation = None
+                    )
+                })
+                val bulkDeleteResult = Future.sequence(deletes).flatMap{ ops => deleteBuilder.many(ops) }
+                bulkDeleteResult.transformWith({
+                    case Success(result) => {
+                        if(result.ok) {
+                            Future.successful(result.nModified)
+                        }else{
+                            throw new Exception(result.errmsg.get)
+                        }
+                    } 
+                    case Failure(cause) => throw cause
+                })
+            }
+            case Failure(cause) => throw cause
+        })
     }
 
     override def aggregate(pipeline: Pipeline): Future[List[File]] = {
