@@ -1,22 +1,44 @@
 package io.ogdt.fusion.core.fs.actors
 
-import akka.actor.typed.Behavior
-import akka.actor.typed.Signal
-import akka.actor.typed.PostStop
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.AbstractBehavior
-import akka.actor.typed.scaladsl.Behaviors
+import akka.Done
+import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
+import akka.actor.typed.scaladsl.{ActorContext, AbstractBehavior, Behaviors}
 
-import io.ogdt.fusion.core.db.ignite.IgniteClientNodeWrapper
-import io.ogdt.fusion.core.db.datastore.models.UserStore
+import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
+import io.ogdt.fusion.core.db.models.sql.User
+import io.ogdt.fusion.core.db.datastores.sql.UserStore
+import io.ogdt.fusion.core.fs.lib.TreeManager
+
+// temp
+import reactivemongo.api.bson.BSONDocument
+import reactivemongo.api.commands.WriteResult
+import reactivemongo.api.bson.collection.BSONCollection
+import reactivemongo.api.bson.BSONDateTime
+import reactivemongo.api.bson.BSONObjectID
+import java.util.UUID
+// ---end temp
 
 import org.apache.ignite.IgniteException
-import akka.actor.typed.ActorRef
-import akka.Done
+
+import scala.util.Success
+import scala.util.Failure
 import scala.collection.parallel.mutable.ParArray
-import io.ogdt.fusion.core.db.datastore.models.User
 import scala.collection.immutable.ArraySeq
 import scala.collection.parallel.immutable.ParVector
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.time.Instant
+import io.ogdt.fusion.core.db.datastores.documents.FileStore
+import io.ogdt.fusion.core.db.datastores.models.documents.File
+
+// DEBUG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import io.ogdt.fusion.core.db.models.documents.nested.file.Metadata
+import io.ogdt.fusion.core.db.models.documents.nested.file.metadata.FusionXmlMeta
+import io.ogdt.fusion.core.db.models.documents.nested.file.Acl
+// end-DEBUG
 
 object FusionFS {
 
@@ -31,20 +53,55 @@ object FusionFS {
 class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior[FusionFS.Command](context) {
     import FusionFS._
 
-    val igniteWrapper = IgniteClientNodeWrapper(context.system)
+    // implicit val igniteWrapper = IgniteClientNodeWrapper(context.system)
+    implicit val mongoWrapper = ReactiveMongoWrapper(context.system)
 
     context.setLoggerName("io.ogdt.fusion.fs")
 
     context.log.info("FusionFS Application started")
 
-    val userStore = UserStore.fromWrapper(igniteWrapper)
-    // userStore.getUsers(new Array[String](0))
-    // userStore.makeUser().setId(10).setFirstname("Daniel").setLastname("Copperfield").persist()
+    // DEBUG
+    var logger: Logger = LoggerFactory.getLogger(getClass());
+    // end-DEBUG
 
-    // userStore.bulkPersistUsers(Vector(
-    //     userStore.makeUser().setId(11).setFirstname("Daniel").setLastname("ForSureCopperfield"),
-    //     userStore.makeUser().setId(12).setFirstname("Daniel").setLastname("NotCopperfield")
-    // ))
+    TreeManager.createFile(
+        new File(
+            id = BSONObjectID.generate(),
+            name = "testFile.oproto",
+            `type` = File.FILE,
+            path = Some("/rootdir/testFile.oproto"),
+            parent = None,
+            chunkList = None,
+            metadata = new Metadata(
+                size = None,
+                creationDate = Instant.now(),
+                lastVersionDate = None,
+                lastModificationDate = Instant.now(),
+                versionsCount = None,
+                chainsCount = None,
+                fusionXML = Some(new FusionXmlMeta(
+                    xmlSchemaFileId = UUID.randomUUID(),
+                    originAppId = "io.ogdt.apps.official:test"
+                )),
+                hidden = false,
+                readonly = false
+            ),
+            versioned = Some(true),
+            acl = new Acl(
+                userAccess = List(
+
+                ),
+                groupAccess = None
+            ),
+            owner = UUID.fromString("7f8e863a-49db-46a8-9a57-d38b4f51e60c")
+        )
+    ).onComplete({
+        case Success(result) => {
+            if (result) logger.info("Successfuly created new file")
+            else logger.info("Failed to create new file")
+        }
+        case Failure(cause) => throw cause
+    })
 
     override def onMessage(msg: Command): Behavior[Command] = {
         msg match {
