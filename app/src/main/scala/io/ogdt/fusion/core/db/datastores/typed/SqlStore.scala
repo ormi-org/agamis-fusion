@@ -55,9 +55,6 @@ abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClient
         var queryString: String = sqlQuery.query
         Future {
             var query = igniteCache.query(new SqlFieldsQuery(queryString))
-            // for ( i <- 0 to query.getColumnsCount() - 1) {
-            //     log.info(s"index: $i / name: ${query.getFieldName(i)}")
-            // }
             var res = query.getAll()
             var scalaRes = Buffer[List[_]]()
             res.forEach(item => {
