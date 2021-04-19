@@ -9,7 +9,7 @@ import java.time.Instant
 import reactivemongo.api.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter}
 
 final case class Metadata(
-    size: Int,
+    size: Option[Int],
     creationDate: Instant,
     lastVersionDate: Option[Instant],
     lastModificationDate: Instant,
@@ -24,8 +24,8 @@ object Metadata {
     implicit object MetadataReader extends BSONDocumentReader[Metadata] {
 
         override def readDocument(doc: BSONDocument): Try[Metadata] = for {
-            size <- doc.getAsTry[Int]("size")
             creationDate <- doc.getAsTry[Instant]("creationDate")
+            size = doc.getAsOpt[Int]("size")
             lastVersionDate = doc.getAsOpt[Instant]("lastVersionDate")
             lastModificationDate <- doc.getAsTry[Instant]("lastModificationDate")
             chainsCount = doc.getAsOpt[Int]("chainsCount")

@@ -4,3 +4,4 @@
 .ammonite/
 metals.sbt
 *.code-workspace
+/.vscode

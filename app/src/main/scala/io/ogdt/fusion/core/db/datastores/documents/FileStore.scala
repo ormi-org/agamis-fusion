@@ -10,15 +10,20 @@ import io.ogdt.fusion.core.db.datastores.models.documents.File
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 
 import reactivemongo.api.DB
-import reactivemongo.api.commands.WriteResult
-import java.util.UUID
-import reactivemongo.api.bson.BSONObjectID
-import reactivemongo.api.bson.BSONDocument
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileFromPath
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
+import reactivemongo.api.Cursor
 import reactivemongo.api.bson.Macros
 import reactivemongo.api.bson.BSONString
 import reactivemongo.api.bson.BSONValue
+import reactivemongo.api.bson.BSONObjectID
+import reactivemongo.api.bson.BSONDocument
+import reactivemongo.api.commands.WriteResult
+
+import java.util.UUID
+
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileFromPath
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileFromId
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileChildrenFromId
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
 
 class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[File] {
 
@@ -145,23 +150,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
-    def findByID(id: String): Future[Option[File]] = {
+    def findByID(id: String): Future[File] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) => {
-                try {
-                    col.find(BSONDocument("_id" -> BSONObjectID.parse(id).get)).one[File]
-                } catch {
-                    case e: IllegalArgumentException => throw new Exception(e)
-                }
-            }
-            case Failure(cause) => throw new Exception(cause)
-        })
-    }
-
-    def findByPath(path: String): Future[File] = {
-        wrapper.getCollection(database, collection).transformWith({
-            case Success(col) => {
-                aggregate(pipeline = GetFileFromPath.pipeline(col).setPath(path)).transformWith({
+                aggregate(pipeline = GetFileFromId.pipeline(col).setId(id)).transformWith({
                     case Success(files) => {
                         wrapper.getLogger().info(files.toString())
                         Future.successful(files(0))
@@ -170,6 +162,67 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                 })
             }
             case Failure(cause) => throw new Exception(cause)
+        })
+    }
+
+    def findByPath(path: String): Future[File] = {
+        wrapper.getCollection(database, collection).transformWith({
+            case Success(col) => {
+                // Exception Handling when file is root
+                if (path.matches("/.?([A-Za-z0-9]+)(.[A-Za-z0-9]+)+")) {
+                    col.find(BSONDocument(
+                        "name" -> path.replaceAll("/", ""),
+                        "parent" -> None
+                    )).one[File].map(file => {
+                        file match {
+                            case Some(file: File) => file
+                            case None => throw new Exception("Couldn't find file with specified path")
+                        }
+                    })
+                } else {
+                    // Normal process when file is at least in sub-level 1
+                    aggregate(pipeline = GetFileFromPath.pipeline(col).setPath(path)).transformWith({
+                        case Success(files) => {
+                            if (files.length == 0) throw new Exception("Couldn't find file with specified path")
+                            wrapper.getLogger().info(files.toString())
+                            Future.successful(files(0))
+                        }
+                        case Failure(cause) => throw new Exception(cause)
+                    })
+                }
+            }
+            case Failure(cause) => throw new Exception(cause)
+        })  
+    }
+
+    def findMany(ids: List[String]): Future[List[File]] = {
+        wrapper.getCollection(database, collection).transformWith({
+            case Success(col) => {
+                col.find(BSONDocument("_id" -> BSONDocument("$in" -> ids.map(BSONObjectID.parse(_).get))))
+                .cursor[File]()
+                .collect[List](-1, Cursor.FailOnError[List[File]]())
+            }
+            case Failure(cause) => throw cause
+        })
+    }
+
+    def getFileChildren(dir: File): Future[List[File]] = {
+        wrapper.getCollection(database, collection).transformWith({
+            case Success(col) => {
+                dir.path match {
+                    case Some(path: String) => {
+                        aggregate(pipeline = GetFileChildrenFromId.pipeline(col).setId(dir.id.toString()).setPathPrefix(path))
+                        .transformWith({
+                            case Success(files) => {
+                                Future.successful(files)
+                            }
+                            case Failure(cause) => throw cause
+                        })
+                    }
+                    case None => throw new Exception("Couldn't parse value 'path' from File object")
+                }
+            }
+            case Failure(cause) => throw cause
         })
     }
 }
