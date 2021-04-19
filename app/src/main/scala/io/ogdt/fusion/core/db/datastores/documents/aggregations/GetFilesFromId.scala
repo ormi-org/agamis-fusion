@@ -10,19 +10,19 @@ import reactivemongo.api.bson.BSONValue
 import reactivemongo.api.bson.BSONString
 import reactivemongo.api.bson.BSONObjectID
 
-object GetFileFromId extends PipelineWrapper {
+object GetFilesFromId extends PipelineWrapper {
 
-    class GetFileFromIdPipeline(protected val _collection: BSONCollection) extends Pipeline {
+    class GetFilesFromIdPipeline(protected val _collection: BSONCollection) extends Pipeline {
 
 
         // DEBUG
         var logger: Logger = LoggerFactory.getLogger(getClass());
         // end-DEBUG
 
-        private var _id = ""
+        private var _ids: List[BSONDocument] = List()
 
-        def setId(id: String): GetFileFromIdPipeline = {
-            _id = id
+        def addId(id: String): GetFilesFromIdPipeline = {
+            _ids ::= BSONDocument("_id" -> BSONObjectID.parse(id).get)
             this
         }
 
@@ -40,7 +40,7 @@ object GetFileFromId extends PipelineWrapper {
                 PushField}
 
             List(
-                Match(BSONDocument("_id" -> BSONObjectID.parse(_id).get)),
+                Match(BSONDocument("$or" -> _ids)),
                 GraphLookup(
                     from = _collection.name,
                     startWith = BSONString("$parent"),
@@ -48,7 +48,7 @@ object GetFileFromId extends PipelineWrapper {
                     connectToField = "_id",
                     as = "ancestors",
                     depthField = Some("order")),
-                Unwind(field = "ancestors"),
+                Unwind(path = "ancestors", preserveNullAndEmptyArrays = Some(true), includeArrayIndex = None),
                 Sort(Descending("ancestors.order")),
                 Group(BSONString("$_id"))(
                     "name" -> FirstField("name"),
@@ -75,7 +75,7 @@ object GetFileFromId extends PipelineWrapper {
                             BSONDocument(
                                 "$reduce" -> BSONDocument(
                                     "input" -> BSONString("$ancestors"),
-                                    "initialValue" -> "/",
+                                    "initialValue" -> "",
                                     "in" -> BSONDocument(
                                         "$concat" -> List[BSONValue](
                                             BSONString("$$value"),
@@ -102,5 +102,5 @@ object GetFileFromId extends PipelineWrapper {
         }
     }
 
-    override def pipeline(col: BSONCollection): GetFileFromIdPipeline = new GetFileFromIdPipeline(col)
+    override def pipeline(col: BSONCollection): GetFilesFromIdPipeline = new GetFilesFromIdPipeline(col)
 }

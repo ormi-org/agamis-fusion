@@ -14,7 +14,16 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import io.ogdt.fusion.core.db.datastores.caches.CachedFileStore
 
+// DEBUG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+// end-DEBUG
+
 object TreeManager {
+
+    // DEBUG
+    var logger: Logger = LoggerFactory.getLogger(getClass());
+    // end-DEBUG
 
     def createFile(file: File)(implicit wrapper: ReactiveMongoWrapper): Future[Boolean] = {
         file.path match {
@@ -96,25 +105,45 @@ object TreeManager {
     }
 
     def deleteFile(file: File)(implicit wrapper: ReactiveMongoWrapper): Future[File] = {
-        new FileStore()
-        .delete(file).transformWith({
-            case Success(deletedFile) => {
-                deletedFile match {
-                    case Some(matchingfile: File) => Future.successful(matchingfile)
-                    case None => throw new Exception("file not found")
-                }
+        getChildrenOf(file).transformWith({
+            case Success(children) => {
+                // Handle case where file to delete has child
+                if (children.length > 0) throw new Exception("Directory can't be deleted if not empty")
+                new FileStore()
+                .delete(file).transformWith({
+                    case Success(deletedFile) => {
+                        deletedFile match {
+                            case Some(matchingfile: File) => Future.successful(matchingfile)
+                            case None => throw new Exception("file not found")
+                        }
+                    }
+                    case Failure(cause) => throw cause
+                })
             }
             case Failure(cause) => throw cause
         })
     }
 
-    def deleteManyFiles(files: List[File])(implicit wrapper: ReactiveMongoWrapper): Future[Int] = {
-        new FileStore()
-        .deleteMany(files).transformWith({
-            case Success(deletedFilesCount) => {
-                Future.successful(deletedFilesCount)
-            }
-            case Failure(cause) => throw cause
+    final case class DeleteManyFilesResult(deleted: Int, errors: List[String])
+
+    def deleteManyFiles(files: List[File])(implicit wrapper: ReactiveMongoWrapper): Future[DeleteManyFilesResult] = {
+
+        Future.sequence(
+            files.map(file => {
+                getChildrenOf(file).map(children => children.length > 0)
+            })
+        ).map(lookup => (files zip lookup))
+        .transformWith(lookup => {
+            val validDelete: List[File] = lookup.get.filter(_._2 == false).map(_._1)
+            val childLookupError: List[String] = lookup.get.filter(_._2 == true).map("Couldn't delete directory "+_._1.path.get+" as it has still children")
+
+            new FileStore()
+            .deleteMany(validDelete).transformWith({
+                case Success(deletedFilesCount) => {
+                    Future.successful(DeleteManyFilesResult(deletedFilesCount, childLookupError))
+                }
+                case Failure(cause) => throw cause
+            })
         })
     }
 }
