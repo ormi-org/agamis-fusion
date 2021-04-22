@@ -19,6 +19,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 // end-DEBUG
 
+// DEBUG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+// end-DEBUG
+
 object TreeManager {
 
     // DEBUG
