@@ -29,7 +29,7 @@ abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClient
 
     val schema: String
     val cache: String
-    var igniteCache: IgniteCache[K, M]
+    protected var igniteCache: IgniteCache[K, M]
 
     protected def init() = {
         if(wrapper.cacheExists(cache)) {
@@ -58,9 +58,8 @@ abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClient
             // for ( i <- 0 to query.getColumnsCount() - 1) {
             //     log.info(s"index: $i / name: ${query.getFieldName(i)}")
             // }
-            var res = query.getAll()
             var scalaRes = Buffer[List[_]]()
-            res.forEach(item => {
+            query.getAll().forEach(item => {
                 scalaRes.addOne(item.asScala.toList)
             })
             ParArray.fromIterables(scalaRes)

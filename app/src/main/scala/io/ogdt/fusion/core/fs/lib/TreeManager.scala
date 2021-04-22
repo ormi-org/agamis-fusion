@@ -1,8 +1,10 @@
 package io.ogdt.fusion.core.fs.lib
 
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+
 import io.ogdt.fusion.core.db.datastores.documents.FileStore
+import io.ogdt.fusion.core.db.datastores.models.documents.File
 
 import reactivemongo.api.bson.BSONObjectID
 
@@ -10,6 +12,7 @@ import scala.util.Success
 import scala.util.Failure
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import io.ogdt.fusion.core.db.datastores.caches.CachedFileStore
 
 object TreeManager {
 
@@ -32,10 +35,14 @@ object TreeManager {
         }
     }
 
-    def getFileFromId(id: String)(implicit wrapper: ReactiveMongoWrapper): Future[File] = {
+    def getFileFromId(id: String)(implicit wrapper: ReactiveMongoWrapper, igniteWrapper: IgniteClientNodeWrapper): Future[File] = {
         new FileStore()
         .findByID(id).transformWith({
-            case Success(file) => Future.successful(file)
+            case Success(file) => {
+                new CachedFileStore()
+                .put(file)
+                Future.successful(file)
+            }
             case Failure(cause) => throw cause
         })
     }

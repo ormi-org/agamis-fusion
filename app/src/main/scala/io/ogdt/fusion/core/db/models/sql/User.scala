@@ -37,4 +37,8 @@ class User(protected val store: UserStore) extends Model {
     def persist() = {
         store.persistUser(this)
     }
+
+    def remove() = {
+        store.removeUser(this)
+    }
 }

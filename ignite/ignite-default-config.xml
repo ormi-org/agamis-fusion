@@ -57,6 +57,23 @@
 					<property name="dataRegionName" value="FusionFS"/>
 				</bean>
 				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="FusionStaging"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="dataRegionName" value="FusionFS"/>
+					<property name="expiryPolicyFactory">
+						<bean class="javax.cache.expiry.AccessedExpiryPolicy" factory-method="factoryOf">
+							<constructor-arg>
+								<bean class="javax.cache.expiry.Duration">
+									<constructor-arg value="DAYS"/>
+									<constructor-arg value="30"/>
+								</bean>
+							</constructor-arg>
+						</bean>
+					</property>
+				</bean>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
 					<property name="name" value="Cache"/>
 					<property name="cacheMode" value="PARTITIONED"/>
 					<property name="backups" value="2"/>
