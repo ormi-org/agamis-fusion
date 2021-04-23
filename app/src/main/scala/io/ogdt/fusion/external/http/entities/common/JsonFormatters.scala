@@ -19,7 +19,7 @@ object JsonFormatters {
         def write(objectid: BSONObjectID) = JsString(objectid.toString)
         def read(value: JsValue) = {
             value match {
-                case JsString(objectid) => BSONObjectID.parse(objectid)
+                case JsString(objectid) => BSONObjectID.parse(objectid).get
                 case _                  => throw new DeserializationException("Expected alphanumeric BSONObjectID string")
             }
         }
