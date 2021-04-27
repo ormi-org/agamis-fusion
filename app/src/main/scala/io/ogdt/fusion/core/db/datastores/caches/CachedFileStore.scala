@@ -16,7 +16,7 @@ class CachedFileStore(implicit wrapper: IgniteClientNodeWrapper) extends CacheSt
 
     super .init()
 
-    protected def key(subject: File): String = {
-        globalPrefix + cachePrefix + subject.id.toString()
+    override protected def key(subject: File): String = {
+        globalPrefix + cachePrefix + subject.id.stringify
     }
 }

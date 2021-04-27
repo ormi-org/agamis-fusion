@@ -6,17 +6,18 @@ import reactivemongo.api.bson.collection.BSONCollection
 import reactivemongo.api.bson.{
     BSONDocument,
     BSONValue,
-    BSONString
+    BSONString,
+    BSONObjectID
 }
 
-object GetFileFromPath extends PipelineWrapper {
+object GetFileFromId extends PipelineWrapper {
 
-    class GetFileFromPathPipeline(protected val _collection: BSONCollection) extends Pipeline {
+    class GetFileFromIdPipeline(protected val _collection: BSONCollection) extends Pipeline {
 
-        private var _path = "/"
+        private var _id = ""
 
-        def setPath(path: String): GetFileFromPathPipeline = {
-            _path = path
+        def setId(id: String): GetFileFromIdPipeline = {
+            _id = id
             this
         }
 
@@ -34,7 +35,7 @@ object GetFileFromPath extends PipelineWrapper {
                 PushField}
 
             List(
-                Match(BSONDocument("name" -> "/".r.split(_path).last)),
+                Match(BSONDocument("_id" -> BSONObjectID.parse(_id).get)),
                 GraphLookup(
                     from = _collection.name,
                     startWith = BSONString("$parent"),
@@ -91,11 +92,10 @@ object GetFileFromPath extends PipelineWrapper {
                             BSONString("$name")
                         )
                     )
-                )),
-                Match(BSONDocument("path" -> _path))
+                ))
             )
         }
     }
 
-    override def pipeline(col: BSONCollection): GetFileFromPathPipeline = new GetFileFromPathPipeline(col)
+    override def pipeline(col: BSONCollection): GetFileFromIdPipeline = new GetFileFromIdPipeline(col)
 }

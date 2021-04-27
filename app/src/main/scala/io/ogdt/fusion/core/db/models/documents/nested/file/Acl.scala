@@ -1,8 +1,10 @@
 package io.ogdt.fusion.core.db.models.documents.nested.file
 
-import io.ogdt.fusion.core.db.models.documents.nested.file.acl.{UserAccess, GroupAccess}
-import reactivemongo.api.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter}
 import scala.util.Try
+
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.{UserAccess, GroupAccess}
+
+import reactivemongo.api.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter}
 
 final case class Acl(
     userAccess: List[UserAccess],
