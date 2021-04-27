@@ -6,12 +6,15 @@ import scala.util.Try
 
 import java.util.UUID
 
-import reactivemongo.api.bson.{BSONDocument, BSONDocumentWriter, BSONDocumentReader, BSONObjectID}
-import reactivemongo.api.bson.BSONString
-import reactivemongo.api.bson.BSONValue
-import reactivemongo.api.bson.BSONReader
-import reactivemongo.api.bson.BSONUndefined
-import reactivemongo.api.bson.BSONNull
+import reactivemongo.api.bson.{
+    BSONDocument,
+    BSONDocumentWriter,
+    BSONDocumentReader,
+    BSONObjectID,
+    BSONString,
+    BSONValue,
+    BSONReader
+}
 
 final case class File(
     id: BSONObjectID,

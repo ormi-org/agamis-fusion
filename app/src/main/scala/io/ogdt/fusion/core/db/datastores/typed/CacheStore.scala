@@ -6,6 +6,10 @@ import org.apache.ignite.lang.IgniteFuture
 import scala.concurrent.Promise
 import scala.util.Try
 import scala.concurrent.Future
+import scala.collection.JavaConverters._
+import scala.util.Success
+import scala.util.Failure
+import scala.language.postfixOps
 
 abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
 
@@ -16,7 +20,7 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
 
     protected def init() = {
         if(wrapper.cacheExists(cache)) {
-            igniteCache = wrapper.getCache[K, M](cache).withKeepBinary()
+            igniteCache = wrapper.getCache[K, M](cache)
         }
     }
 
@@ -24,7 +28,7 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
     protected def key(subject: M): K
 
     // Parse key directly from String
-    protected def key(subject: String): K = {
+    def key(subject: String): K = {
         (globalPrefix + cachePrefix + subject).asInstanceOf[K]
     }
 
@@ -47,8 +51,35 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
         igniteToScalaFuture(igniteCache.putAsync(key(value), value))
     }
 
+    // Put many values for specified keys
+    def putMany(values: List[M]): Future[_] = {
+        igniteToScalaFuture(igniteCache.putAllAsync(
+            (values map (value => key(value) -> value) toMap ).asJava
+        ))
+    }
+
     // Get the value for specified key
     def get(search: String): Future[M] = {
         igniteToScalaFuture(igniteCache.getAsync(key(search)))
+    }
+
+    def getMany(searches: List[String]): Future[java.util.Map[K, M]] = {
+        igniteToScalaFuture(igniteCache.getAllAsync(
+            searches.map(search => {
+                key(search)
+            }).toSet.asJava
+        ))
+    }
+
+    def delete(value: M): Future[java.lang.Boolean] = {
+        igniteToScalaFuture(igniteCache.removeAsync(key(value)))
+    }
+
+    def deleteMany(values: List[M]): Future[Void] = {
+        igniteToScalaFuture(igniteCache.removeAllAsync(
+            values.map(value => {
+                key(value)
+            }).toSet.asJava
+        ))
     }
 }

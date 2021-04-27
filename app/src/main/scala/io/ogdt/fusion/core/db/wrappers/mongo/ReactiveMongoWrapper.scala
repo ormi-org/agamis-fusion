@@ -13,11 +13,8 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.Extension
 import akka.actor.typed.ExtensionId
 
-import reactivemongo.api.{ Cursor, DB, MongoConnection, AsyncDriver }
+import reactivemongo.api.{DB, MongoConnection, AsyncDriver }
 import reactivemongo.api.bson.collection.BSONCollection
-
-import org.slf4j.Logger
-import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
 
 class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 
@@ -39,8 +36,6 @@ class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
     private val parsedUri = MongoConnection.fromString(mongoUri)
 
     private val _mongo: Future[MongoConnection] = parsedUri.flatMap(driver.connect(_))
-
-    def getLogger(): Logger = system.log
 
     def getDb(db: String): Future[DB] = {
         _mongo.flatMap(_.database(db))

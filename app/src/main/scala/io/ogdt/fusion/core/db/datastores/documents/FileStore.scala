@@ -5,38 +5,27 @@ import scala.util.Failure
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
-import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
-
-import reactivemongo.api.DB
-import reactivemongo.api.Cursor
-import reactivemongo.api.bson.Macros
-import reactivemongo.api.bson.BSONString
-import reactivemongo.api.bson.BSONValue
-import reactivemongo.api.bson.BSONObjectID
-import reactivemongo.api.bson.BSONDocument
-import reactivemongo.api.bson.BSONNull
-import reactivemongo.api.commands.WriteResult
-
 import java.util.UUID
 
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileFromPath
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileFromId
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFilesFromId
-import io.ogdt.fusion.core.db.datastores.documents.aggregations.GetFileChildrenFromId
+import reactivemongo.api.bson.BSONDocument
+import reactivemongo.api.commands.WriteResult
+
+import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
+import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
+import io.ogdt.fusion.core.db.datastores.models.documents.File
+
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import io.ogdt.fusion.core.db.datastores.documents.aggregations.{
+    GetFileFromPath,
+    GetFileFromId,
+    GetFilesFromId,
+    GetFileChildrenFromId
+}
 
 class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[File] {
 
     override val database: String = "fusiondb"
     override val collection: String = "files"
-
-    // DEBUG
-    var logger: Logger = LoggerFactory.getLogger(getClass());
-    // end-DEBUG
 
     override def insert(file: File): Future[WriteResult] = {
         wrapper.getCollection(database, collection).transformWith({

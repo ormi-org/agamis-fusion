@@ -10,14 +10,14 @@ import io.ogdt.fusion.core.db.models.sql.User
 import io.ogdt.fusion.core.db.datastores.sql.UserStore
 import io.ogdt.fusion.core.fs.lib.TreeManager
 
-// temp
-import reactivemongo.api.bson.BSONDocument
-import reactivemongo.api.commands.WriteResult
-import reactivemongo.api.bson.collection.BSONCollection
-import reactivemongo.api.bson.BSONDateTime
-import reactivemongo.api.bson.BSONObjectID
-import java.util.UUID
-// ---end temp
+// // temp
+// import reactivemongo.api.bson.BSONDocument
+// import reactivemongo.api.commands.WriteResult
+// import reactivemongo.api.bson.collection.BSONCollection
+// import reactivemongo.api.bson.BSONDateTime
+// import reactivemongo.api.bson.BSONObjectID
+// import java.util.UUID
+// // ---end temp
 
 import org.apache.ignite.IgniteException
 
@@ -53,7 +53,7 @@ object FusionFS {
 class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior[FusionFS.Command](context) {
     import FusionFS._
 
-    // implicit val igniteWrapper = IgniteClientNodeWrapper(context.system)
+    implicit val igniteWrapper = IgniteClientNodeWrapper(context.system)
     implicit val mongoWrapper = ReactiveMongoWrapper(context.system)
 
     context.setLoggerName("io.ogdt.fusion.fs")
@@ -64,29 +64,36 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
     var logger: Logger = LoggerFactory.getLogger(getClass());
     // end-DEBUG
 
-    TreeManager.getManyFiles(List(
-        "606f4492130000130044e695",
-        "606f4492130000130044e696",
-        "607dc2a51b00001b00ae5454"
-    ))
-    .onComplete({
-        case Success(files: List[File]) => {
-            TreeManager.deleteManyFiles(files).onComplete({
-                case Success(deleteResult) => {
-                    logger.info("Successfuly deleted " + deleteResult.deleted + " files")
-                    deleteResult.errors.foreach(error => {
-                        logger.info(error)
-                    })
-                }
-                case Failure(cause) => throw cause
-            })
-            // TreeManager.getChildrenOf(file).onComplete({
-            //     case Success(files) => logger.info(files.toString())
-            //     case Failure(cause) => throw cause
-            // })
+    TreeManager.getFileFromId("606f4492130000130044e695").onComplete({
+        case Success(file: File) => {
+            logger.info(file.toString())
         }
         case Failure(cause) => throw cause
     })
+
+    // TreeManager.getManyFiles(List(
+    //     "606f4492130000130044e695",
+    //     "606f4492130000130044e696",
+    //     "607dc2a51b00001b00ae5454"
+    // ))
+    // .onComplete({
+    //     case Success(files: List[File]) => {
+    //         TreeManager.deleteManyFiles(files).onComplete({
+    //             case Success(deleteResult) => {
+    //                 logger.info("Successfuly deleted " + deleteResult.deleted + " files")
+    //                 deleteResult.errors.foreach(error => {
+    //                     logger.info(error)
+    //                 })
+    //             }
+    //             case Failure(cause) => throw cause
+    //         })
+    //         // TreeManager.getChildrenOf(file).onComplete({
+    //         //     case Success(files) => logger.info(files.toString())
+    //         //     case Failure(cause) => throw cause
+    //         // })
+    //     }
+    //     case Failure(cause) => throw cause
+    // })
 
     // TreeManager.getFileFromPath("/rootdir")
     // .onComplete({
