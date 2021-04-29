@@ -6,7 +6,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 
 import reactivemongo.api.DB

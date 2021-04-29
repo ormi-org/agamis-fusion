@@ -1,9 +1,8 @@
 package io.ogdt.fusion.external.http.entities.nested.file.acl.access
 
-import spray.json.{DefaultJsonProtocol, RootJsonFormat, JsObject, JsValue, DeserializationException}
-import spray.json.JsBoolean
-import spray.json.JsonFormat
-import spray.json.JsArray
+import spray.json.DefaultJsonProtocol
+
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.access.{Rights => RightsDocument}
 
 final case class Rights(
     read: Boolean,
@@ -16,27 +15,36 @@ final case class Rights(
     totalControl: Boolean
 )
 
-object RightsJsonProtocol extends DefaultJsonProtocol{
+object Rights {
 
-    implicit object RightsJsonFormat extends JsonFormat[Rights] {
-        
-        def read(value: JsValue) = {
-            value.asJsObject.getFields("read", "readAndExecute", "write", "versionning", "advancedVersioning", "aclManagement", "advancedAclManagement", "totalControl") match {
-                case Seq(JsBoolean(read), JsBoolean(readAndExecute), JsBoolean(write), JsBoolean(versionning), JsBoolean(advancedVersioning), JsBoolean(aclManagement), JsBoolean(advancedAclManagement), JsBoolean(totalControl)) =>
-                    new Rights(read, readAndExecute, write, Some(versionning), Some(advancedVersioning), aclManagement, advancedAclManagement, totalControl)
-                case _ => throw new DeserializationException("Rights expected")
-            }
-        }
-       
-       def write(r: Rights) = JsObject(
-           "read"                  -> JsBoolean(r.read),
-           "readAndExecute"        -> JsBoolean(r.readAndExecute),
-           "write"                 -> JsBoolean(r.write),
-           "versioning"            -> JsBoolean(r.versioning.get),
-           "advancedVersioning"    -> JsBoolean(r.advancedVersioning.get),
-           "aclManagement"         -> JsBoolean(r.aclManagement),
-           "advancedAclManagement" -> JsBoolean(r.advancedAclManagement),
-           "totalControl"          -> JsBoolean(r.totalControl)
-       )
+    implicit def rightsToDocument(r: Rights): RightsDocument = {
+        RightsDocument(
+            r.read, 
+            r.readAndExecute, 
+            r.write, 
+            r.versioning, 
+            r.advancedVersioning, 
+            r.aclManagement, 
+            r.advancedAclManagement, 
+            r.totalControl
+        )
     }
+
+    implicit def documentToRights(doc: RightsDocument): Rights = {
+        Rights(
+            doc.read, 
+            doc.readAndExecute, 
+            doc.write, 
+            doc.versioning, 
+            doc.advancedVersioning, 
+            doc.aclManagement, 
+            doc.advancedAclManagement, 
+            doc.totalControl
+        )
+    }
+}
+
+object RightsJsonProtocol extends DefaultJsonProtocol {
+
+    implicit val rightsFormat = jsonFormat8(Rights.apply)
 }

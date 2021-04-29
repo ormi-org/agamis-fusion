@@ -2,29 +2,36 @@ package io.ogdt.fusion.external.http.entities.nested.file.metadata
 
 import java.util.UUID
 
-import spray.json.{DefaultJsonProtocol, JsonFormat, JsObject, JsString, JsValue, DeserializationException}
-import spray.json.JsString
+import spray.json.DefaultJsonProtocol
+
+import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
+
+import io.ogdt.fusion.core.db.models.documents.nested.file.metadata.{FusionXmlMeta => FusionXmlMetaDocument}
 
 final case class FusionXmlMeta(
     xmlSchemaFileId: UUID,
     originAppId: String
 )
 
-object FusionXmlMetaJsonProtocol extends DefaultJsonProtocol {
+object FusionXmlMeta { 
 
-    implicit object FusionXmlMetaJsonFormat extends JsonFormat[FusionXmlMeta] {
-       def read(value: JsValue) = {
-           value.asJsObject.getFields("xmlSchemaFileId", "originAppId") match {
-               case Seq(xmlSchemaFileId, JsString(originAppId)) => 
-                new FusionXmlMeta(UUID.fromString(xmlSchemaFileId.toString()), originAppId)
-               case _ => throw new DeserializationException("GroupAccess expected")
-           } 
-       }
-
-        def write(fxm: FusionXmlMeta) = JsObject(
-            "xmlSchemaFileId" -> JsString(fxm.xmlSchemaFileId.toString()),  
-            "originAppId"  -> JsString(fxm.originAppId)
+    implicit def fusionXmlMetaToDocument(fxm: FusionXmlMeta): FusionXmlMetaDocument = {
+        FusionXmlMetaDocument(
+            fxm.xmlSchemaFileId, 
+            fxm.originAppId
         )
     }
 
+    implicit def documentToFusionXmlMeta(doc: FusionXmlMetaDocument): FusionXmlMeta = {
+        FusionXmlMeta(
+            doc.xmlSchemaFileId, 
+            doc.originAppId
+        )
+    }
+
+}
+
+object FusionXmlMetaJsonProtocol extends DefaultJsonProtocol {
+
+    implicit val fusionXmlFormat = jsonFormat2(FusionXmlMeta.apply)
 }

@@ -2,31 +2,37 @@ package io.ogdt.fusion.external.http.entities.nested.file.acl
 
 import java.util.UUID
 
-import io.ogdt.fusion.external.http.entities.nested.file.acl.access.Rights
+import spray.json.DefaultJsonProtocol
 
-import spray.json.{DefaultJsonProtocol, JsonFormat,JsString, JsObject, JsValue, DeserializationException}
+import io.ogdt.fusion.external.http.entities.nested.file.acl.access.Rights
+import io.ogdt.fusion.external.http.entities.nested.file.acl.access.RightsJsonProtocol._
+
+import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
+
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.{GroupAccess => GroupAccessDocument}
 
 final case class GroupAccess(
     groupId: UUID,
     rights: Rights
 )
 
-
-object GroupJsonProtocol extends DefaultJsonProtocol {
-
-    implicit object GroupJsonFormat extends JsonFormat[GroupAccess] {
-       def read(value: JsValue) = {
-           value.asJsObject.getFields("groupId", "rights") match {
-               case Seq(groupId, rights) => 
-                new GroupAccess(UUID.fromString(groupId.toString()), rights)
-               case _ => throw new DeserializationException("GroupAccess expected")
-           } 
-       }
-
-        def write(g: GroupAccess) = JsObject(
-            "groupId" -> JsString(g.groupId.toString()),  
-            "rights"  -> g.rights
+object GroupAccess {
+    implicit def groupAccessToDocument(ga: GroupAccess): GroupAccessDocument = {
+        GroupAccessDocument(
+            ga.groupId,
+            ga.rights
         )
     }
 
+    implicit def documentToGroupAccess(doc: GroupAccessDocument): GroupAccess = {
+        GroupAccess(
+            doc.groupId,
+            doc.rights
+        )
+    }
+}
+
+object GroupJsonProtocol extends DefaultJsonProtocol {
+
+    implicit val groupAccessFormat = jsonFormat2(GroupAccess.apply)
 }

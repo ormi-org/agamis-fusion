@@ -1,7 +1,7 @@
 package io.ogdt.fusion.core.fs.lib
 
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 import io.ogdt.fusion.core.db.datastores.documents.FileStore
 
 import reactivemongo.api.bson.BSONObjectID
