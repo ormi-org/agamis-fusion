@@ -12,7 +12,6 @@ import reactivemongo.api.bson.{
     BSONDocumentReader,
     BSONObjectID,
     BSONString,
-    BSONValue,
     BSONReader
 }
 
@@ -33,20 +32,20 @@ object File {
 
     sealed trait FileType
     case object FILE extends FileType {
-        override def toString(): String = {
+        override def toString: String = {
             "FILE"
         }
     }
     case object DIRECTORY extends FileType {
-        override def toString(): String = {
+        override def toString: String = {
             "DIRECTORY"
         }
     }
 
     implicit object FileReader extends BSONDocumentReader[File] {
 
-        implicit object FileTypeReader extends BSONReader[FileType] {
-            override def readTry(value: BSONValue): Try[FileType] = {
+        implicit val fileTypeReader: BSONReader[FileType] = {
+            BSONReader.from[FileType] { value =>
                 value match {
                     case BSONString("FILE") => Try(FILE)
                     case BSONString("DIRECTORY") => Try(DIRECTORY)
@@ -75,7 +74,7 @@ object File {
             scala.util.Success(BSONDocument(
                 "_id" -> file.id,
                 "name" -> file.name,
-                "type" -> file.`type`.toString(),
+                "type" -> file.`type`.toString,
                 "parent" -> file.parent,
                 "chunkList" -> file.chunkList,
                 "metadata" -> file.metadata,

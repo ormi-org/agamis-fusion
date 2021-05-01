@@ -1,6 +1,6 @@
 package io.ogdt.fusion.core.db.datastores.typed
 
-import scala.reflect._
+import scala.reflect.{ClassTag, classTag}
 
 import scala.collection.mutable.Map
 import scala.collection.mutable.Buffer
@@ -54,7 +54,9 @@ abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClient
     def executeQuery(sqlQuery: SqlStoreQuery): Future[ParArray[List[_]]] = {
         var queryString: String = sqlQuery.query
         Future {
-            var query = igniteCache.query(new SqlFieldsQuery(queryString))
+            var igniteQuery = new SqlFieldsQuery(queryString)
+            if (sqlQuery.params.length > 0) igniteQuery.setArgs(sqlQuery.params:_*)
+            var query = igniteCache.query(igniteQuery)
             var scalaRes = Buffer[List[_]]()
             query.getAll().forEach(item => {
                 scalaRes.addOne(item.asScala.toList)

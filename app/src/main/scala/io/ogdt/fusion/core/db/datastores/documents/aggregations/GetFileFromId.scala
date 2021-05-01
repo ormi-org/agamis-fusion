@@ -5,7 +5,6 @@ import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.{Pipeline,
 import reactivemongo.api.bson.collection.BSONCollection
 import reactivemongo.api.bson.{
     BSONDocument,
-    BSONValue,
     BSONString,
     BSONObjectID
 }
@@ -66,16 +65,16 @@ object GetFileFromId extends PipelineWrapper {
                     "acl" -> 1,
                     "owner" -> 1,
                     "path" -> BSONDocument(
-                        "$concat" -> List[BSONValue](
+                        "$concat" -> List(
                             BSONDocument(
                                 "$reduce" -> BSONDocument(
                                     "input" -> BSONString("$ancestors"),
                                     "initialValue" -> "",
                                     "in" -> BSONDocument(
-                                        "$concat" -> List[BSONValue](
+                                        "$concat" -> List(
                                             BSONString("$$value"),
                                             BSONDocument(
-                                                "$cond" -> Array[BSONValue](
+                                                "$cond" -> Array(
                                                     BSONDocument(
                                                         "$eq" -> Array("$$value", "/")
                                                     ),

@@ -6,10 +6,13 @@ import io.ogdt.fusion.core.db.models.sql.typed.Model
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 import java.util.UUID
+import scala.concurrent.Future
+import io.ogdt.fusion.core.db.models.sql.typed.annotations.{PrePersist, PostRemove}
+import scala.concurrent.ExecutionContext
 
-class User(protected val store: UserStore) extends Model {
+class User(implicit protected val store: UserStore) extends Model {
 
-    @QuerySqlField(index = true, name = "id")
+    @QuerySqlField(index = true, name = "id", notNull = true)
     protected var _id: UUID = null
     def id: UUID = _id
     // Used to set UUID (mainly for setting uuid of existing user when fetching)
@@ -18,7 +21,7 @@ class User(protected val store: UserStore) extends Model {
         this
     }
 
-    @QuerySqlField(name = "username")
+    @QuerySqlField(name = "username", notNull = true)
     private var _username: String = null
     def username: String = _username
     def setUsername(username: String): User = {
@@ -26,7 +29,7 @@ class User(protected val store: UserStore) extends Model {
         this
     }
 
-    @QuerySqlField(name = "password")
+    @QuerySqlField(name = "password", notNull = true)
     private var _password: String = null
     def password: String = _password
     def setPassword(password: String): User = {
@@ -34,11 +37,28 @@ class User(protected val store: UserStore) extends Model {
         this
     }
 
-    def persist() = {
-        store.persistUser(this)
+    private var _relatedProfile: Profile = null
+    def relatedProfile: Profile = _relatedProfile
+    def setRelatedProfile(profile: Profile): User = {
+        _relatedProfile = profile.setRelatedUser(this)
+        this
     }
 
-    def remove() = {
-        store.removeUser(this)
+    private def persist(implicit ec: ExecutionContext): Future[Boolean] = {
+        super.persist(() => store.persistUser(this))
+    }
+
+    private def remove(implicit ec: ExecutionContext): Future[Boolean] = {
+        super.persist(() => store.removeUser(this))
+    }
+
+    @PrePersist
+    private def persistRelatedProfileModifications(implicit ec: ExecutionContext): Future[Boolean] = {
+        _relatedProfile.persist
+    }
+
+    @PostRemove
+    private def removeRelatedProfile(implicit ec: ExecutionContext): Future[Boolean] = {
+        _relatedProfile.remove
     }
 }
