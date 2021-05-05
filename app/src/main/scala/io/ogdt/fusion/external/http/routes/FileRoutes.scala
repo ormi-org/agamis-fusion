@@ -15,6 +15,18 @@ import io.ogdt.fusion.external.http.entities.FileJsonProtocol
 import java.util.UUID
 import io.ogdt.fusion.external.http.entities.File
 import reactivemongo.api.bson.BSONObjectID
+import io.ogdt.fusion.core.fs.lib.TreeManager
+
+import scala.concurrent.ExecutionContext
+import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
+import scala.util.Success
+import scala.util.Failure
+import io.ogdt.fusion.core.db.datastores.documents.FileStore
+import scala.concurrent.Await
+import akka.pattern.Patterns
+import akka.actor.Status
+import akka.http.javadsl.model.StatusCode
+import akka.http.scaladsl.model.HttpResponse
 
 class FileRoutes(buildFileRepository: ActorRef[FileRepository.Command])(implicit system: ActorSystem[_]) extends FileJsonProtocol{
 
@@ -24,9 +36,22 @@ class FileRoutes(buildFileRepository: ActorRef[FileRepository.Command])(implicit
     // asking someone requires a timeout and a scheduler, if the timeout hits without response
     // the ask is failed with a TimeoutException
     implicit val timeout = Timeout(3.seconds)
+    
+    implicit val mongoWrapper = ReactiveMongoWrapper(system)
 
     lazy val routes: Route =
     concat(
+        pathPrefix("init")(
+            concat(
+                get {
+                    entity(as[File]) { file => 
+                        val operationPerformed: Future[File] = 
+                            buildFileRepository.ask(FileRepository.AddInitFile(file,_))
+                            complete(file)
+                    }
+                }
+            )  
+        ),
         pathPrefix("files")(
             concat(
                 // get all files
@@ -39,8 +64,9 @@ class FileRoutes(buildFileRepository: ActorRef[FileRepository.Command])(implicit
                     entity(as[File]) { file =>
                         val operationPerformed: Future[FileRepository.Response] = 
                             buildFileRepository.ask(FileRepository.AddFile(file,_))
-                        onSuccess(operationPerformed) {                    
-                            case FileRepository.OK  => complete("File added")
+                            complete("OK")
+                        onSuccess(operationPerformed) {
+                            case FileRepository.OK  => complete("File added") 
                             case FileRepository.KO(reason) => complete(StatusCodes.InternalServerError -> reason)
                         }
                     }

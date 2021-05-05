@@ -22,6 +22,14 @@ object TreeManager {
     var logger: Logger = LoggerFactory.getLogger(getClass());
     // end-DEBUG
 
+    def initFileSystem(file: File)(implicit wrapper: ReactiveMongoWrapper): Future[Unit] = {
+        new FileStore()
+        .insert(file).transformWith({
+            case Success(result) => Future.successful()
+            case Failure(cause)  => Future.failed(cause)
+        })
+    }
+
     def createFile(file: File)(implicit wrapper: ReactiveMongoWrapper): Future[Boolean] = {
         file.path match {
             case Some(path: String) => {

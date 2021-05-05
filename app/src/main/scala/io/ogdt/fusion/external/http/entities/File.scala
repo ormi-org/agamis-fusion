@@ -19,7 +19,12 @@ import io.ogdt.fusion.core.db.models.documents.{File => FileDocument}
 import io.ogdt.fusion.external.http.entities.File.DIRECTORY
 import io.ogdt.fusion.external.http.entities.File.FILE
 
+import io.ogdt.fusion.external.http.entities.nested.file.acl.access.Rights
+
 import spray.json._
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.UserAccess
+import io.ogdt.fusion.external.http.entities.nested.file.metadata.FusionXmlMeta
+import java.time.Instant
 
 final case class File(
     id: Option[BSONObjectID],
@@ -51,13 +56,21 @@ object File {
 
     implicit def fileToFileDocument(f: File): FileDocument = {
         FileDocument(
-            f.id.get,
+            //f.id.get,
+            f.id match {
+                case Some(value) => value
+                case None => BSONObjectID.generate()
+            }, 
             f.name,
             f.`type` match {
                 case DIRECTORY => FileDocument.DIRECTORY
                 case FILE => FileDocument.FILE
             },
-            f.path,
+            // f.path,
+            f.path match {
+                case Some(value) => Some(value)
+                case None => Some("/")
+            },
             f.parent,
             f.chunkList,
             f.metadata,
@@ -104,51 +117,96 @@ trait FileJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     }
 
     implicit object FileJsonFormat extends RootJsonFormat[File] {
-        def write(f: File) = JsObject(
-            "id" -> JsString(f.id.getOrElse(null).stringify),
-            "name" -> JsString(f.name),
-            "type" -> JsString(
-                f.`type` match {
-                    case DIRECTORY => "DIRECTORY"
-                    case FILE => "FILE"
-                }
-            ),
-            "path" -> JsString(f.path.getOrElse(null)),
-            "parent" -> JsString(f.parent.getOrElse(null).stringify),
-            "chunkList" -> JsArray(f.chunkList.getOrElse(null).map(chunkId => JsString(chunkId.toString()))),
-            "metadata" -> f.metadata.toJson,
-            "versioned" -> JsBoolean(f.versioned.get),
-            "acl" -> f.acl.toJson,
-            "owner" -> JsString(f.owner.toString()),
-        )
+        def write(f: File) = {
+            var values: List[JsField] = List()
+            f.id match {
+                case Some(id) => values :+= ("id" -> JsString(id.stringify))
+                case None => 
+            }
+            values :+= ("name" -> JsString(f.name))
+            f.`type` match {
+                case DIRECTORY => values :+= ("type" -> JsString("DIRECTORY"))
+                case FILE => values :+= ("type" -> JsString("FILE"))
+            }
+            f.path match {
+                case Some(path) => values :+= ("path" -> JsString(path))
+                case None =>
+            }
+            f.parent match {
+                case Some(parentId) => values :+= ("parent" -> JsString(parentId.stringify))
+                case None =>
+            }
+            f.chunkList match {
+                case Some(chunkList) => values :+= ("chunkList" -> JsArray(chunkList.map(chunkId => JsString(chunkId.toString()))))
+                case None =>
+            }
+            values :+= ("metadata" -> f.metadata.toJson)
+            f.versioned match {
+                case Some(versioned) => values :+= ("versioned" -> JsBoolean(versioned))
+                case None =>
+            }
+            values :+= ("acl" -> f.acl.toJson)
+            values :+= ("owner" -> JsString(f.owner.toString()))
+            JsObject(values:_*)
+        }
+        
         def read(json: JsValue): File = {
             val jsFileObject: JsObject = json.asJsObject
-
-            jsFileObject.getFields("name", "type", "metadata", "versionned", "acl", "owner") match {
+            jsFileObject.getFields("name", "type", "metadata", "acl", "owner") match {
                 case Seq(
-                    JsString(name),
-                    JsString(fileType),
-                    metadata,
-                    JsBoolean(versioned),
-                    acl,
-                    JsString(owner)
-                ) => new File(
-                    Some(BSONObjectID.parse(jsFileObject.fields.get("id").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
                     name,
-                    fileType match {
-                        case "DIRECTORY" => DIRECTORY
-                        case "FILE" => FILE
-                    },
-                    jsFileObject.fields.get("path").map(_.convertTo[String]),
-                    Some(BSONObjectID.parse(jsFileObject.fields.get("parent").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
-                    Some(jsFileObject.fields.get("chunkList").map(_.convertTo[JsArray]).toList.map(
-                        chunkId => UUID.fromString(chunkId.toString())
-                    )),
-                    metadata.convertTo[Metadata],
-                    Some(versioned),
-                    acl.convertTo[Acl], 
-                    UUID.fromString(owner.toString())
-                )
+                    fileType,
+                    metadata,
+                    acl,
+                    owner
+                ) => {
+                    // new File(
+                    //     Some(BSONObjectID.parse(jsFileObject.fields.get("id").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
+                    //     name.convertTo[String],
+                    //     fileType.convertTo[String] match {
+                    //         case "DIRECTORY" => DIRECTORY
+                    //         case "FILE" => FILE
+                    //     },
+                    //     jsFileObject.fields.get("path").map(_.convertTo[String]),
+                    //     Some(BSONObjectID.parse(jsFileObject.fields.get("parent").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
+                    //     Some(jsFileObject.fields.get("chunkList").map(_.convertTo[String]).toList.map(
+                    //         chunkId => UUID.fromString(chunkId)
+                    //     )),
+                    //     metadata.convertTo[Metadata],
+                    //     Some(versioned.convertTo[Boolean]),
+                    //     acl.convertTo[Acl],
+                    //     UUID.fromString(owner.convertTo[String])
+                    // )
+                    new File(
+                        jsFileObject.fields.get("id").map(_.convertTo[String]) match {
+                            case Some(id) => BSONObjectID.parse(id).getOrElse(null) match {
+                                case objectId: BSONObjectID => Some(objectId)
+                                case _ => None
+                            }
+                            case None => None
+                        },
+                        name.convertTo[String],
+                        fileType.convertTo[String] match {
+                            case "DIRECTORY" => DIRECTORY
+                            case "FILE" => FILE
+                        },
+                        jsFileObject.fields.get("path").map(_.convertTo[String]),
+                        jsFileObject.fields.get("parent").map(_.convertTo[String]) match {
+                            case Some(parent) => BSONObjectID.parse(parent).getOrElse(null) match {
+                                case objectId: BSONObjectID => Some(objectId)
+                                case _ => None
+                            }
+                            case None => None
+                        },
+                        Some(jsFileObject.fields.get("chunkList").map(_.convertTo[String]).toList.map(
+                            chunkId => UUID.fromString(chunkId)
+                        )),
+                        metadata.convertTo[Metadata],
+                        jsFileObject.fields.get("versioned").map(_.convertTo[Boolean]),
+                        acl.convertTo[Acl],
+                        UUID.fromString(owner.convertTo[String])
+                    )
+                }
                 case other => throw new DeserializationException("Cannot deserialize File: File expected but got invalid input. Raw input: " + other)
             }
         }

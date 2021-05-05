@@ -12,6 +12,7 @@ import io.ogdt.fusion.external.http.entities.nested.file.metadata.FusionXmlMetaJ
 import io.ogdt.fusion.external.http.entities.common.JsonFormatters.InstantFormat
 
 import io.ogdt.fusion.core.db.models.documents.nested.file.{Metadata => MetadataDocument}
+import io.ogdt.fusion.core.db.models.documents.nested.file.metadata.{FusionXmlMeta => FusionXmlMetaDocument}
 
 
 final case class Metadata(
@@ -36,7 +37,10 @@ object Metadata {
             m.lastModificationDate,
             m.chainsCount,
             m.versionsCount,
-            Some(m.fusionXML.getOrElse(null)),
+            m.fusionXML.getOrElse(null) match {
+                case meta: FusionXmlMeta => Some(meta.copy())
+                case null => None
+            },
             m.hidden,
             m.readonly
         )
@@ -50,7 +54,10 @@ object Metadata {
             doc.lastModificationDate,
             doc.chainsCount,
             doc.versionsCount,
-            Some(doc.fusionXML.getOrElse(null)),
+            doc.fusionXML.getOrElse(null) match {
+                case meta: FusionXmlMetaDocument => Some(meta.copy())
+                case null => None
+            },
             doc.hidden,
             doc.readonly
         )
