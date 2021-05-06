@@ -7,8 +7,8 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 import java.util.UUID
 import scala.concurrent.Future
-import io.ogdt.fusion.core.db.models.sql.typed.annotations.{PrePersist, PostRemove}
 import scala.concurrent.ExecutionContext
+import java.sql.Timestamp
 
 class User(implicit protected val store: UserStore) extends Model {
 
@@ -37,28 +37,23 @@ class User(implicit protected val store: UserStore) extends Model {
         this
     }
 
-    private var _relatedProfile: Profile = null
-    def relatedProfile: Profile = _relatedProfile
-    def setRelatedProfile(profile: Profile): User = {
-        _relatedProfile = profile.setRelatedUser(this)
+    private var _relatedProfiles: List[Profile] = List()
+    def relatedProfiles: List[Profile] = _relatedProfiles
+    def addRelatedProfile(profile: Profile): User = {
+        _relatedProfiles ::= profile
+        profile.setRelatedUser(this)
+        this
+    }
+    def deleteRelatedProfile(profile: Profile): User = {
+        _relatedProfiles = _relatedProfiles.filter(p => p.id != profile.id)
         this
     }
 
-    private def persist(implicit ec: ExecutionContext): Future[Boolean] = {
-        super.persist(() => store.persistUser(this))
+    def persist(implicit ec: ExecutionContext): Future[Unit] = {
+        store.persistUser(this)
     }
 
-    private def remove(implicit ec: ExecutionContext): Future[Boolean] = {
-        super.persist(() => store.removeUser(this))
-    }
-
-    @PrePersist
-    private def persistRelatedProfileModifications(implicit ec: ExecutionContext): Future[Boolean] = {
-        _relatedProfile.persist
-    }
-
-    @PostRemove
-    private def removeRelatedProfile(implicit ec: ExecutionContext): Future[Boolean] = {
-        _relatedProfile.remove
+    def remove(implicit ec: ExecutionContext): Future[Unit] = {
+        store.deleteUser(this)
     }
 }

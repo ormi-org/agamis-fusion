@@ -1,4 +1,4 @@
-package io.ogdt.fusion.core.db.datastores.models.documents
+package io.ogdt.fusion.core.db.models.documents
 
 import io.ogdt.fusion.core.db.models.documents.nested.file.{Metadata, Acl}
 

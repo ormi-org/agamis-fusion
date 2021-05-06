@@ -6,7 +6,8 @@ import scala.util.Success
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import io.ogdt.fusion.core.db.datastores.typed.SqlStore
-import io.ogdt.fusion.core.db.models.sql.typed.annotations.{PrePersist, PostPersist, PreRemove, PostRemove}
+import java.sql.Timestamp
+import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 trait Model {
 
@@ -20,76 +21,23 @@ trait Model {
         }
     }
 
-    protected def persist(method: () => Future[Boolean])(implicit ec: ExecutionContext): Future[Boolean] = {
-        // prePersist.transformWith({
-        //     case Success(preResult) =>
-        //         if (preResult) return Future.successful(true)
-        //         return Future.failed(new Error("Persist pre-method failed")) // TODO : replace with custom Exception
-        //     case Failure(cause) => Future.failed(cause)
-        // })
-        Future.sequence(List(
-            PrePersist.executeAnnotatedMethods(this),
-            method().transformWith({
-                case Success(result) =>
-                    if (result) return Future.successful(true)
-                    return Future.failed(new Error("Persist core method failed")) // TODO : replace with custom Exception
-                case Failure(cause) => Future.failed(cause)
-            }),
-            PostPersist.executeAnnotatedMethods(this)
-        )).transformWith({
-            case Success(results) => Future.successful(true)
-            case Failure(cause) => Future.failed(cause)
-        })
-        // PostPersist.executeAnnotatedMethods(this)
-        // postPersist.transformWith({
-        //     case Success(postResult) => 
-        //         if (postResult) return Future.successful(true)
-        //         return Future.failed(new Error("Persist post-method failed")) // TODO : replace with custom Exception
-        //     case Failure(cause) => Future.failed(cause)
-        // })
+    @QuerySqlField(name = "created_at", notNull = true)
+    protected var _createdAt: Timestamp = null
+    def createdAt: Timestamp = _createdAt
+    def setCreatedAt(createdAt: Timestamp): this.type = {
+        _createdAt = createdAt
+        this
     }
 
-    protected def remove(method: () => Future[Boolean])(implicit ec: ExecutionContext): Future[Boolean] = {
-        // preRemove.transformWith({
-        //     case Success(preResult) =>
-        //         if (preResult) return Future.successful(true)
-        //         return Future.failed(new Error("Remove core method failed")) // TODO : replace with custom Exception
-        //     case Failure(cause) => Future.failed(cause)
-        // })
-        Future.sequence(List(
-            PreRemove.executeAnnotatedMethods(this),
-            method().transformWith({
-                case Success(result) =>
-                    if (result) return Future.successful(true)
-                    return Future.failed(new Error("Remove core method failed")) // TODO : replace with custom Exception
-                case Failure(cause) => Future.failed(cause)
-            }),
-            PostRemove.executeAnnotatedMethods(this)
-        )).transformWith({
-            case Success(results) => Future.successful(true)
-            case Failure(cause) => Future.failed(cause)
-        })
-        // postRemove.transformWith({
-        //     case Success(postResult) => 
-        //         if (postResult) return Future.successful(true)
-        //         return Future.failed(new Error("Remove post-method failed")) // TODO : replace with custom Exception
-        //     case Failure(cause) => Future.failed(cause)
-        // })
+    @QuerySqlField(name = "updated_at", notNull = true)
+    protected var _updatedAt: Timestamp = null
+    def updatedAt: Timestamp = _updatedAt
+    def setUpdatedAt(updatedAt: Timestamp): this.type = {
+        _updatedAt = updatedAt
+        this
     }
 
-    // def prePersist: Future[Boolean] = {
-    //     Future.successful(true)
-    // }
+    protected def persist(implicit ec: ExecutionContext): Future[Unit]
 
-    // def postPersist: Future[Boolean] = {
-    //     Future.successful(true)
-    // }
-
-    // def preRemove: Future[Boolean] = {
-    //     Future.successful(true)
-    // }
-
-    // def postRemove: Future[Boolean] = {
-    //     Future.successful(true)
-    // }
+    protected def remove(implicit ec: ExecutionContext): Future[Unit]
 }

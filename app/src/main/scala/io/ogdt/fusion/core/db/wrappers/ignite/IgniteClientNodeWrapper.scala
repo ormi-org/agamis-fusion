@@ -76,7 +76,6 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     }
 
     def cacheExists(cache: String): Boolean = {
-        getLogger().info(ignite.cacheNames().toString())
         ignite.cacheNames().contains(cache)
     }
 }

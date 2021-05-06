@@ -5,11 +5,11 @@ import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 
 import io.ogdt.fusion.core.db.datastores.documents.FileStore
 import io.ogdt.fusion.core.db.datastores.caches.CachedFileStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 
 import scala.util.Success
 import scala.util.Failure
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -18,7 +18,7 @@ object TreeManager {
 
     /** A method for creating a new file in the '''File Tree'''
       * 
-      * [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is created and added to cache for further faster retrieval
+      * [[io.ogdt.fusion.core.db.models.documents.File File]] is created and added to cache for further faster retrieval
       * @note This method is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[scala.Boolean Boolean]]
       * 
       * @example 
@@ -64,7 +64,7 @@ object TreeManager {
 
     /** A method for getting an existing file in the '''File Tree''' by its '''id'''
       *
-      * [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is retrieved from the provided id and stored to cache for further faster retrieval
+      * [[io.ogdt.fusion.core.db.models.documents.File File]] is retrieved from the provided id and stored to cache for further faster retrieval
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * @note id '''must''' be a valid BSONObjectId String
       * 
@@ -113,7 +113,7 @@ object TreeManager {
 
     /** A method for getting an existing file in the '''File Tree''' by its '''path''' (e.g.: /root/directory/file.extension)
       * 
-      * [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is retrieved from the provided path
+      * [[io.ogdt.fusion.core.db.models.documents.File File]] is retrieved from the provided path
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 
@@ -142,7 +142,7 @@ object TreeManager {
 
     /** A method for getting several existing files in the '''File Tree''' by their '''id'''
       * 
-      * [[scala.List List]] of [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is retrieved from the provided ids, then each file are stored into cache for further retrieval
+      * [[scala.List List]] of [[io.ogdt.fusion.core.db.models.documents.File File]] is retrieved from the provided ids, then each file are stored into cache for further retrieval
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * @note ids '''must''' be valid BSONObjectId String
       * 
@@ -188,7 +188,7 @@ object TreeManager {
 
     /** A method for getting several existing children files in the '''File Tree''' by their '''parent''' aka "dir"
       * 
-      * [[scala.List List]] of children [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is retrieved from the provided parent
+      * [[scala.List List]] of children [[io.ogdt.fusion.core.db.models.documents.File File]] is retrieved from the provided parent
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 
@@ -217,7 +217,7 @@ object TreeManager {
 
     /** A method for getting parent file in the '''File Tree''' by one of its '''child''' aka "file"
       * 
-      * parent [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is retrieved from the provided child
+      * parent [[io.ogdt.fusion.core.db.models.documents.File File]] is retrieved from the provided child
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 
@@ -247,7 +247,7 @@ object TreeManager {
     
     /** A method for updating a file in the '''File Tree'''
       * 
-      * [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is updated using the internal Id, then file is stored/updated into cache for further retrieval
+      * [[io.ogdt.fusion.core.db.models.documents.File File]] is updated using the internal Id, then file is stored/updated into cache for further retrieval
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 
@@ -288,7 +288,7 @@ object TreeManager {
 
     /** A method for deleting a file in the '''File Tree'''
       * 
-      * [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
+      * [[io.ogdt.fusion.core.db.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 
@@ -344,7 +344,7 @@ object TreeManager {
 
     /** A method for deleting many files in the '''File Tree'''
       * 
-      * @note [[io.ogdt.fusion.core.db.datastores.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
+      * @note [[io.ogdt.fusion.core.db.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
       * @note This method is Async and returns a [[scala.concurrent.Future Future]]
       * 
       * @example 

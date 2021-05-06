@@ -12,6 +12,9 @@ object FusionApp {
     
     def main(args: Array[String]): Unit = {
         val system = ActorSystem[FusionFS.Command](FusionFS(), "fusion-system")
+        if (args.contains("--init")) {
+            // init db
+        }
         // val fusionfs: ActorRef[FusionFS.Command] = system
 
         // fusionfs ! FusionFS.GracefulShutdown

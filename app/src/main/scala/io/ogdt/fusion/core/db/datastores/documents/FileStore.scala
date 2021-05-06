@@ -12,7 +12,7 @@ import reactivemongo.api.commands.WriteResult
 
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.{
