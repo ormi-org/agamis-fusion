@@ -13,16 +13,7 @@ import scala.util.Success
 import scala.util.Failure
 import akka.protobufv3.internal.compiler.PluginProtos.CodeGeneratorResponse.File
 
-class Organization(implicit protected val store: OrganizationStore) extends Model with Serializable {
-
-    @QuerySqlField(index = true, name = "id", notNull = true)
-    protected var _id: UUID = null
-    def id: UUID = _id
-    // Used to set UUID (mainly for setting uuid of existing user when fetching)
-    def setId(id: String): Organization = {
-        _id = UUID.fromString(id)
-        this
-    }
+class Organization(implicit @transient protected val store: OrganizationStore) extends Model {
 
     @QuerySqlField(name = "label", notNull = true)
     private var _label: String = null
@@ -32,11 +23,15 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
         this
     }
 
-    @QuerySqlField(name = "type", notNull = true)
-    private var _type: String = null
-    def `type`: String = _type
-    def setType(`type`: String): Organization = {
-        _type = `type`
+    @QuerySqlField(name = "organizationtype_id", notNull = true)
+    private var _organizationtypeId: UUID = null
+
+    @transient
+    private var _type: Option[OrganizationType] = None
+    def `type`: Option[OrganizationType] = _type
+    def setType(`type`: OrganizationType): Organization = {
+        _type = Some(`type`)
+        _organizationtypeId = `type`.id
         this
     }
 
@@ -52,6 +47,7 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
         this
     }
 
+    @transient
     private var _relatedProfiles: List[Profile] = List()
     def relatedProfiles: List[Profile] = _relatedProfiles
     def addRelatedProfile(profile: Profile): Organization = {
@@ -59,11 +55,12 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
         profile.setRelatedOrganization(this)
         this
     }
-    def deleteRelatedProfile(profile: Profile): Organization = {
+    def removeRelatedProfile(profile: Profile): Organization = {
         _relatedProfiles = _relatedProfiles.filter(p => p.id != profile.id)
         this
     }
 
+    // @transient
     // private var _relatedGroups: List[Group] = List()
     // def relatedGroups: List[Group] = _relatedGroups
     // def addRelatedGroup(group: Group): Organization = {
@@ -71,11 +68,12 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
     //     group.setRelatedOrganization(this)
     //     this
     // }
-    // def deleteRelatedGroup(group: Group): Organization = {
+    // def removeRelatedGroup(group: Group): Organization = {
     //     _relatedGroups = _relatedGroups.filter(g => g.id != group.id)
     //     this
     // }
 
+    @transient
     private var _defaultFileSystem: FileSystem = null
     def defaultFileSystem: FileSystem = _defaultFileSystem
     def setDefaultFileSystem(fileSystem: FileSystem): Future[Organization] = {
@@ -89,6 +87,7 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
         }
     }
 
+    @transient
     private var _fileSystems: List[FileSystem] = List()
     def fileSystems: List[FileSystem] = _fileSystems
     def addFileSystem(fileSystem: FileSystem): Organization = {
@@ -105,10 +104,11 @@ class Organization(implicit protected val store: OrganizationStore) extends Mode
                 _fileSystems = _fileSystems.filter(f => f.id != fileSystem.id)
                 Future.successful(this)
             }
-            case Failure(cause) => Future.failed(cause)
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
+    // @transient
     // private var _applications: List[Application] = List()
     // def applications: List[Application] = _applications
     // def addApplication(application: Application): Organization = {

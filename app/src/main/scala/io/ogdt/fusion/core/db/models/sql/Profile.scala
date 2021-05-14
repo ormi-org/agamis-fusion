@@ -10,21 +10,26 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import java.time.Instant
 
-class Profile(implicit protected val store: ProfileStore) extends Model {
-
-    // setCreatedAt(Timestamp.from(Instant.now()))
-
-    @QuerySqlField(index = true, name = "id", notNull = true)
-    protected var _id: UUID = null
-    def id: UUID = _id
-    def setId(id: String): Profile = {
-        _id = UUID.fromString(id)
-        this
-    }
+/** A class that reflects the state of the profile entity in the database
+  * 
+  * @param store an implicit parameter for accessing store methods
+  */
+class Profile(implicit @transient protected val store: ProfileStore) extends Model {
 
     @QuerySqlField(name = "lastname", notNull = true)
     private var _lastname: String = null
+
+    /** Profile lastname property
+      *
+      * @return profile lastname [[java.lang.String String]]
+      */
     def lastname: String = _lastname
+
+    /** A method for setting lastname property
+      *
+      * @param lastname a [[java.lang.String String]] to assign to profile lastname property
+      * @return this object
+      */
     def setLastname(lastname: String): Profile = {
         _lastname = lastname
         this
@@ -32,7 +37,18 @@ class Profile(implicit protected val store: ProfileStore) extends Model {
 
     @QuerySqlField(name = "firstname", notNull = true)
     private var _firstname: String = null
+
+    /** Profile firstname property
+      *
+      * @return profile firstname [[java.lang.String String]]
+      */
     def firstname: String = _firstname
+
+    /** A method for setting firstname property
+      *
+      * @param firstname a [[java.lang.String String]] to assign to profile firstname property
+      * @return this object
+      */
     def setFirstname(firstname: String): Profile = {
         _firstname = firstname
         this
@@ -40,7 +56,18 @@ class Profile(implicit protected val store: ProfileStore) extends Model {
 
     @QuerySqlField(name = "last_login", notNull = false)
     private var _lastLogin: Timestamp = null
+
+    /** Profile property that reflects datetime of the last time user logged in with this profile
+      *
+      * @return creation date [[java.sql.Timestamp Timestamp]]
+      */
     def lastLogin: Timestamp = _lastLogin
+
+    /** A method for setting lastLogin property
+      * 
+      * @param lastLogin a [[java.sql.Timestamp Timestamp]] to assign to entity lastLogin property
+      * @return
+      */
     def setLastLogin(lastLogin: Timestamp): Profile = {
         _lastLogin = lastLogin
         this
@@ -48,11 +75,26 @@ class Profile(implicit protected val store: ProfileStore) extends Model {
 
     @QuerySqlField(name = "is_active", notNull = true)
     private var _isActive: Boolean = false
+
+    /** Profile property that reflects current whether active or inactive state
+      *
+      * @return isActive [[scala.Boolean Boolean]] state
+      */
     def isActive: Boolean = _isActive
+
+    /** A method for setting isActive property to true
+      *
+      * @return this object
+      */
     def setActive: Profile = {
         _isActive = true
         this
     }
+
+    /** A method for setting isActive property to false
+      *
+      * @return this object
+      */
     def setInactive: Profile = {
         _isActive = false
         this
@@ -61,8 +103,22 @@ class Profile(implicit protected val store: ProfileStore) extends Model {
     @QuerySqlField(name = "user_id", notNull = true)
     private var _userId: UUID = null
 
+    @transient
     private var _relatedUser: Option[User] = None
+
+    /** Profile property that reflects the user to which this profile is related
+      *
+      * @return related [[io.ogdt.fusion.core.db.models.sql.User User]]
+      */
     def relatedUser: Option[User] = _relatedUser
+
+    /** A method for setting profile/user relation
+      * 
+      * This method automatically set userId foreign key
+      * 
+      * @param user a [[io.ogdt.fusion.core.db.models.sql.User User]] to assign to this relation
+      * @return this object
+      */
     def setRelatedUser(user: User): Profile = {
         _relatedUser = Some(user)
         _userId = user.id
@@ -72,19 +128,35 @@ class Profile(implicit protected val store: ProfileStore) extends Model {
     @QuerySqlField(name = "organization_id", notNull = true)
     private var _organizationId: UUID = null
 
+    @transient
     private var _relatedOrganization: Option[Organization] = None
+
+    /** Profile property that reflects the organization to which this profile is related
+      *
+      * @return related [[io.ogdt.fusion.core.db.models.sql.Organization Organization]]
+      */
     def relatedOrganization: Option[Organization] = _relatedOrganization
+
+    /** A method for setting profile/organization relation
+      * 
+      * This method automatically set organizationId foreign key
+      * 
+      * @param user a [[io.ogdt.fusion.core.db.models.sql.Organization Organization]] to assign to this relation
+      * @return this object
+      */
     def setRelatedOrganization(organization: Organization): Profile = {
         _relatedOrganization = Some(organization)
         _organizationId = organization.id
         this
     }
 
+    /** @inheritdoc */
     def persist(implicit ec: ExecutionContext): Future[Unit] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
         store.persistProfile(this)
     }
 
+    /** @inheritdoc */
     def remove(implicit ec: ExecutionContext): Future[Unit] = {
         store.deleteProfile(this)
     }

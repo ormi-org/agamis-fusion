@@ -9,17 +9,9 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import java.sql.Timestamp
+import java.beans.Transient
 
-class User(implicit protected val store: UserStore) extends Model {
-
-    @QuerySqlField(index = true, name = "id", notNull = true)
-    protected var _id: UUID = null
-    def id: UUID = _id
-    // Used to set UUID (mainly for setting uuid of existing user when fetching)
-    def setId(id: String): User = {
-        _id = UUID.fromString(id)
-        this
-    }
+class User(implicit @transient protected val store: UserStore) extends Model {
 
     @QuerySqlField(name = "username", notNull = true)
     private var _username: String = null
@@ -37,15 +29,15 @@ class User(implicit protected val store: UserStore) extends Model {
         this
     }
 
+    @transient
     private var _relatedProfiles: List[Profile] = List()
     def relatedProfiles: List[Profile] = _relatedProfiles
     def addRelatedProfile(profile: Profile): User = {
         _relatedProfiles ::= profile
-        profile.setRelatedUser(this)
         this
     }
-    def deleteRelatedProfile(profile: Profile): User = {
-        _relatedProfiles = _relatedProfiles.filter(p => p.id != profile.id)
+    def removeRelatedProfile(profile: Profile): User = {
+        _relatedProfiles = _relatedProfiles.filterNot(p => p.id == profile.id)
         this
     }
 

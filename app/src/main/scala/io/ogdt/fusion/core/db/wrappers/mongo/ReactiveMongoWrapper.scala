@@ -18,9 +18,9 @@ import reactivemongo.api.bson.collection.BSONCollection
 
 class ReactiveMongoWrapper(system: ActorSystem[_]) extends Extension {
 
-    var mongoUri: String = null
+    implicit val ec: ExecutionContext = system.executionContext
 
-    import ExecutionContext.Implicits.global
+    var mongoUri: String = null
 
     try {
         mongoUri = EnvContainer.getString("fusion.core.db.mongo.uri")
