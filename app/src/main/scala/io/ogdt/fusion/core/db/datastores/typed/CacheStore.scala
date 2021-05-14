@@ -20,7 +20,7 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
     protected var igniteCache: IgniteCache[K, M]
 
     protected def init() = {
-        if(wrapper.cacheExists(cache)) {
+        if (wrapper.cacheExists(cache)) {
             igniteCache = wrapper.getCache[K, M](cache)
         }
     }

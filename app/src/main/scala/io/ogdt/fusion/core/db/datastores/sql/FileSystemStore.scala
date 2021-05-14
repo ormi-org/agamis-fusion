@@ -159,7 +159,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                         ) flatMap { fileSystem =>
                             entityReflection._2(0)(3) match {
                                 case shared: Boolean => {
-                                    if(shared) Right(fileSystem.setShared)
+                                    if (shared) Right(fileSystem.setShared)
                                     else Right(fileSystem.setUnshared)
                                 }
                                 case _ => Right(fileSystem)
@@ -186,7 +186,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                     ) flatMap { organization =>
                                         row(9) match {
                                             case queryable: Boolean => {
-                                                if(queryable) Right(organization.setQueryable)
+                                                if (queryable) Right(organization.setQueryable)
                                                 else Right(organization.setUnqueryable)
                                             }
                                             case _ => Right(organization)

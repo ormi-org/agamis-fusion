@@ -174,7 +174,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                         ) flatMap { profile =>
                             entityReflection._2(0)(4) match {
                                 case active: Boolean => {
-                                    if(active) Right(profile.setActive)
+                                    if (active) Right(profile.setActive)
                                     else Right(profile.setInactive)
                                 }
                                 case _ => Right(profile)

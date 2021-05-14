@@ -166,7 +166,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                                     ) flatMap { profile =>
                                         row(9) match {
                                             case isActive: Boolean => {
-                                                if(isActive) Right(profile.setActive)
+                                                if (isActive) Right(profile.setActive)
                                                 else Right(profile.setInactive)
                                             }
                                             case _ => Right(profile)

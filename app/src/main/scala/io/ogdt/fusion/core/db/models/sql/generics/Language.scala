@@ -5,13 +5,10 @@ import java.util.UUID
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 import io.ogdt.fusion.core.db.models.sql.exceptions.MalformedLocalLanguageCodeException
-import io.ogdt.fusion.core.db.datastores.sql.generics.LanguageStore
+import org.apache.commons.codec.language.bm.Lang
 
-/** A class that reflects the state of the language entity in the database
-  *
-  * @param store an implicit parameter for accessing store methods
-  */
-class Language(implicit @transient protected val store: LanguageStore) {
+/** A class that reflects the state of the language entity in the database */
+class Language {
 
     @transient
     private val locLangCodeReg: String = "[a-z]{2}(-[A-Z]{2,3})?"
@@ -30,8 +27,8 @@ class Language(implicit @transient protected val store: LanguageStore) {
       * @param id a [[java.util.UUID UUID]] to assign to language unique id property
       * @return this object
       */
-    def setId(id: UUID): Language = {
-        _id = id
+    def setId(id: String): Language = {
+        _id = UUID.fromString(id)
         this
     }
 
@@ -79,5 +76,11 @@ class Language(implicit @transient protected val store: LanguageStore) {
     def setLabel(label: String): Language = {
         _label = label
         this
+    }
+}
+
+object Language {
+    def apply: Language = {
+        new Language()
     }
 }

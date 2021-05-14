@@ -123,9 +123,9 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                 val bulkDeleteResult = Future.sequence(deletes).flatMap{ ops => deleteBuilder.many(ops) }
                 bulkDeleteResult.transformWith({
                     case Success(result) => {
-                        if(result.ok) {
+                        if (result.ok) {
                             Future.successful(result.n)
-                        }else{
+                        } else {
                             throw new Exception(result.errmsg.get)
                         }
                     } 
