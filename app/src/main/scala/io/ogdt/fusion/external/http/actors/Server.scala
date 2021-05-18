@@ -10,7 +10,7 @@ import akka.actor.typed.scaladsl.Behaviors
 
 import scala.concurrent.Future
 
-import io.ogdt.fusion.external.http.routes.{FileRoutes, UserRoutes, GroupRoutes, ProfileRoutes}
+import io.ogdt.fusion.external.http.routes.{FileRoutes, UserRoutes, GroupRoutes, ProfileRoutes, FileSystemRoutes}
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -27,6 +27,9 @@ object Server {
     def apply(host: String, port: Int): Behavior[Message] = Behaviors.setup { ctx =>
 
     implicit val system = ctx.system
+
+    val buildFileSystemRepository = ctx.spawn(FileSystemRepository(), "FileSystemRepository")
+    val fileSystemRoutes = new FileSystemRoutes(buildFileSystemRepository)
 
     val buildFileRepository = ctx.spawn(FileRepository(), "FileRepository")
     val fileRoutes = new FileRoutes(buildFileRepository)
@@ -48,7 +51,10 @@ object Server {
                         concat(
                             pathPrefix("fs")(
                                 concat(
-                                    fileRoutes.routes,
+                                    fileSystemRoutes.routes,
+                                    concat(
+                                        fileRoutes.routes,
+                                    )
                                 )
                             ),
                             userRoutes.routes,

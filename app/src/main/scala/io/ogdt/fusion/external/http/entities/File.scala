@@ -1,30 +1,30 @@
 package io.ogdt.fusion.external.http.entities
 
 import reactivemongo.api.bson.BSONObjectID
+
 import java.util.UUID
+import java.time.Instant
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
-import io.ogdt.fusion.external.http.entities.nested.file.{Metadata, Acl}
-
-import io.ogdt.fusion.external.http.entities.nested.file.MetadataJsonProtocol._
-import io.ogdt.fusion.external.http.entities.nested.file.AclJsonProtocol._
-
-import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
-
+import spray.json._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, DeserializationException, JsValue, JsString}
 
 import io.ogdt.fusion.core.db.models.documents.{File => FileDocument}
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.UserAccess
 
 import io.ogdt.fusion.external.http.entities.File.DIRECTORY
 import io.ogdt.fusion.external.http.entities.File.FILE
 
-import io.ogdt.fusion.external.http.entities.nested.file.acl.access.Rights
+import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
 
-import spray.json._
-import io.ogdt.fusion.core.db.models.documents.nested.file.acl.UserAccess
+import io.ogdt.fusion.external.http.entities.nested.file.{Metadata, Acl}
+import io.ogdt.fusion.external.http.entities.nested.file.MetadataJsonProtocol._
 import io.ogdt.fusion.external.http.entities.nested.file.metadata.FusionXmlMeta
-import java.time.Instant
+import io.ogdt.fusion.external.http.entities.nested.file.AclJsonProtocol._
+import io.ogdt.fusion.external.http.entities.nested.file.acl.access.Rights
+import scala.util.{Success, Failure}
+
 
 final case class File(
     id: Option[BSONObjectID],
@@ -56,7 +56,7 @@ object File {
 
     implicit def fileToFileDocument(f: File): FileDocument = {
         FileDocument(
-            //f.id.get,
+            // f.id.get,
             f.id match {
                 case Some(value) => value
                 case None => BSONObjectID.generate()
@@ -67,10 +67,7 @@ object File {
                 case FILE => FileDocument.FILE
             },
             // f.path,
-            f.path match {
-                case Some(value) => Some(value)
-                case None => Some("/")
-            },
+            f.path,
             f.parent,
             f.chunkList,
             f.metadata,
@@ -121,7 +118,7 @@ trait FileJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
             var values: List[JsField] = List()
             f.id match {
                 case Some(id) => values :+= ("id" -> JsString(id.stringify))
-                case None => 
+                case None => BSONObjectID.generate()
             }
             values :+= ("name" -> JsString(f.name))
             f.`type` match {
@@ -130,7 +127,7 @@ trait FileJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
             }
             f.path match {
                 case Some(path) => values :+= ("path" -> JsString(path))
-                case None =>
+                case None => 
             }
             f.parent match {
                 case Some(parentId) => values :+= ("parent" -> JsString(parentId.stringify))
@@ -160,41 +157,27 @@ trait FileJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
                     acl,
                     owner
                 ) => {
-                    // new File(
-                    //     Some(BSONObjectID.parse(jsFileObject.fields.get("id").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
-                    //     name.convertTo[String],
-                    //     fileType.convertTo[String] match {
-                    //         case "DIRECTORY" => DIRECTORY
-                    //         case "FILE" => FILE
-                    //     },
-                    //     jsFileObject.fields.get("path").map(_.convertTo[String]),
-                    //     Some(BSONObjectID.parse(jsFileObject.fields.get("parent").map(_.convertTo[String]).getOrElse(null)).getOrElse(null)),
-                    //     Some(jsFileObject.fields.get("chunkList").map(_.convertTo[String]).toList.map(
-                    //         chunkId => UUID.fromString(chunkId)
-                    //     )),
-                    //     metadata.convertTo[Metadata],
-                    //     Some(versioned.convertTo[Boolean]),
-                    //     acl.convertTo[Acl],
-                    //     UUID.fromString(owner.convertTo[String])
-                    // )
                     new File(
                         jsFileObject.fields.get("id").map(_.convertTo[String]) match {
-                            case Some(id) => BSONObjectID.parse(id).getOrElse(null) match {
-                                case objectId: BSONObjectID => Some(objectId)
-                                case _ => None
+                            case Some(id) => BSONObjectID.parse(id) match {
+                                case Success(value) => Some(value)
+                                case Failure(cause) => throw new Exception("bla bla bla", cause) // TODO : changer pour une custom
                             }
-                            case None => None
+                            case None => Some(BSONObjectID.generate())
                         },
                         name.convertTo[String],
                         fileType.convertTo[String] match {
                             case "DIRECTORY" => DIRECTORY
                             case "FILE" => FILE
                         },
-                        jsFileObject.fields.get("path").map(_.convertTo[String]),
+                        jsFileObject.fields.get("path").map(_.convertTo[String]) match {
+                            case Some(value) => Some(value)
+                            case None => Some("/")
+                        },
                         jsFileObject.fields.get("parent").map(_.convertTo[String]) match {
-                            case Some(parent) => BSONObjectID.parse(parent).getOrElse(null) match {
-                                case objectId: BSONObjectID => Some(objectId)
-                                case _ => None
+                            case Some(parent) => BSONObjectID.parse(parent) match {
+                                case Success(value) => Some(value)
+                                case Failure(cause) => throw new Exception("bla bla bla", cause) // TODO : changer pour une custom
                             }
                             case None => None
                         },

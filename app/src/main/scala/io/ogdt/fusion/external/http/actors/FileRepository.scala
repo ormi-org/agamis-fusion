@@ -1,6 +1,7 @@
 package io.ogdt.fusion.external.http.actors
 
-import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
+import akka.pattern.pipe
+import akka.actor.typed.{Behavior, Signal, PostStop,ActorSystem,  ActorRef}
 import akka.actor.typed.scaladsl.{ActorContext, AbstractBehavior, Behaviors}
 import reactivemongo.api.bson.BSONObjectID
 
@@ -8,6 +9,8 @@ import java.util.UUID
 import java.time.Instant
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import scala.util.Success
 import scala.util.Failure
 import scala.util.Try
@@ -17,15 +20,12 @@ import io.ogdt.fusion.external.http.entities.nested.file.Acl
 import io.ogdt.fusion.external.http.entities.File
 import io.ogdt.fusion.external.http.entities.nested.file.metadata.FusionXmlMeta
 
-import akka.actor.typed.ActorSystem
-import akka.pattern.pipe
-
 import io.ogdt.fusion.core.db.datastores.documents.FileStore
 import io.ogdt.fusion.core.fs.lib.TreeManager
-// import io.ogdt.fusion.core.db.models.documents.{File => FileDocument}
+import io.ogdt.fusion.core.db.models.documents.{File => FileDocument}
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
-import scala.concurrent.Future
-import scala.concurrent.Await
+import org.apache.ignite.internal.util.typedef.F
+import io.ogdt.fusion.core.db.models.documents
 
 object FileRepository {
     sealed trait Status
@@ -33,14 +33,17 @@ object FileRepository {
     object Failed extends Status
 
     sealed trait Response 
-    case object OK extends Response
-    final case class KO(reason: String) extends Response
+    case object OK extends Response 
+    final case class KO(reason: String) extends Response 
 
     sealed trait Command
-    final case class AddInitFile(file: File, replyTo: ActorRef[File]) extends Command
-    final case class GetFileById(id: BSONObjectID, replyTo: ActorRef[Option[File]]) extends Command
+
     final case class AddFile(file: File, replyTo: ActorRef[Response]) extends Command
-    final case class ClearFiles(replyTo: ActorRef[Response]) extends Command
+    final case class GetFileById(id: String, replyTo: ActorRef[File]) extends Command
+    final case class GetFileByPath(path: String, replyTo: ActorRef[File]) extends Command
+    final case class DeleteFile(file: File, replyTo: ActorRef[Response]) extends Command
+    final case class DeleteManyFile(files: List[File], replyTo: ActorRef[Response]) extends Command
+    final case class UpdateFile(file: File, replyTo: ActorRef[Response]) extends Command
     
     def apply()(implicit system: ActorSystem[_]): Behavior[Command] = 
 
@@ -51,93 +54,68 @@ object FileRepository {
 
             Behaviors.receiveMessage {
                 case AddFile(file, replyTo) => 
-                    // if (file == null) {
-                    //     replyTo ! KO("File is null")
-                    //      Behaviors.same
-                    // } else {
-                    //     replyTo ! OK 
-                    //     Behaviors.same
-                        // context.pipeToSelf(TreeManager.createFile(file).transformWith({
-                        //     case Success(value) => value
-                        //     case Failure(cause) => cause
-                        // }))
-                    // }
-                    // TreeManager.createFile(file).onComplete({
-                    //     case Success(result) => replyTo ! result
-                    //     case Failure(cause) => throw cause
-                    // })
-                    replyTo ! OK
-                    Behaviors.same
-                case AddInitFile(file, replyTo) =>
-                    val file: File = new File(
-                                    id = Some(BSONObjectID.generate()),
-                                    name = "rootdir1",
-                                    `type` = File.DIRECTORY,
-                                    path = Some("/id"),
-                                    parent = None,
-                                    chunkList = None,
-                                    metadata = new Metadata(
-                                        size = None,
-                                        creationDate = Instant.now(),
-                                        lastVersionDate = None,
-                                        lastModificationDate = Instant.now(),
-                                        versionsCount = None,
-                                        chainsCount = None,
-                                        fusionXML = Some(new FusionXmlMeta(
-                                            xmlSchemaFileId = UUID.randomUUID(),
-                                            originAppId = "io.ogdt.apps.official:test"
-                                        )),
-                                        hidden = false,
-                                        readonly = false
-                                    ),
-                                    versioned = Some(true),
-                                    acl = new Acl(
-                                        userAccess = List(
-
-                                        ),
-                                        groupAccess = None
-                                    ),
-                                    owner = UUID.fromString("7f8e863a-49db-46a8-9a57-d38b4f51e60c")
-                                )
-                    replyTo ! file
+                    TreeManager.createFile(file).onComplete({
+                        case Success(file) => replyTo ! OK
+                        case Failure(error) => replyTo ! KO(error.toString + (if (error.getCause() != null) " : " + error.getCause().toString else "")) // TODO : changer pour une custom
+                    })
                     Behaviors.same
                 case GetFileById(id, replyTo) =>
-                    replyTo ! Some(File(
-                        id = Some(BSONObjectID.generate()),
-                        name = "testFile.oproto",
-                        `type` = File.FILE,
-                        path = Some("/rootdir/testFile.oproto"),
-                        parent = None,
-                        chunkList = None,
-                        metadata = new Metadata(
-                            size = None,
-                            creationDate = Instant.now(),
-                            lastVersionDate = None,
-                            lastModificationDate = Instant.now(),
-                            versionsCount = None,
-                            chainsCount = None,
-                            fusionXML = Some(new FusionXmlMeta(
-                                xmlSchemaFileId = UUID.randomUUID(),
-                                originAppId = "io.ogdt.apps.official:test"
-                            )),
-                            hidden = false,
-                            readonly = false
-                        ),
-                        versioned = Some(true),
-                        acl = new Acl(
-                            userAccess = List(
-
-                            ),
-                            groupAccess = None
-                        ),
-                        owner = UUID.fromString("7f8e863a-49db-46a8-9a57-d38b4f51e60c")
-                    ))
-                    // replyTo ! files.get(id)
+                    TreeManager.getFileFromId(id).onComplete({
+                        case Success(file) => replyTo ! File(Some(file.id),
+                                                                file.name,
+                                                                file.`type` match {
+                                                                    case FileDocument.DIRECTORY => File.DIRECTORY
+                                                                    case FileDocument.FILE => File.FILE
+                                                                },
+                                                                file.path,
+                                                                file.parent,
+                                                                file.chunkList,
+                                                                file.metadata, 
+                                                                file.versioned,
+                                                                file.acl,
+                                                                file.owner)
+                        case Failure(cause) => throw new Exception(cause)
+                    })
                     Behaviors.same
-                case ClearFiles(replyTo) =>
-                    replyTo ! OK
+                case GetFileByPath(path, replyTo) => 
+                    TreeManager.getFileFromPath(path).onComplete({
+                        case Success(file) => replyTo ! File(Some(file.id),
+                                                                file.name,
+                                                                file.`type` match {
+                                                                    case FileDocument.DIRECTORY => File.DIRECTORY
+                                                                    case FileDocument.FILE => File.FILE
+                                                                },
+                                                                file.path,
+                                                                file.parent,
+                                                                file.chunkList,
+                                                                file.metadata, 
+                                                                file.versioned,
+                                                                file.acl,
+                                                                file.owner)
+                        case Failure(cause) => throw new Exception(cause)  
+                    })
+                    Behaviors.same
+                case UpdateFile(file, replyTo) => 
+                    TreeManager.updateFile(file).onComplete({
+                        case Success(file) => replyTo ! OK
+                        case Failure(error) => replyTo ! KO(error.toString + (if (error.getCause() != null) " : " + error.getCause().toString else "")) // TODO : changer pour une custom
+                    })
+                    Behaviors.same
+                case DeleteFile(file, replyTo) =>
+                    TreeManager.deleteFile(file).onComplete({
+                        case Success(file) => replyTo ! OK
+                        case Failure(error) => replyTo ! KO(error.toString + (if (error.getCause() != null) " : " + error.getCause().toString else "")) // TODO : changer pour une custom  
+                    })
                     Behaviors.same
                     // FileRepository(Map.empty)
+                case DeleteManyFile(files, replyTo) => 
+                    // delete many files
+                    // TreeManager.deleteManyFiles(files).onComplete({
+                    //     case Success(files) => replyTo ! OK
+                    //     case Failure(error) => replyTo ! KO(error.toString + (if (error.getCause() != null) " : " + error.getCause().toString else "")) // TODO : changer pour une custom   
+                    // })
+                    replyTo ! KO("Not implemented yet")
+                    Behaviors.same
             }
         }
 

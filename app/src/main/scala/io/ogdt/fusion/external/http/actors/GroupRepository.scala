@@ -19,21 +19,26 @@ object GroupRepository {
 
     sealed trait Command
     final case class AddGroup(group: Group, replyTo: ActorRef[Response]) extends Command
-    final case class GetGroupById(id: UUID, replyTo: ActorRef[Option[Group]]) extends Command
-    final case class ClearGroups(replyTo: ActorRef[Response]) extends Command
+    final case class GetGroupByPath(name: String, replyTo: ActorRef[Response]) extends Command
+    final case class GetGroupById(id: String, replyTo: ActorRef[Response]) extends Command
+    final case class UpdateGroup(group: Group, replyTo: ActorRef[Response]) extends Command
+    final case class DeleteGroup(group: Group, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
         case AddGroup(group, replyTo) =>
             println(group)
+            replyTo ! OK     
+            Behaviors.same
+        case GetGroupByPath(name, replyTo) =>
             replyTo ! OK
             Behaviors.same
         case GetGroupById(id, replyTo) =>
-            replyTo ! Some(Group(
-                id = UUID.randomUUID(),
-                name = "group1"
-            ))
+            replyTo ! OK
             Behaviors.same
-        case ClearGroups(replyTo) =>
+        case UpdateGroup(group, replyTo) =>
+            replyTo ! OK
+            Behaviors.same 
+        case DeleteGroup(group, replyTo) =>
             replyTo ! OK
             Behaviors.same
     }

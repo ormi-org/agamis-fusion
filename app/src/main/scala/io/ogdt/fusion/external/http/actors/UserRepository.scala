@@ -18,24 +18,27 @@ object UserRepository {
 
     sealed trait Command
     final case class AddUser(user: User, replyTo: ActorRef[Response]) extends Command
-    final case class GetUserById(id: UUID, replyTo: ActorRef[Option[User]]) extends Command
-    final case class ClearUsers(replyTo: ActorRef[Response]) extends Command
+    final case class GetUserByPath(name: String, replyTo: ActorRef[Response]) extends Command
+    final case class GetUserById(id: String, replyTo: ActorRef[Response]) extends Command
+    final case class UpdateUser(user: User, replyTo: ActorRef[Response]) extends Command
+    final case class DeleteUser(group: User, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
-        case AddUser(user, replyTo) =>
-            println(user)
+        case AddUser(group, replyTo) =>
+            println(group)
+            replyTo ! OK     
+            Behaviors.same
+        case GetUserByPath(name, replyTo) =>
             replyTo ! OK
             Behaviors.same
         case GetUserById(id, replyTo) =>
-            replyTo ! Some(User(
-                id = UUID.randomUUID(),
-                username = "John",
-                password = "password"
-            ))
+            replyTo ! OK
             Behaviors.same
-        case ClearUsers(replyTo) =>
+        case UpdateUser(user, replyTo) =>
+            replyTo ! OK
+            Behaviors.same 
+        case DeleteUser(user, replyTo) =>
             replyTo ! OK
             Behaviors.same
     }
-
 }

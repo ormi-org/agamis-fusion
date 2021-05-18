@@ -1,23 +1,31 @@
 package io.ogdt.fusion.external.http.routes
 
-import scala.concurrent.ExecutionContext
+import scala.util.Success
+import scala.util.Failure
+
+import scala.concurrent.duration._
+import scala.concurrent.Future
+
+import java.util.UUID
+
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
 
-import java.util.UUID
-
 import akka.util.Timeout
 
-import scala.concurrent.duration._
-
 import akka.actor.typed.{ActorSystem, ActorRef}
-import scala.concurrent.Future
 
 import io.ogdt.fusion.external.http.entities.Group
 import io.ogdt.fusion.external.http.actors.GroupRepository
 import io.ogdt.fusion.external.http.entities.GroupJsonProtocol
 
+/**
+  * Class Group Routes
+  *
+  * @param buildGroupRepository
+  * @param system
+  */
 class GroupRoutes(buildGroupRepository: ActorRef[GroupRepository.Command])(implicit system: ActorSystem[_]) extends GroupJsonProtocol{
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
@@ -32,21 +40,19 @@ class GroupRoutes(buildGroupRepository: ActorRef[GroupRepository.Command])(impli
         pathPrefix("groups")(
             concat(
                 // get all groups
-                get {
-                    println(s"test group route")
-                    complete(StatusCodes.OK)
-                },
+                // get {
+                //     println(s"test group route")
+                //     complete(StatusCodes.OK)
+                // },
                 // create group
                 post {
                     entity(as[Group]) { group =>
-                        val operationPerformed: Future[GroupRepository.Response] = 
-                            buildGroupRepository.ask(GroupRepository.AddGroup(group,_))
-                        onSuccess(operationPerformed) {                    
-                            case GroupRepository.OK  => complete("Group added")
-                            case GroupRepository.KO(reason) => complete(StatusCodes.InternalServerError -> reason)
+                        onComplete(buildGroupRepository.ask(GroupRepository.AddGroup(group,_))) {
+                            case Success(value) => complete(StatusCodes.OK)
+                            case Failure(reason) => complete(StatusCodes.NotImplemented)
                         }
                     }
-                },
+                }
             )
         ),
         pathPrefix("group")(
@@ -54,8 +60,13 @@ class GroupRoutes(buildGroupRepository: ActorRef[GroupRepository.Command])(impli
                 //get by name
                 get {
                     parameter("name".as[String]) { (name: String) => 
-                        println(s"name is $name")
-                        complete(StatusCodes.OK)
+                    println(s"name is $name")
+                    onComplete(buildGroupRepository.ask(GroupRepository.GetGroupByPath(name,_))) {
+                        case Success(group) => complete(StatusCodes.OK)
+                        case Failure(reason) => reason match {
+                            case _ => complete(StatusCodes.NotImplemented -> reason)
+                            }
+                        }
                     }
                 },
                 pathPrefix(Segment) { groupUuid: String =>
@@ -63,19 +74,42 @@ class GroupRoutes(buildGroupRepository: ActorRef[GroupRepository.Command])(impli
                         //get by id
                         get {
                             println(s"get group uuid $groupUuid")
-                            complete(StatusCodes.OK)
+                            onComplete(buildGroupRepository.ask(GroupRepository.GetGroupById(groupUuid,_))) {
+                                case Success(group) => complete(StatusCodes.OK)
+                                case Failure(reason) => reason match {
+                                    case _ => complete(StatusCodes.NotImplemented -> reason)
+                                }
+                            }
                         },
                         // update group
                         put {
                             entity(as[Group]) { group =>
                                 println(s"received update group for $groupUuid : $group")
-                                complete(StatusCodes.OK)
+                                onComplete(buildGroupRepository.ask(GroupRepository.UpdateGroup(group,_))) {
+                                    case Success(response) => response match {
+                                        case GroupRepository.OK  => complete("Group updated") 
+                                        case GroupRepository.KO(cause) => cause match {
+                                            case _ => complete(StatusCodes.NotImplemented -> new Error(""))
+                                        }
+                                    }
+                                    case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)
+                                }
                             }
                         },
                         // delete group
                         delete {
                             println(s"delete group id $groupUuid")
-                            complete(StatusCodes.OK)
+                            entity(as[Group]) { group =>
+                            onComplete(buildGroupRepository.ask(GroupRepository.DeleteGroup(group,_))) {
+                                case Success(response) => response match {
+                                    case GroupRepository.OK  => complete("Group deleted") 
+                                    case GroupRepository.KO(cause) => cause match {
+                                        case _ => complete(StatusCodes.NotImplemented -> new Error(""))
+                                    }
+                                }
+                                case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)
+                            }
+                        }
                         }
                     )
                 }      

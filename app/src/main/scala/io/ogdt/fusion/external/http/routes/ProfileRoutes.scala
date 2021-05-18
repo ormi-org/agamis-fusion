@@ -1,23 +1,30 @@
 package io.ogdt.fusion.external.http.routes
 
-import scala.concurrent.ExecutionContext
+import scala.util.Success
+import scala.util.Failure
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+import java.util.UUID
+
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
 
-import java.util.UUID
-
 import akka.util.Timeout
 
-import scala.concurrent.duration._
-
 import akka.actor.typed.{ActorSystem, ActorRef}
-import scala.concurrent.Future
 
-import io.ogdt.fusion.external.http.entities.Profile
+import io.ogdt.fusion.external.http.entities.{Profile, ProfileJsonProtocol}
 import io.ogdt.fusion.external.http.actors.ProfileRepository
-import io.ogdt.fusion.external.http.entities.ProfileJsonProtocol
 
+/**
+  * Class Profile Routes
+  *
+  * @param buildProfileRepository
+  * @param system
+  */
 class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])(implicit system: ActorSystem[_]) extends ProfileJsonProtocol{
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
@@ -39,11 +46,14 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                 // create profile
                 post {
                     entity(as[Profile]) { profile =>
-                        val operationPerformed: Future[ProfileRepository.Response] = 
-                            buildProfileRepository.ask(ProfileRepository.AddProfile(profile,_))
-                        onSuccess(operationPerformed) {                    
-                            case ProfileRepository.OK  => complete("Profile added")
-                            case ProfileRepository.KO(reason) => complete(StatusCodes.InternalServerError -> reason)
+                        onComplete(buildProfileRepository.ask(ProfileRepository.AddProfile(profile,_))) {
+                            case Success(response) => response match {
+                                case ProfileRepository.OK  => complete("Profile posted") 
+                                case ProfileRepository.KO(cause) => cause match {
+                                    case _ => complete(StatusCodes.NotImplemented -> new Error(""))
+                                }
+                            }
+                            case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)
                         }
                     }
                 },
@@ -56,19 +66,43 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                         //get by id
                         get {
                             println(s"get profile uuid $profileUuid")
-                            complete(StatusCodes.OK)
+                            onComplete(buildProfileRepository.ask(ProfileRepository.GetProfileById(profileUuid,_))) {
+                                case Success(response) => response match {
+                                    case ProfileRepository.OK => complete(s"GET profile uuid : $profileUuid")
+                                    case ProfileRepository.KO(cause) => cause match {
+                                        case _ => complete(StatusCodes.InternalServerError -> new Error(""))
+                                    }
+                                }
+                                case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)    
+                            }
                         },
                         // update profile
                         put {
                             entity(as[Profile]) { profile =>
                                 println(s"received update profile for $profileUuid : $profile")
-                                complete(StatusCodes.OK)
+                                onComplete(buildProfileRepository.ask(ProfileRepository.UpdateProfile(profileUuid,_))) {
+                                    case Success(response) => response match {
+                                        case ProfileRepository.OK => complete(s"UPDATE profile uuid : $profileUuid")
+                                        case ProfileRepository.KO(cause) => cause match {
+                                            case _ => complete(StatusCodes.InternalServerError -> new Error(""))
+                                        }
+                                    }
+                                    case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)    
+                                }
                             }
                         },
                         // delete profile
                         delete {
                             println(s"delete profile id $profileUuid")
-                            complete(StatusCodes.OK)
+                            onComplete(buildProfileRepository.ask(ProfileRepository.DeleteProfile(profileUuid,_))) {
+                                case Success(response) => response match {
+                                    case ProfileRepository.OK => complete(s"DELETE profile uuid : $profileUuid")
+                                    case ProfileRepository.KO(cause) => cause match {
+                                        case _ => complete(StatusCodes.InternalServerError -> new Error(""))
+                                    }
+                                }
+                                case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)    
+                            }
                         }
                     )
                 }      
