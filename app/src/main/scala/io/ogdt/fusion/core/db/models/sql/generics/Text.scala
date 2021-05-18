@@ -1,13 +1,12 @@
 package io.ogdt.fusion.core.db.models.sql.generics
 
-import io.ogdt.fusion.core.db.datastores.sql.generics.TextStore
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 
-class Text(implicit @transient protected val store: TextStore) {
+class Text {
 
-    @QuerySqlField(name = "id", notNull = true, index = true, orderedGroups = Array(new QuerySqlField.Group(name = "IX_TEXT_LANGUAGE", order = 0)))
+    @QuerySqlField(name = "id", notNull = true, orderedGroups = Array(new QuerySqlField.Group(name = "IX_TEXT_LANGUAGE", order = 0)))
     protected var _id: UUID = UUID.randomUUID()
     def id: UUID = _id
     // Used to set UUID (mainly for setting uuid of existing text when fetching)

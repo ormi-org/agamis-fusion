@@ -16,6 +16,7 @@ import java.util.UUID
 import scala.jdk.CollectionConverters._
 import io.ogdt.fusion.core.db.common.Utils
 import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.CacheAtomicityMode
 import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
@@ -34,6 +35,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             wrapper.createCache[UUID, Organization](
                 wrapper.makeCacheConfig[UUID, Organization]
                 .setCacheMode(CacheMode.REPLICATED)
+                .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
                 // .setQueryEntities(
                 //     List(
@@ -149,7 +151,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         .setParams(queryArgs.toList)
     }
 
-    //Get existing organizations from database
+    // Get existing organizations from database
     def getOrganizations(queryFilters: OrganizationStore.GetOrganizationsFilters)(implicit ec: ExecutionContext): Future[List[Organization]] = {
         executeQuery(
             makeOrganizationsQuery(queryFilters)
@@ -330,12 +332,34 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         })
     }
 
+    // Get a single existing organization from database by its id
+    def getOrganizationById(id: String)(implicit ec: ExecutionContext): Future[Organization] = {
+        getOrganizations(
+            OrganizationStore.GetOrganizationsFilters(
+                List(
+                    OrganizationStore.GetOrganizationsFilter(
+                        List(id), List(), List(), None, None, None
+                    )
+                ),
+                List()
+            )
+        ).transformWith({
+            case Success(organizations) => 
+                organizations.length match {
+                    case 0 => Future.failed(new Error(s"Organization ${id} couldn't be found")) // TODO : changer pour une custom
+                    case 1 => Future.successful(organizations(0))
+                    case _ => Future.failed(new Error(s"Duplicate id issue in OrganizationStore")) // TODO : changer pour une custom
+                }
+            case Failure(cause) => Future.failed(new Exception("bla bla bla", cause)) // TODO : changer pour une custom
+        })
+    }
+
     // Save organization object's modification to database
     def persistOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
         Utils.igniteToScalaFuture(igniteCache.putAsync(
             organization.id, organization
         )).transformWith({
-            case Success(value) => Future.successful()
+            case Success(value) => Future.unit
             case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
@@ -373,7 +397,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         organization.relatedProfiles.map(p => p)
         Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
         .transformWith({
-            case Success(value) => Future.successful()
+            case Success(value) => Future.unit
             case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }

@@ -21,6 +21,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import org.apache.ignite.cache.QueryEntity
 import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.CacheAtomicityMode
 import java.util.Collection
 
 class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, FileSystem] {
@@ -33,6 +34,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             wrapper.createCache[UUID, FileSystem](
                 wrapper.makeCacheConfig[UUID, FileSystem]
                 .setCacheMode(CacheMode.REPLICATED)
+                .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
                 .setQueryEntities(
                     List(
@@ -241,7 +243,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         Utils.igniteToScalaFuture(igniteCache.putAsync(
             fileSystem.id, fileSystem
         )).transformWith({
-            case Success(value) => Future.successful()
+            case Success(value) => Future.unit
             case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
@@ -279,7 +281,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         if (!fileSystem.organizations.isEmpty) return Future.failed(new Error("fileSystem is still attached to some organization and can't be deleted"))
         Utils.igniteToScalaFuture(igniteCache.removeAsync(fileSystem.id))
         .transformWith({
-            case Success(value) => Future.successful()
+            case Success(value) => Future.unit
             case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }

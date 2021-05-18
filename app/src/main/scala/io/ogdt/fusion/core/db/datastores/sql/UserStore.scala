@@ -1,26 +1,38 @@
 package io.ogdt.fusion.core.db.datastores.sql
 
-import io.ogdt.fusion.core.db.models.sql.User
-import io.ogdt.fusion.core.db.datastores.typed.SqlMutableStore
-import io.ogdt.fusion.core.db.datastores.typed.sql.GetEntityFilters
 import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 
+import io.ogdt.fusion.core.db.datastores.typed.SqlMutableStore
+import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
+import io.ogdt.fusion.core.db.datastores.typed.sql.GetEntityFilters
+
+import io.ogdt.fusion.core.db.common.Utils
+
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.users.{
+    UserNotFoundException,
+    UserNotPersistedException,
+    DuplicateUserException,
+    UserQueryExecutionException
+}
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
+
 import org.apache.ignite.IgniteCache
+import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.CacheAtomicityMode
 
 import scala.util.Success
 import scala.util.Failure
-
-import scala.reflect.classTag
-
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+
 import java.sql.Timestamp
 import java.util.UUID
+
 import scala.jdk.CollectionConverters._
-import io.ogdt.fusion.core.db.common.Utils
-import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
-import scala.concurrent.ExecutionContext
+
 import scala.collection.mutable.ListBuffer
-import org.apache.ignite.cache.CacheMode
+
+import io.ogdt.fusion.core.db.models.sql.User
 
 class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, User] {
 
@@ -32,6 +44,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
             wrapper.createCache[UUID, User](
                 wrapper.makeCacheConfig[UUID, User]
                 .setCacheMode(CacheMode.REPLICATED)
+                .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
                 // .setQueryEntities(
                 //     List(
@@ -115,7 +128,6 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                 }}"
             ).mkString(", ")}"
         }
-        println(queryArgs)
         makeQuery(queryString)
         .setParams(queryArgs.toList)
     }
@@ -184,6 +196,17 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                 })
                 Future.successful(users.toList)
             }
+            case Failure(cause) => Future.failed(new UserQueryExecutionException)
+        })
+    }
+
+    def getAllUsers(implicit ec: ExecutionContext): Future[List[User]] = {
+        getUsers(UserStore.GetUsersFilters.none).transformWith({
+            case Success(users) => 
+                users.length match {
+                    case 0 => Future.failed(new NoEntryException("User table is empty"))
+                    case _ => Future.successful(users)
+                }
             case Failure(cause) => Future.failed(cause)
         })
     }
@@ -204,11 +227,11 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         ).transformWith({
             case Success(users) =>
                 users.length match {
-                    case 0 => Future.failed(new Error(s"User ${id} couldn't be found")) // TODO : changer pour une custom
+                    case 0 => Future.failed(new UserNotFoundException(s"User ${id} couldn't be found"))
                     case 1 => Future.successful(users(0))
-                    case _ => Future.failed(new Error(s"Duplicate id issue in UserStore")) // TODO : changer pour une custom
+                    case _ => Future.failed(new DuplicateUserException)
                 }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
@@ -228,11 +251,11 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         ).transformWith({
             case Success(users) =>
                 users.length match {
-                    case 0 => Future.failed(new Error(s"User ${username} couldn't be found"))
+                    case 0 => Future.failed(new UserNotFoundException(s"User ${username} couldn't be found"))
                     case 1 => Future.successful(users(0))
-                    case _ => Future.failed(new Error(s"Duplicate username issue in UserStore"))
+                    case _ => Future.failed(new DuplicateUserException)
                 }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
@@ -241,8 +264,8 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         Utils.igniteToScalaFuture(igniteCache.putAsync(
             user.id, user
         )).transformWith({
-            case Success(value) => Future.successful()
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Success(value) => Future.unit
+            case Failure(cause) => Future.failed(UserNotPersistedException(cause))
         })
     }
 
@@ -270,7 +293,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(UserNotPersistedException(cause))
         })
     }
 
@@ -278,8 +301,8 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
     def deleteUser(user: User)(implicit ec: ExecutionContext): Future[Unit] = {
         Utils.igniteToScalaFuture(igniteCache.removeAsync(user.id))
         .transformWith({
-            case Success(value) => Future.successful()
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Success(value) => Future.unit
+            case Failure(cause) => Future.failed(UserNotPersistedException(cause))
         })
     }
 
@@ -306,7 +329,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(UserNotPersistedException(cause))
         })
     }
 }
@@ -322,4 +345,13 @@ object UserStore {
         filters: List[GetUsersFilter],
         orderBy: List[(String, Int)] // (column, direction)
     ) extends GetEntityFilters
+
+    object GetUsersFilters {
+        def none: GetUsersFilters = {
+            GetUsersFilters(
+                List(),
+                List()
+            )
+        }
+    }
 }

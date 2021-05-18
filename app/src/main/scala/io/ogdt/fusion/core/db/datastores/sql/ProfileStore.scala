@@ -21,6 +21,7 @@ import org.apache.ignite.cache.CacheMode
 import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
+import org.apache.ignite.cache.CacheAtomicityMode
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Profile] {
 
@@ -32,6 +33,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             wrapper.createCache[UUID, Profile](
                 wrapper.makeCacheConfig[UUID, Profile]
                 .setCacheMode(CacheMode.REPLICATED)
+                .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
                 // .setQueryEntities(
                 //     List(
@@ -240,7 +242,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                 Utils.igniteToScalaFuture(igniteCache.putAsync(
                     profile.id, profile
                 )).transformWith({
-                    case Success(value) => Future.successful()
+                    case Success(value) => Future.unit
                     case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
@@ -291,7 +293,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             case (None, None) => {
                 Utils.igniteToScalaFuture(igniteCache.removeAsync(profile.id))
                 .transformWith({
-                    case Success(value) => Future.successful()
+                    case Success(value) => Future.unit
                     case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }

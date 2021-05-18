@@ -20,6 +20,10 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
     
     @transient
     private var _labels: Map[(UUID, UUID), (String, String)] = Map()
+    /** A mapping of all labels for this OrgnizationType
+      *
+      * @return a map of [(text_id, language_id), (language_code, content)]
+      */
     def labels: Map[(UUID, UUID), (String, String)] = _labels
     def label(languageCode: String): String = {
         _labels.find(_._2._1 == languageCode) match {
@@ -34,7 +38,7 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
         }
     }
     def setLabel(language: Language, content: String): OrganizationType = {
-        _labels = labels.+(((_labelTextId, language.id), (language.code, content)))
+        _labels = _labels.+(((_labelTextId, language.id), (language.code, content)))
         this
     }
 
@@ -51,10 +55,10 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
     }
 
     override protected def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.successful()
+        Future.unit
     }
 
     override protected def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.successful()
+        Future.unit
     }
 }
