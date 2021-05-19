@@ -55,10 +55,10 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
     }
 
     override protected def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.unit
+        store.persistOrganizationType(this)
     }
 
     override protected def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.unit
+        store.deleteOrgnizationType(this)
     }
 }

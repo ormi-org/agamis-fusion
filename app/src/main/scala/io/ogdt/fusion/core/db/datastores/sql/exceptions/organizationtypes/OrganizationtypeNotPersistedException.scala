@@ -19,4 +19,10 @@ object OrganizationtypeNotPersistedException {
     ): OrganizationtypeNotPersistedException = {
         OrganizationtypeNotPersistedException(cause)
     }
+
+    def apply(
+        message: String
+    ): OrganizationtypeNotPersistedException = {
+        OrganizationtypeNotPersistedException(null, message)
+    }
 }

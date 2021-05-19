@@ -68,4 +68,14 @@ class TextStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlStore[Stri
             case Failure(cause) => Future.failed(TextNotPersistedException(cause))
         })
     }
+
+    def deleteText(key: String)(implicit ec: ExecutionContext): Future[Unit] = {
+        Utils.igniteToScalaFuture(igniteCache.removeAsync(key)).transformWith({
+            case Success(done) => {
+                if (done) Future.unit
+                else Future.failed(TextNotPersistedException())
+            }
+            case Failure(cause) => Future.failed(TextNotPersistedException(cause))
+        })
+    }
 }

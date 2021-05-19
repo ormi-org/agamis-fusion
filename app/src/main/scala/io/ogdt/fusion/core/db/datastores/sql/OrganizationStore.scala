@@ -57,20 +57,20 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
 
     def makeOrganizationsQuery(queryFilters: OrganizationStore.GetOrganizationsFilters): SqlStoreQuery = {
         var queryString: String = 
-            "SELECT id, label, type, queryable, created_at, updated_at, data, data_type " +
+            "SELECT org_id, org_label, org_queryable, org_created_at, org_updated_at, info_data, type_data " +
             "FROM " +
-            "(SELECT ORG.id, ORG.label, type, queryable, ORG.created_at, ORG.updated_at, " +
+            "(SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
             "CONCAT_WS('||', PROFILE.id, lastname, firstname, last_login, is_active, user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at) AS data, 'PROFILE' AS data_type " +
             s"FROM $schema.ORGANIZATION as ORG " +
             s"INNER JOIN $schema.PROFILE AS PROFILE ON PROFILE.organization_id = ORG.id " +
             "UNION ALL " +
-            "SELECT ORG.id, ORG.label, type, queryable, ORG.created_at, ORG.updated_at, " +
+            "SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
             "CONCAT_WS('||', FS.id, rootdir_id, FS.label, shared, FS_ORG.is_default, FS.created_at, FS.updated_at) AS data, 'FS' AS data_type " +
             s"FROM $schema.ORGANIZATION as ORG " +
             s"LEFT OUTER JOIN $schema.FILESYSTEM_ORGANIZATION AS FS_ORG ON FS_ORG.organization_id = ORG.id " +
             s"LEFT OUTER JOIN $schema.FILESYSTEM AS FS ON FS_ORG.filesystem_id = FS.id" +
-            "UNION ALL SELECT " +
-            "ORG.id AS org_id, ORG.label AS org_label, queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
+            "UNION ALL " +
+            "SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
             "CONCAT_WS('||', ORGTYPE.id, TEXT.content, LANG.code, LANG.label, TEXT.language_id, TEXT.id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data " +
 	        s"FROM $schema.ORGANIZATION as ORG " +
 	        s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORGTYPE.id = ORG.organizationtype_id " +
@@ -82,23 +82,23 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             var innerWhereStatement: ListBuffer[String] = ListBuffer()
             // manage ids search
             if (filter.id.length > 0) {
-                innerWhereStatement += s"ORG.id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"org_id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.id
             }
             // manage labels search
             if (filter.label.length > 0) {
-                innerWhereStatement += s"ORG.label in (${(for (i <- 1 to filter.label.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"org_label in (${(for (i <- 1 to filter.label.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.label
             }
             // manage types search
             if (filter.`type`.length > 0) {
-                innerWhereStatement += s"ORG.type in (${(for (i <- 1 to filter.`type`.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"org_type in (${(for (i <- 1 to filter.`type`.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.`type`
             }
             // manage shared state search
             filter.queryable match {
                 case Some(value) => {
-                    innerWhereStatement += s"ORG.queryable = ?"
+                    innerWhereStatement += s"queryable = ?"
                     queryArgs += value.toString
                 }
                 case None => ()
@@ -106,7 +106,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             // manage metadate search
             filter.createdAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"ORG.created_at ${
+                    innerWhereStatement += s"org_created_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -120,7 +120,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             }
             filter.updatedAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"ORG.updated_at ${
+                    innerWhereStatement += s"org_updated_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -141,7 +141,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         // manage order
         if (queryFilters.orderBy.length > 0) {
             queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
-                s"ORG.${o._1} ${o._2 match {
+                s"org_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
                 }}"
@@ -185,15 +185,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                 relation(6) match {
                                     case "FS" => {
                                         val fileSystemReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (
-                                            fileSystemReflection(0) != null &&
-                                            fileSystemReflection(1) != null &&
-                                            fileSystemReflection(2) != null &&
-                                            fileSystemReflection(3) != null &&
-                                            fileSystemReflection(4) != null &&
-                                            fileSystemReflection(5) != null &&
-                                            fileSystemReflection(6) != null
-                                        ) {
+                                        if (fileSystemReflection.length == 7) {
                                             (for (
                                                 fileSystem <- Right(
                                                     new FileSystemStore().makeFileSystem
@@ -227,17 +219,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                     }
                                     case "PROFILE" => {
                                         val profileReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (
-                                            profileReflection(0) != null &&
-                                            profileReflection(1) != null &&
-                                            profileReflection(2) != null &&
-                                            profileReflection(3) != null &&
-                                            profileReflection(4) != null &&
-                                            profileReflection(5) != null &&
-                                            profileReflection(6) != null &&
-                                            profileReflection(7) != null &&
-                                            profileReflection(8) != null
-                                        ) {
+                                        if (profileReflection.length == 9) {
                                             (for (
                                                 profile <- Right(
                                                     new ProfileStore().makeProfile
@@ -272,15 +254,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                     }
                                     case "ORGTYPE_LANG_VARIANT" => {
                                         val orgTypeLangVariantReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (
-                                            orgTypeLangVariantReflection(0) != null &&
-                                            orgTypeLangVariantReflection(1) != null &&
-                                            orgTypeLangVariantReflection(2) != null &&
-                                            orgTypeLangVariantReflection(3) != null &&
-                                            orgTypeLangVariantReflection(4) != null &&
-                                            orgTypeLangVariantReflection(5) != null &&
-                                            orgTypeLangVariantReflection(6) != null
-                                        ) {
+                                        if (orgTypeLangVariantReflection.length == 7) {
                                             orgType match {
                                                 case Some(value) => {
                                                     orgType = Some(value.setLabel(
@@ -394,7 +368,6 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
 
     // Delete user from database
     def deleteOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
-        organization.relatedProfiles.map(p => p)
         Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
         .transformWith({
             case Success(value) => Future.unit
