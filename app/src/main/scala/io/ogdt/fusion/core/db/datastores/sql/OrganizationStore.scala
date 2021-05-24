@@ -25,6 +25,13 @@ import io.ogdt.fusion.core.db.models.sql.generics.Text
 import io.ogdt.fusion.core.db.models.sql.generics.Language
 import io.ogdt.fusion.core.db.models.sql.OrganizationType
 
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.{
+    OrganizationNotPersistedException,
+    OrganizationQueryExecutionException,
+    DuplicateOrganizationException,
+    OrganizationNotFoundException
+}
+
 class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Organization] {
 
     override val schema: String = "FUSION"
@@ -302,7 +309,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                 })
                 Future.successful(organizations.toList)
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 
@@ -320,11 +327,11 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         ).transformWith({
             case Success(organizations) => 
                 organizations.length match {
-                    case 0 => Future.failed(new Error(s"Organization ${id} couldn't be found")) // TODO : changer pour une custom
+                    case 0 => Future.failed(new OrganizationNotFoundException(s"Organization ${id} couldn't be found"))
                     case 1 => Future.successful(organizations(0))
-                    case _ => Future.failed(new Error(s"Duplicate id issue in OrganizationStore")) // TODO : changer pour une custom
+                    case _ => Future.failed(new DuplicateOrganizationException)
                 }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
@@ -334,7 +341,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             organization.id, organization
         )).transformWith({
             case Success(value) => Future.unit
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 
@@ -362,7 +369,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 
@@ -371,7 +378,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
         .transformWith({
             case Success(value) => Future.unit
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 
@@ -398,7 +405,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 }

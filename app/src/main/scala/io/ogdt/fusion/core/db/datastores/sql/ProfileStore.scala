@@ -23,6 +23,13 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import org.apache.ignite.cache.CacheAtomicityMode
 
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.profiles.{
+    ProfileNotPersistedException,
+    ProfileQueryExecutionException,
+    DuplicateProfileException,
+    ProfileNotFoundException
+}
+
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Profile] {
 
     override val schema: String = "FUSION"
@@ -205,7 +212,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                 })
                 Future.successful(profiles.toList)
             }
-            case Failure(cause) => Future.failed(cause) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(ProfileQueryExecutionException(cause))
         })
     }
 
@@ -228,11 +235,11 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
         ).transformWith({
             case Success(profiles) =>
                 profiles.length match {
-                    case 0 => Future.failed(new Error(s"Profile ${id} couldn't be found")) // TODO : changer pour une custom
+                    case 0 => Future.failed(new ProfileNotFoundException(s"Profile ${id} couldn't be found"))
                     case 1 => Future.successful(profiles(0))
-                    case _ => Future.failed(new Error(s"Duplicate id issue in ProfileStore")) // TODO : changer pour une custom
+                    case _ => Future.failed(new DuplicateProfileException)
                 }
-            case Failure(cause) => Future.failed(new Exception("Failed to get profile by id", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
@@ -243,11 +250,11 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                     profile.id, profile
                 )).transformWith({
                     case Success(value) => Future.unit
-                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+                    case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
                 })
             }
-            case (None, _) => Future.failed(new Error("relatedUser not found and can't be set to null")) // TODO : changer pour une custom
-            case (_, None) => Future.failed(new Error("relatedOrganization not found and can't be set to null")) // TODO : changer pour une custom
+            case (None, _) => Future.failed(ProfileNotPersistedException("relatedUser not found and can't be set to null"))
+            case (_, None) => Future.failed(ProfileNotPersistedException("relatedOrganization not found and can't be set to null"))
         }
     }
 
@@ -282,7 +289,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
         })
     }
 
@@ -294,7 +301,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                 Utils.igniteToScalaFuture(igniteCache.removeAsync(profile.id))
                 .transformWith({
                     case Success(value) => Future.unit
-                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+                    case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
                 })
             }
         }
@@ -329,7 +336,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
         })
     }
 }

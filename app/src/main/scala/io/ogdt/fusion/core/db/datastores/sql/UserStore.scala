@@ -196,7 +196,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                 })
                 Future.successful(users.toList)
             }
-            case Failure(cause) => Future.failed(new UserQueryExecutionException)
+            case Failure(cause) => Future.failed(UserQueryExecutionException(cause))
         })
     }
 

@@ -66,18 +66,18 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
                             case Success(value) => {
                                 commitTransaction(transaction).transformWith({
                                     case Success(value) => Future.unit
-                                    case Failure(cause) => throw cause
+                                    case Failure(cause) => Future.failed(OrganizationtypeNotPersistedException(cause))
                                 })
                             }
                             case Failure(cause) => {
                                 rollbackTransaction(transaction)
-                                throw cause
+                                Future.failed(OrganizationtypeNotPersistedException(cause))
                             }
                         })
                     }
                     case Failure(cause) => {
                         rollbackTransaction(transaction)
-                        throw cause
+                        Future.failed(OrganizationtypeNotPersistedException(cause))
                     }
                 })
             }

@@ -33,6 +33,13 @@ import scala.collection.mutable.ListBuffer
 import java.time.Instant
 import scala.util.Try
 import io.ogdt.fusion.core.db.models.sql.generics.Language
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.filesystems.{
+    DuplicateFilesystemException,
+    FilesystemNotPersistedException,
+    FilesystemNotFoundException,
+    FilesystemQueryExecutionException
+}
 
 class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, FileSystem] {
 
@@ -257,6 +264,17 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         })
     }
 
+    def getAllFileSystems(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
+        getFileSystems(FileSystemStore.GetFileSystemsFilters.none).transformWith({
+            case Success(fileSystems) => 
+                fileSystems.length match {
+                    case 0 => Future.failed(new NoEntryException("FileSystem table is empty"))
+                    case _ => Future.successful(fileSystems)
+                }
+            case Failure(cause) => Future.failed(cause)
+        })
+    }
+
     def getFileSystemById(id: String)(implicit ec: ExecutionContext): Future[FileSystem] = {
         getFileSystems(
             FileSystemStore.GetFileSystemsFilters(
@@ -275,11 +293,11 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         ).transformWith({
             case Success(fileSystems) => 
                 fileSystems.length match {
-                    case 0 => Future.failed(new Error(s"User ${id} couldn't be found")) // TODO : changer pour une custom
+                    case 0 => Future.failed(new FilesystemNotFoundException(s"FileSystem ${id} couldn't be found"))
                     case 1 => Future.successful(fileSystems(0))
-                    case _ => Future.failed(new Error(s"Duplicate id issue in FileSystemStore")) // TODO : changer pour une custom
+                    case _ => Future.failed(new DuplicateFilesystemException)
                 }
-            case Failure(cause) => Future.failed(new Exception("Failed to ", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(FilesystemQueryExecutionException(cause))
         })
     }
 
@@ -291,7 +309,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             fileSystem.id, fileSystem
         )).transformWith({
             case Success(value) => Future.unit
-            case Failure(cause) => Future.failed(new Exception("Failed to persist fileSystem",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
         })
     }
 
@@ -319,7 +337,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("Failed to persist fileSystems", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
         })
     }
 
@@ -332,7 +350,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                 if (done) Future.unit
                 else Future.failed(FilesystemNotPersistedException())
             }
-            case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause))
         })
     }
 
@@ -360,7 +378,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                     ))
                 })
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
+            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
         })
     }
 }
@@ -378,4 +396,13 @@ object FileSystemStore {
         filters: List[GetFileSystemsFilter],
         orderBy: List[(String, Int)]
     ) extends GetEntityFilters
+
+    object GetFileSystemsFilters {
+        def none: GetFileSystemsFilters = {
+            GetFileSystemsFilters(
+                List(),
+                List()
+            )
+        }
+    }
 }

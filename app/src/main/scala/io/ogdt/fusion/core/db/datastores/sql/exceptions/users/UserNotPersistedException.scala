@@ -19,4 +19,10 @@ object UserNotPersistedException {
     ): UserNotPersistedException = {
         UserNotPersistedException(cause)
     }
+
+    def apply(
+        message: String
+    ): UserNotPersistedException = {
+        UserNotPersistedException(null, message)
+    }
 }
