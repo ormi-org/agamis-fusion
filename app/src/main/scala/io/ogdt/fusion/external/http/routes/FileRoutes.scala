@@ -28,6 +28,8 @@ import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 import io.ogdt.fusion.core.db.datastores.documents.FileStore
 import io.ogdt.fusion.external.http.actors.FileRepository.OK
 import akka.http.scaladsl.model.HttpResponse
+import io.ogdt.fusion.external.http.actors.Server
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
   * Class File Routes 

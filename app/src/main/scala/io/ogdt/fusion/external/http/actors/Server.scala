@@ -52,12 +52,12 @@ object Server {
                             pathPrefix("fs")(
                                 concat(
                                     fileSystemRoutes.routes,
+                                    userRoutes.routes,
                                     concat(
                                         fileRoutes.routes,
                                     )
                                 )
                             ),
-                            userRoutes.routes,
                             profileRoutes.routes,
                             groupRoutes.routes,
                         )

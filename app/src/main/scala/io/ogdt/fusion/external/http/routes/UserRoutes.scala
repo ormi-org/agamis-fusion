@@ -18,6 +18,8 @@ import scala.concurrent.Future
 
 import io.ogdt.fusion.external.http.entities.{User, UserJsonProtocol}
 import io.ogdt.fusion.external.http.actors.UserRepository
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.headers.RawHeader
 
 /**
   * Class User Routes
@@ -29,6 +31,8 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable
+    
+    import io.ogdt.fusion.external.http.authorization._
 
     // asking someone requires a timeout and a scheduler, if the timeout hits without response
     // the ask is failed with a TimeoutException
@@ -46,9 +50,11 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                 // create user
                 post {
                     entity(as[User]) { user =>
+                        // token generation
+                        val token = user.createToken(user.username,1)
                         onComplete(buildUserRepository.ask(UserRepository.AddUser(user,_))) {
-                            case Success(value) => complete(StatusCodes.OK)
-                            case Failure(reason) => complete(StatusCodes.NotImplemented)
+                            case Success(value) => respondWithHeader(RawHeader("Access-Token",token)) { complete(StatusCodes.OK) }
+                            case Failure(reason) => complete(HttpResponse(StatusCodes.InternalServerError, entity = reason.toString()))
                         }
                     }
                 }
@@ -59,11 +65,10 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                 //get by name
                 get {
                     parameter("name".as[String]) { (name: String) => 
-                    println(s"name is $name")
-                    onComplete(buildUserRepository.ask(UserRepository.GetUserByPath(name,_))) {
-                        case Success(user) => complete(StatusCodes.OK)
+                    onComplete(buildUserRepository.ask(UserRepository.GetUserByName(name,_))) {
+                        case Success(user) => complete(StatusCodes.OK -> user)
                         case Failure(reason) => reason match {
-                            case _ => complete(StatusCodes.NotImplemented -> reason)
+                            case _ => complete(HttpResponse(StatusCodes.InternalServerError, entity = reason.toString()))
                             }
                         }
                     }
@@ -72,12 +77,15 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                     concat(
                         //get by id
                         get {
-                            println(s"get user uuid $userUuid")
-                            onComplete(buildUserRepository.ask(UserRepository.GetUserById(userUuid,_))) {
-                                case Success(user) => complete(StatusCodes.OK)
-                                case Failure(reason) => reason match {
-                                    case _ => complete(StatusCodes.NotImplemented -> reason)
-                                }
+                            optionalHeaderValueByName("Authorization") {
+                                case Some(token) => 
+                                    onComplete(buildUserRepository.ask(UserRepository.GetUserById(token,userUuid,_))) {
+                                        case Success(user) => complete(StatusCodes.OK -> user)
+                                        case Failure(reason) => reason match {
+                                            case _ => complete(HttpResponse(StatusCodes.InternalServerError, entity = reason.toString()))
+                                        }
+                                    }
+                                case _ => complete(HttpResponse(StatusCodes.Unauthorized, entity = "No token provided"))
                             }
                         },
                         // update user

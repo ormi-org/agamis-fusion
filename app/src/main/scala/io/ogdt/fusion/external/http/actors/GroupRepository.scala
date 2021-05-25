@@ -19,7 +19,6 @@ object GroupRepository {
 
     sealed trait Command
     final case class AddGroup(group: Group, replyTo: ActorRef[Response]) extends Command
-    final case class GetGroupByPath(name: String, replyTo: ActorRef[Response]) extends Command
     final case class GetGroupById(id: String, replyTo: ActorRef[Response]) extends Command
     final case class UpdateGroup(group: Group, replyTo: ActorRef[Response]) extends Command
     final case class DeleteGroup(group: Group, replyTo: ActorRef[Response]) extends Command
@@ -28,9 +27,6 @@ object GroupRepository {
         case AddGroup(group, replyTo) =>
             println(group)
             replyTo ! OK     
-            Behaviors.same
-        case GetGroupByPath(name, replyTo) =>
-            replyTo ! OK
             Behaviors.same
         case GetGroupById(id, replyTo) =>
             replyTo ! OK

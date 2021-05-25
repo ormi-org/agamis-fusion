@@ -5,12 +5,13 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, JsValue, JsString, DeserializationException}
 
 import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
+import io.ogdt.fusion.external.http.authorization.JwtAuthorization
 
-final case class User(
+final case class User (
     id: UUID,
     username: String,
     password: String
-) 
+) extends JwtAuthorization
 
 trait UserJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     import io.ogdt.fusion.external.http.actors.UserRepository._

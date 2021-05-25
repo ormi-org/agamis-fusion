@@ -5,9 +5,13 @@ import java.util.UUID
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
 
+import scala.util.{Success, Failure}
+
 import io.ogdt.fusion.external.http.entities.User
+import io.ogdt.fusion.external.http.authorization.JwtAuthorization
 
 object UserRepository {
+
     sealed trait Status
     object Successful extends Status
     object Failed extends Status
@@ -18,21 +22,33 @@ object UserRepository {
 
     sealed trait Command
     final case class AddUser(user: User, replyTo: ActorRef[Response]) extends Command
-    final case class GetUserByPath(name: String, replyTo: ActorRef[Response]) extends Command
-    final case class GetUserById(id: String, replyTo: ActorRef[Response]) extends Command
+    final case class GetUserById(token: String, id: String, replyTo: ActorRef[User]) extends Command
+    final case class GetUserByName(name: String, replyTo: ActorRef[User]) extends Command
     final case class UpdateUser(user: User, replyTo: ActorRef[Response]) extends Command
-    final case class DeleteUser(group: User, replyTo: ActorRef[Response]) extends Command
+    final case class DeleteUser(user: User, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
-        case AddUser(group, replyTo) =>
-            println(group)
-            replyTo ! OK     
+        case AddUser(user, replyTo) =>
+            if (user.checkPassword(user.username, user.password)) {
+                replyTo ! OK
+            } else {
+                replyTo ! KO("Problem with the creation of user")
+            }
             Behaviors.same
-        case GetUserByPath(name, replyTo) =>
-            replyTo ! OK
+        case GetUserById(token,id, replyTo) =>
+            if (user.isTokenExpired(token)) {
+                throw new Exception("Token expired")
+            } else if (user.isTokenValid(token)) {
+                UserStore.getUserbyID(id).transformWith({
+                    case Success(user) => replyTo ! user
+                    case Failure(cause) => throw new Exception(cause)
+                })
+            } else {
+                throw new Exception("Token invalid") 
+            }
             Behaviors.same
-        case GetUserById(id, replyTo) =>
-            replyTo ! OK
+        case GetUserByName(name, replyTo) => 
+            replyTo ! User(UUID.randomUUID(),"","")
             Behaviors.same
         case UpdateUser(user, replyTo) =>
             replyTo ! OK

@@ -1,6 +1,6 @@
 package io.ogdt.fusion.core.db.datastores.typed
 
-import scala.reflect._
+import scala.reflect.{ClassTag,classTag}
 
 import scala.collection.mutable.Map
 import scala.collection.mutable.Buffer

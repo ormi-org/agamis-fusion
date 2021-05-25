@@ -14,6 +14,8 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2",
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion,
@@ -23,5 +25,11 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "reactivemongo" % "1.0.3",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
-  "org.scalatest" %% "scalatest" % "3.1.0" % Test
+  // Testing 
+  "org.scalactic" %% "scalactic" % "3.2.7",
+  "org.scalatest" %% "scalatest" % "3.2.7" % "test", 
+  // JWT
+  "com.github.jwt-scala" %% "jwt-core" % "7.1.5",
+  "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5"
+
 )
