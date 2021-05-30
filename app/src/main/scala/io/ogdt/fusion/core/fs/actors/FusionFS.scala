@@ -14,6 +14,7 @@ import io.ogdt.fusion.core.db.datastores.sql.OrganizationStore
 import io.ogdt.fusion.core.db.datastores.sql.OrganizationTypeStore
 import io.ogdt.fusion.core.db.datastores.sql.generics.LanguageStore
 import io.ogdt.fusion.core.db.datastores.sql.generics.TextStore
+import io.ogdt.fusion.core.db.datastores.sql.generics.EmailStore
 
 object FusionFS {
 
@@ -52,6 +53,7 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
                 // Generic stores
                 var languageStore = new LanguageStore
                 var textStore = new TextStore
+                var emailStore = new EmailStore
                 context.log.info("Initializing database")
                 Behaviors.same
         }

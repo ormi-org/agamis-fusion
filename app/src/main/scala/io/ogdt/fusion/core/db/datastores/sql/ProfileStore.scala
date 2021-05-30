@@ -10,11 +10,15 @@ import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Failure
 
+import io.ogdt.fusion.core.db.models.sql.relations.{
+    ProfileEmail,
+    ProfileGroup,
+    ProfilePermission
+}
+
 import java.sql.Timestamp
 import java.util.UUID
 import io.ogdt.fusion.core.db.common.Utils
-
-import scala.reflect.classTag
 
 import scala.jdk.CollectionConverters._
 import org.apache.ignite.cache.CacheMode
@@ -30,6 +34,12 @@ import io.ogdt.fusion.core.db.datastores.sql.exceptions.profiles.{
     ProfileNotFoundException
 }
 
+import org.apache.ignite.cache.QueryEntity
+import scala.util.Try
+import io.ogdt.fusion.core.db.datastores.sql.generics.EmailStore
+import io.ogdt.fusion.core.db.models.sql.OrganizationType
+import io.ogdt.fusion.core.db.models.sql.generics.Language
+
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Profile] {
 
     override val schema: String = "FUSION"
@@ -42,11 +52,16 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                 .setCacheMode(CacheMode.REPLICATED)
                 .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
-                // .setQueryEntities(
-                //     List(
-                //         new QueryEntity(classTag[UUID].runtimeClass, classTag[FilesystemOrganization].runtimeClass)
-                //     ).asJava
-                // )
+                .setQueryEntities(
+                    List(
+                        new QueryEntity(classOf[String], classOf[ProfileEmail])
+                        .setTableName("PROFILE_EMAIL"),
+                        new QueryEntity(classOf[String], classOf[ProfileGroup])
+                        .setTableName("PROFILE_GROUP"),
+                        new QueryEntity(classOf[String], classOf[ProfilePermission])
+                        .setTableName("PROFILE_PERMISSION")
+                    ).asJava
+                )
                 .setName(cache)
                 .setSqlSchema(schema)
                 .setIndexedTypes(classOf[UUID], classOf[Profile])
@@ -61,35 +76,54 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
 
     def makeProfilesQuery(queryFilters: ProfileStore.GetProfilesFilters): SqlStoreQuery = {
         var queryString: String = 
-            "SELECT PROFILE.id, lastname, firstname, last_login, is_active, PROFILE.created_at, PROFILE.updated_at, " +
-            "USER.id, username, password, USER.created_at, USER.updated_at, " +
-            "ORGANIZATION.id, label, type, queryable, ORGANIZATION.created_at, ORGANIZATION.updated_at " +
-            s"FROM $schema.PROFILE as PROFILE " +
+            "SELECT profile_id, profile_lastname, profile_firstname, profile_last_login, profile_is_active, profile_created_at, profile_updated_at, info_data, type_data " +
+            "FROM " +
+            "(SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
+            "CONCAT_WS('||', USER.id, username, password, USER.created_at, USER.updated_at) AS info_data, 'USER' AS type_data " +
+            s"FROM $schema.PROFILE AS PROFILE " +
             s"INNER JOIN $schema.USER as USER ON USER.id = PROFILE.user_id " +
-            s"INNER JOIN $schema.ORGANIZATION as ORGANIZATION ON ORGANIZATION.id = PROFILE.organization_id"
+            "UNION ALL " +
+            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at,  " +
+            "CONCAT_WS('||', ORG.id, ORG.label, ORG.queryable, ORG.created_at, ORG.updated_at) AS info_data, 'ORGANIZATION' AS type_data " +
+            s"FROM $schema.PROFILE AS PROFILE " +
+            s"INNER JOIN $schema.ORGANIZATION AS ORG ON PROFILE.organization_id = ORG.id " +
+            "UNION ALL " +
+            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
+            "CONCAT_WS('||', ORG.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data " +
+            s"FROM $schema.PROFILE AS PROFILE " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATION AS ORG ON PROFILE.organization_id = ORG.id " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
+            s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
+            s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id " +
+            "UNION ALL " +
+            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
+            "CONCAT_WS('||', EMAIL.id, EMAIL.address) AS info_data, 'EMAIL' AS type_data " +
+            s"FROM $schema.PROFILE AS PROFILE " +
+            s"LEFT OUTER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id " +
+            s"LEFT OUTER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id)"
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
             var innerWhereStatement: ListBuffer[String] = ListBuffer()
             // manage ids search
             if (filter.id.length > 0) {
-                innerWhereStatement += s"PROFILE.id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"profile_id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.id
             }
             // manage lastnames search
             if (filter.lastname.length > 0) {
-                innerWhereStatement += s"PROFILE.lastname in (${(for (i <- 1 to filter.lastname.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"profile_lastname in (${(for (i <- 1 to filter.lastname.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.lastname
             }
             // manage lastnames search
             if (filter.firstname.length > 0) {
-                innerWhereStatement += s"PROFILE.firstname in (${(for (i <- 1 to filter.firstname.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"profile_firstname in (${(for (i <- 1 to filter.firstname.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.firstname
             }
             // manage lastLogin date search
             filter.lastLogin match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"PROFILE.last_login ${
+                    innerWhereStatement += s"profile_last_login ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -104,7 +138,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             // manage shared state search
             filter.isActive match {
                 case Some(value) => {
-                    innerWhereStatement += s"PROFILE.is_active = ?"
+                    innerWhereStatement += s"profile_is_active = ?"
                     queryArgs += value.toString
                 }
                 case None => ()
@@ -112,7 +146,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             // manage metadate search
             filter.createdAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"PROFILE.created_at ${
+                    innerWhereStatement += s"profile_created_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -126,7 +160,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             }
             filter.updatedAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"PROFILE.updated_at ${
+                    innerWhereStatement += s"profile_updated_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -147,7 +181,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
         // manage order
         if (!queryFilters.orderBy.isEmpty) {
             queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
-                s"PROFILE.${o._1} ${o._2 match {
+                s"profile_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
                 }}"
@@ -189,23 +223,124 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                                 case _ => Right(profile)
                             }
                         } flatMap { profile =>
-                            var row = entityReflection._2(0)
-                            if (row(7) != null && row(8) != null && row(9) != null && row(10) != null && row(11) != null)
-                                Right(profile.setRelatedUser(
-                                    new UserStore().makeUser
-                                    .setId(row(7).toString)
-                                    .setUsername(row(8).toString)
-                                    .setPassword(row(9).toString)
-                                    .setCreatedAt(row(10) match {
-                                        case createdAt: Timestamp => createdAt
-                                        case _ => null
-                                    })
-                                    .setUpdatedAt(row(11) match {
-                                        case updatedAt: Timestamp => updatedAt
-                                        case _ => null
-                                    })
-                                ))
-                            else Right(profile)
+                            var orgType: Option[OrganizationType] = None
+                            entityReflection._2.foreach({ relation =>
+                                relation(8) match {
+                                    case "USER" => {
+                                        val userReflection = relation(7).asInstanceOf[String].split("||")
+                                        if (userReflection.length == 5) {
+                                            (for (
+                                                user <- Right(
+                                                    new UserStore().makeUser
+                                                    .setId(userReflection(0))
+                                                    .setUsername(userReflection(1))
+                                                    .setPassword(userReflection(2))
+                                                    .setCreatedAt(Try(userReflection(3).asInstanceOf[Timestamp]) match {
+                                                        case Success(createdAt) => createdAt
+                                                        case _ => null
+                                                    })
+                                                    .setUpdatedAt(Try(userReflection(4).asInstanceOf[Timestamp]) match {
+                                                        case Success(updatedAt) => updatedAt
+                                                        case _ => null
+                                                    })
+                                                )
+                                            ) yield {
+                                                profile.setRelatedUser(user)
+                                            })
+                                        }
+                                    }
+                                    case "EMAIL" => {
+                                        val emailReflection = relation(7).asInstanceOf[String].split("||")
+                                        if (emailReflection.length == 2) {
+                                            (for (
+                                                email <- Right(
+                                                    new EmailStore().makeEmail
+                                                    .setId(emailReflection(0))
+                                                    .setAddress(emailReflection(1))
+                                                )
+                                            ) yield {
+                                                emailReflection(2).toBooleanOption match {
+                                                    case Some(true) => profile.setMainEmail(email)
+                                                    case Some(false) => profile.addEmail(email)
+                                                    case None =>
+                                                }
+                                            })
+                                        }
+                                    }
+                                    case "ORGANIZATION" => {
+                                        val organizationReflection = relation(7).asInstanceOf[String].split("||")
+                                        if (organizationReflection.length == 5) {
+                                            (for (
+                                                organization <- Right(
+                                                    new OrganizationStore().makeOrganization
+                                                    .setId(organizationReflection(0))
+                                                    .setLabel(organizationReflection(1))
+                                                    .setCreatedAt(Try(organizationReflection(3).asInstanceOf[Timestamp]) match {
+                                                        case Success(createdAt) => createdAt
+                                                        case _ => null
+                                                    })
+                                                    .setUpdatedAt(Try(organizationReflection(4).asInstanceOf[Timestamp]) match {
+                                                        case Success(updatedAt) => updatedAt
+                                                        case _ => null
+                                                    })
+                                                ) flatMap { organization =>
+                                                    organizationReflection(2).toBooleanOption match {
+                                                        case Some(true) => Right(organization.setQueryable)
+                                                        case Some(false) => Right(organization.setUnqueryable)
+                                                        case None => Right(organization)
+                                                    }
+                                                }
+                                            ) yield {
+                                                profile.setRelatedOrganization(organization)
+                                            })
+                                        }
+                                    }
+                                    case "ORGTYPE_LANG_VARIANT" => {
+                                        val orgTypeLangVariantReflection = relation(7).asInstanceOf[String].split("||")
+                                        if (orgTypeLangVariantReflection.length == 7) {
+                                            orgType match {
+                                                case Some(value) => {
+                                                    orgType = Some(value.setLabel(
+                                                        Language.apply
+                                                        .setId(orgTypeLangVariantReflection(3).toString)
+                                                        .setCode(orgTypeLangVariantReflection(2).toString)
+                                                        .setLabel(orgTypeLangVariantReflection(4).toString),
+                                                        orgTypeLangVariantReflection(1).toString
+                                                    ))
+                                                }
+                                                case None => {
+                                                    orgType = Some(new OrganizationTypeStore().makeOrganizationType
+                                                        .setCreatedAt(Try(orgTypeLangVariantReflection(6).asInstanceOf[Timestamp]) match {
+                                                            case Success(createdAt) => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Try(orgTypeLangVariantReflection(7).asInstanceOf[Timestamp]) match {
+                                                            case Success(updatedAt) => updatedAt
+                                                            case _ => null
+                                                        })
+                                                        .setLabelTextId(orgTypeLangVariantReflection(5).toString)
+                                                        .setLabel(
+                                                            Language.apply
+                                                            .setId(orgTypeLangVariantReflection(3).toString)
+                                                            .setCode(orgTypeLangVariantReflection(2).toString)
+                                                            .setLabel(orgTypeLangVariantReflection(4).toString),
+                                                            orgTypeLangVariantReflection(1).toString
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                            orgType match {
+                                case Some(orgTypeValue) => profile.relatedOrganization match {
+                                    case Some(orgValue) => profile.setRelatedOrganization(orgValue.setType(orgTypeValue))
+                                    case None => 
+                                }
+                                case None => 
+                            }
+                            Right(profile)
                         }
                     ) yield profile)
                     .getOrElse(null)
@@ -343,16 +478,16 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
 
 object ProfileStore {
     case class GetProfilesFilter(
-        id: List[String],
-        lastname: List[String],
-        firstname: List[String],
-        lastLogin: Option[(String, Timestamp)],
-        isActive: Option[Boolean],
-        createdAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
-        updatedAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
+        id: List[String] = List(),
+        lastname: List[String] = List(),
+        firstname: List[String] = List(),
+        lastLogin: Option[(String, Timestamp)] = None,
+        isActive: Option[Boolean] = None,
+        createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
+        updatedAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
     )
     case class GetProfilesFilters(
-        filters: List[GetProfilesFilter],
-        orderBy: List[(String, Int)] // (column, direction)
+        filters: List[GetProfilesFilter] = List(),
+        orderBy: List[(String, Int)] = List() // (column, direction)
     ) extends GetEntityFilters
 }

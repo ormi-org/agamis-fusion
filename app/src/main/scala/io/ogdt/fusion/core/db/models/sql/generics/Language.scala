@@ -4,7 +4,7 @@ import java.util.UUID
 
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 
-import io.ogdt.fusion.core.db.models.sql.exceptions.MalformedLocalLanguageCodeException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.MalformedLocalLanguageCodeException
 import org.apache.commons.codec.language.bm.Lang
 
 /** A class that reflects the state of the language entity in the database */

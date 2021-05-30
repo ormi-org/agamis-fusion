@@ -11,6 +11,8 @@ import scala.concurrent.ExecutionContext
 import java.sql.Timestamp
 import java.beans.Transient
 
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+
 class User(implicit @transient protected val store: UserStore) extends Model {
 
     @QuerySqlField(name = "username", notNull = true)
@@ -25,19 +27,26 @@ class User(implicit @transient protected val store: UserStore) extends Model {
     private var _password: String = null
     def password: String = _password
     def setPassword(password: String): User = {
-        _password = password
+        _password = Security.hash(password)
         this
     }
 
     @transient
-    private var _relatedProfiles: List[Profile] = List()
-    def relatedProfiles: List[Profile] = _relatedProfiles
+    private var _relatedProfiles: List[(Boolean, Profile)] = List()
+    def relatedProfiles: List[(Boolean, Profile)] = _relatedProfiles
     def addRelatedProfile(profile: Profile): User = {
-        _relatedProfiles ::= profile
+        _relatedProfiles.find(_._2.id == profile.id) match {
+            case Some(found) => throw new RelationAlreadyExistsException()
+            case None => _relatedProfiles ::= (true, profile)
+        }
         this
     }
     def removeRelatedProfile(profile: Profile): User = {
-        _relatedProfiles = _relatedProfiles.filterNot(p => p.id == profile.id)
+        _relatedProfiles =
+            _relatedProfiles.map({ p =>
+                if (p._2.id == profile.id) p.copy(_1 = false)
+                else p
+            })
         this
     }
 
@@ -47,5 +56,22 @@ class User(implicit @transient protected val store: UserStore) extends Model {
 
     def remove(implicit ec: ExecutionContext): Future[Unit] = {
         store.deleteUser(this)
+    }
+
+    def authenticate(plainPassword: String): Boolean = {
+        Security.validate(plainPassword, this._password)
+    }
+
+    object Security {
+
+        def hash(plainPassword: String): String = {
+            // Implement password hashing
+            "passwordHash"
+        }
+
+        def validate(plainPassword: String, currentPasswordHash: String): Boolean = {
+            // Implement password validation
+            true
+        }
     }
 }

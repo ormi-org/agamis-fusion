@@ -46,11 +46,6 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
                 .setCacheMode(CacheMode.REPLICATED)
                 .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
-                // .setQueryEntities(
-                //     List(
-                //         new QueryEntity(classTag[UUID].runtimeClass, classTag[FilesystemOrganization].runtimeClass)
-                //     ).asJava
-                // )
                 .setName(cache)
                 .setSqlSchema(schema)
                 .setIndexedTypes(classOf[UUID], classOf[User])

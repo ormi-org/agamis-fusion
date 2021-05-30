@@ -12,6 +12,9 @@ import java.sql.Timestamp
 import scala.util.Success
 import scala.util.Failure
 
+import io.ogdt.fusion.core.db.models.sql.exceptions.organizations.UnsafeFilesystemUnmountException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+
 class FileSystem(implicit @transient protected val store: FileSystemStore) extends Model {
 
     @QuerySqlField(name = "rootdir_id", notNull = true)
@@ -43,21 +46,27 @@ class FileSystem(implicit @transient protected val store: FileSystemStore) exten
     }
 
     @transient
-    private var _organizations: List[Organization] = List()
-    def organizations: List[Organization] = _organizations
-    def addOrganization(organization: Organization): FileSystem = {
-        _organizations ::= organization
-        organization.addFileSystem(this)
+    private var _organizations: List[(Boolean, (Boolean, Organization))] = List()
+    def organizations: List[(Boolean, (Boolean, Organization))] = _organizations
+    def addOrganization(organization: Organization, asDefault: Boolean = false): FileSystem = {
+        _organizations.find(_._2._2.id == organization.id) match {
+            case Some(found) => throw new RelationAlreadyExistsException()
+            case None => _organizations ::= (true, (asDefault, organization))
+        }
         this
     }
-    def removeOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[FileSystem] = {
-        organization.removeFileSystem(this).transformWith({
-            case Success(value) => {
-                _organizations = _organizations.filter(o => o.id != organization.id)
-                Future.successful(this)
+    def removeOrganization(organization: Organization)(implicit ec: ExecutionContext): FileSystem = {
+        _organizations.find(o => o._2._2.id == organization.id && o._2._1 == true) match {
+            case Some(found) => throw UnsafeFilesystemUnmountException.IS_DEFAULT_FS()
+            case None => {
+                _organizations =
+                    _organizations.map({ o =>
+                        if (o._2._2.id == organization.id) o.copy(_1 = false)
+                        else o
+                    })
+                this
             }
-            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
-        })
+        }
     }
 
     def persist(implicit ec: ExecutionContext): Future[Unit] = {

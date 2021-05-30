@@ -24,6 +24,7 @@ import scala.util.Try
 import io.ogdt.fusion.core.db.models.sql.generics.Text
 import io.ogdt.fusion.core.db.models.sql.generics.Language
 import io.ogdt.fusion.core.db.models.sql.OrganizationType
+import io.ogdt.fusion.core.db.models.sql.relations.OrganizationApplication
 
 import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.{
     OrganizationNotPersistedException,
@@ -31,6 +32,7 @@ import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.{
     DuplicateOrganizationException,
     OrganizationNotFoundException
 }
+import org.apache.ignite.cache.QueryEntity
 
 class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Organization] {
 
@@ -44,11 +46,12 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                 .setCacheMode(CacheMode.REPLICATED)
                 .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
                 .setDataRegionName("Fusion")
-                // .setQueryEntities(
-                //     List(
-                //         new QueryEntity(classTag[UUID].runtimeClass, classTag[FilesystemOrganization].runtimeClass)
-                //     ).asJava
-                // )
+                .setQueryEntities(
+                    List(
+                        new QueryEntity(classOf[String], classOf[OrganizationApplication])
+                        .setTableName("ORGANIZATION_APPLICATION")
+                    ).asJava
+                )
                 .setName(cache)
                 .setSqlSchema(schema)
                 .setIndexedTypes(classOf[UUID], classOf[Organization])
@@ -67,9 +70,12 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             "SELECT org_id, org_label, org_queryable, org_created_at, org_updated_at, info_data, type_data " +
             "FROM " +
             "(SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
-            "CONCAT_WS('||', PROFILE.id, lastname, firstname, last_login, is_active, user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at) AS data, 'PROFILE' AS data_type " +
+            "CONCAT_WS('||', PROFILE.id, lastname, firstname, EMAIL.address, last_login, is_active, user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at) AS data, 'PROFILE' AS data_type " +
             s"FROM $schema.ORGANIZATION as ORG " +
             s"INNER JOIN $schema.PROFILE AS PROFILE ON PROFILE.organization_id = ORG.id " +
+            "LEFT OUTER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id" +
+	        "LEFT OUTER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id" +
+	        "WHERE PROFILE_EMAIL.is_main = TRUE" +
             "UNION ALL " +
             "SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
             "CONCAT_WS('||', FS.id, rootdir_id, FS.label, shared, FS_ORG.is_default, FS.created_at, FS.updated_at) AS data, 'FS' AS data_type " +
@@ -216,10 +222,10 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                                     }
                                                 } 
                                             ) yield {
-                                                if (fileSystemReflection(4) == true) {
-                                                    organization.setDefaultFileSystem(fileSystem)
-                                                } else {
-                                                    organization.addFileSystem(fileSystem)
+                                                fileSystemReflection(4).toBooleanOption match {
+                                                    case Some(true) => organization.setDefaultFileSystem(fileSystem)
+                                                    case Some(false) => organization.addFileSystem(fileSystem)
+                                                    case None =>
                                                 }
                                             })
                                         }
@@ -246,12 +252,10 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                                         case _ => null
                                                     })
                                                 ) flatMap { profile =>
-                                                    Try(profileReflection(4).asInstanceOf[Boolean]) match {
-                                                        case Success(isActive) => {
-                                                            if (isActive) Right(profile.setActive)
-                                                            else Right(profile.setInactive)
-                                                        }
-                                                        case _ => Right(profile)
+                                                    profileReflection(4).toBooleanOption match {
+                                                        case Some(true) => Right(profile.setActive)
+                                                        case Some(false) => Right(profile.setInactive)
+                                                        case None => Right(profile)
                                                     }
                                                 }
                                             ) yield {
@@ -300,7 +304,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                             })
                             orgType match {
                                 case Some(value) => organization.setType(value)
-                                case None => ()
+                                case None =>
                             }
                             Right(organization)
                         }
@@ -373,7 +377,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         })
     }
 
-    // Delete user from database
+    // Delete organization from database
     def deleteOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
         Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
         .transformWith({
@@ -390,7 +394,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
       */
     case class BulkDeleteOrganizationsResult(inserts: Int, errors: List[String])
 
-    // Delete several users from database
+    // Delete several organizations from database
     def bulkDeleteOrganizations(organizations: List[Organization])(implicit ec: ExecutionContext): Future[BulkDeleteOrganizationsResult] = {
         Utils.igniteToScalaFuture(igniteCache.removeAllAsync(organizations.map(_.id).toSet.asJava))
         .transformWith({
@@ -412,15 +416,15 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
 
 object OrganizationStore {
     case class GetOrganizationsFilter(
-        id: List[String],
-        label: List[String],
-        `type`: List[String],
-        queryable: Option[Boolean],
-        createdAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
-        updatedAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
+        id: List[String] = List(),
+        label: List[String] = List(),
+        `type`: List[String] = List(),
+        queryable: Option[Boolean] = None,
+        createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
+        updatedAt: Option[(String, Timestamp)] = None // (date, (eq, lt, gt, ne))
     )
     case class GetOrganizationsFilters(
-        filters: List[GetOrganizationsFilter],
-        orderBy: List[(String, Int)]
+        filters: List[GetOrganizationsFilter] = List(),
+        orderBy: List[(String, Int)] = List()
     ) extends GetEntityFilters
 }

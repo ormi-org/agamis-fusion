@@ -55,7 +55,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                 .setDataRegionName("Fusion")
                 .setQueryEntities(
                     List(
-                        new QueryEntity(classOf[UUID], classOf[FilesystemOrganization])
+                        new QueryEntity(classOf[String], classOf[FilesystemOrganization])
                         .setTableName("FILESYSTEM_ORGANIZATION")
                     ).asJava
                 )
@@ -95,17 +95,17 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         queryFilters.filters.foreach({ filter =>
             var innerWhereStatement: ListBuffer[String] = ListBuffer()
             // manage ids search
-            if (filter.id.length > 0) {
+            if (!filter.id.isEmpty) {
                 innerWhereStatement += s"fs_id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.id
             }
             // manage rootdirIds search
-            if (filter.rootdirId.length > 0) {
+            if (!filter.rootdirId.isEmpty) {
                 innerWhereStatement += s"fs_rootdir_id in (${(for (i <- 1 to filter.rootdirId.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.rootdirId
             }
             // manage labels search
-            if (filter.label.length > 0) {
+            if (!filter.label.isEmpty) {
                 innerWhereStatement += s"fs_label in (${(for (i <- 1 to filter.label.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.label
             }
@@ -149,11 +149,11 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             whereStatements += innerWhereStatement.mkString(" AND ")
         })
         // compile whereStatements
-        if (whereStatements.length > 0) {
+        if (!whereStatements.isEmpty) {
             queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
-        if (queryFilters.orderBy.length > 0) {
+        if (!queryFilters.orderBy.isEmpty) {
             queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
                 s"fs_${o._1} ${o._2 match {
                     case 1 => "ASC"
@@ -161,7 +161,6 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                 }}"
             ).mkString(", ")}"
         }
-        println(queryArgs)
         makeQuery(queryString)
         .setParams(queryArgs.toList)
     }
@@ -260,12 +259,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                 })
                 Future.successful(fileSystems.toList)
             }
-            case Failure(cause) => Future.failed(cause)
+            case Failure(cause) => Future.failed(FilesystemQueryExecutionException(cause))
         })
     }
 
     def getAllFileSystems(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
-        getFileSystems(FileSystemStore.GetFileSystemsFilters.none).transformWith({
+        getFileSystems(FileSystemStore.GetFileSystemsFilters()).transformWith({
             case Success(fileSystems) => 
                 fileSystems.length match {
                     case 0 => Future.failed(new NoEntryException("FileSystem table is empty"))
@@ -277,18 +276,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
 
     def getFileSystemById(id: String)(implicit ec: ExecutionContext): Future[FileSystem] = {
         getFileSystems(
-            FileSystemStore.GetFileSystemsFilters(
-                List(
-                    FileSystemStore.GetFileSystemsFilter(
-                        List(id),
-                        List(),
-                        List(),
-                        None,
-                        None,
-                        None
+            FileSystemStore.GetFileSystemsFilters().copy(
+                filters = List(
+                    FileSystemStore.GetFileSystemsFilter().copy(
+                        id = List(id)
                     )
-                ),
-                List()
+                )
             )
         ).transformWith({
             case Success(fileSystems) => 
@@ -297,112 +290,157 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                     case 1 => Future.successful(fileSystems(0))
                     case _ => Future.failed(new DuplicateFilesystemException)
                 }
-            case Failure(cause) => Future.failed(FilesystemQueryExecutionException(cause))
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
     // Save user object's modification to database
     def persistFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
-        if (fileSystem.organizations.length == 0)
-            return Future.failed(new Error("FileSystem must be mounted on at least one organization before being persisted"))
-        Utils.igniteToScalaFuture(igniteCache.putAsync(
-            fileSystem.id, fileSystem
-        )).transformWith({
-            case Success(value) => Future.unit
-            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
-        })
+        if (fileSystem.organizations.filter(_._1 == true).isEmpty)
+            return Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
+        else {
+            val transaction = makeTransaction
+            transaction match {
+                case Success(tx) => {
+                    val relationCache: IgniteCache[String, FilesystemOrganization] =
+                        wrapper.getCache[String, FilesystemOrganization](cache)
+                    Future.sequence(
+                        List(
+                            // Save orgs
+                            Utils.igniteToScalaFuture(relationCache.putAllAsync(
+                                (fileSystem.organizations
+                                .filter(_._1 == true)
+                                .map({ org =>
+                                    (
+                                        fileSystem.id +":"+org._2._2.id,
+                                        FilesystemOrganization(
+                                            fileSystem.id,
+                                            org._2._2.id,
+                                            org._1
+                                        )
+                                    )
+                                })).toMap[String, FilesystemOrganization].asJava
+                            )),
+                            // Remove orgs
+                            Utils.igniteToScalaFuture(relationCache.removeAllAsync(
+                                (fileSystem.organizations
+                                .filter(_._1 == false)
+                                .map(fileSystem.id +":"+_._2._2.id)).toSet[String].asJava
+                            )),
+                            // Save entity
+                            Utils.igniteToScalaFuture(igniteCache.putAsync(
+                                fileSystem.id, fileSystem
+                            ))
+                        )
+                    ).transformWith({
+                        case Success(value) => {
+                            commitTransaction(transaction).transformWith({
+                                case Success(value) => Future.unit
+                                case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
+                            })
+                        }
+                        case Failure(cause) => {
+                            rollbackTransaction(transaction)
+                            Future.failed(FilesystemNotPersistedException(cause))
+                        }
+                    })
+                }
+                case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
+            }
+        }
     }
 
-    /** A result of bulkPersistFileSystems method
-      * 
-      * @constructor create a new BulkPersistFileSystemsResult with a count of inserted FileSystems and a list of errors
-      * @param inserts a count of the effectively inserted FileSystems
-      * @param errors a list of errors catched from a file deletion
-      */
-    case class BulkPersistFileSystemsResult(inserts: Int, errors: List[String])
-
     // Save several object's modifications
-    def bulkPersistFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[BulkPersistFileSystemsResult] = {
-        Utils.igniteToScalaFuture(igniteCache.putAllAsync(
-            (fileSystems.map(_.id) zip fileSystems).toMap[UUID, FileSystem].asJava
-        )).transformWith({
-            case Success(value) => {
-                Future.sequence(
-                    fileSystems.map(fileSystem => Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(fileSystem.id)))
-                ).map(lookup => (fileSystems zip lookup))
-                .transformWith(lookup => {
-                    Future.successful(BulkPersistFileSystemsResult(
-                        lookup.get.filter(_._2 == true).length,
-                        lookup.get.filter(_._2 == false).map("Insert fileSystem "+_._1.toString+" failed")
-                    ))
-                })
+    def bulkPersistFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[Unit] = {
+        fileSystems.find({ fs => !fs.organizations.isEmpty }) match {
+            case Some(found) => throw FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted")
+            case None => {
+                val transaction = makeTransaction
+                transaction match {
+                    case Success(tx) => {
+                        val relationCache: IgniteCache[String, FilesystemOrganization] =
+                            wrapper.getCache[String, FilesystemOrganization](cache)
+                        Future.sequence(
+                            List(
+                                Utils.igniteToScalaFuture(igniteCache.putAllAsync(
+                                    (fileSystems.map(_.id) zip fileSystems).toMap[UUID, FileSystem].asJava
+                                )),
+                                Utils.igniteToScalaFuture(relationCache.putAllAsync(
+                                    (fileSystems.map(fs => fs.organizations.filter(_._1 == true).map(fs.id +":"+_._2._2.id) zip fs.organizations.map({ org =>
+                                        FilesystemOrganization(
+                                            fs.id,
+                                            org._2._2.id,
+                                            org._1
+                                        )
+                                    })).flatten.toMap[String, FilesystemOrganization].asJava)
+                                )),
+                                Utils.igniteToScalaFuture(relationCache.removeAllAsync(
+                                    (fileSystems.map(fs =>
+                                        fs.organizations.filter(_._1 == false).map(fs.id +":"+_._2._2.id)
+                                    )).flatten.toSet[String].asJava
+                                ))
+                            )
+                        ).transformWith({
+                            case Success(value) => {
+                                commitTransaction(transaction).transformWith({
+                                    case Success(value) => Future.unit
+                                    case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
+                                })
+                            }
+                            case Failure(cause) => {
+                                rollbackTransaction(transaction)
+                                Future.failed(FilesystemNotPersistedException(cause))
+                            }
+                        })
+                    }
+                    case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
+                }
             }
-            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
-        })
+        }
     }
 
     // Delete fileSystem from database
     def deleteFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
         if (!fileSystem.organizations.isEmpty) return Future.failed(FilesystemNotPersistedException("fileSystem is still attached to some organization and can't be deleted"))
-        Utils.igniteToScalaFuture(igniteCache.removeAsync(fileSystem.id))
-        .transformWith({
-            case Success(done) => {
-                if (done) Future.unit
-                else Future.failed(FilesystemNotPersistedException())
-            }
-            case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause))
-        })
+        else {
+            Utils.igniteToScalaFuture(igniteCache.removeAsync(fileSystem.id))
+            .transformWith({
+                case Success(done) => {
+                    if (done) Future.unit
+                    else Future.failed(FilesystemNotPersistedException())
+                }
+                case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause))
+            })
+        }
     }
 
-    /** A result of bulkDeleteFileSystems method
-      * 
-      * @constructor create a new BulkDeleteFileSystemsResult with a count of deleted FileSystems and a list of errors
-      * @param inserts a count of the effectively deleted FileSystems
-      * @param errors a list of errors catched from a fileSystem deletion
-      */
-    case class BulkDeleteFileSystemsResult(inserts: Int, errors: List[String])
-
     // Delete several users from database
-    def bulkDeleteFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[BulkDeleteFileSystemsResult] = {
-        Utils.igniteToScalaFuture(igniteCache.removeAllAsync(
-            fileSystems.filter(_.organizations.isEmpty).map(_.id).toSet.asJava)
-        ).transformWith({
-            case Success(value) => {
-                Future.sequence(
-                    fileSystems.map(fileSystem => Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(fileSystem.id)))
-                ).map(lookup => (fileSystems zip lookup))
-                .transformWith(lookup => {
-                    Future.successful(BulkDeleteFileSystemsResult(
-                        lookup.get.filter(_._2 == false).length,
-                        lookup.get.filter(_._2 == true).map("Failed to delete fileSystem "+_._1.toString)
-                    ))
+    def bulkDeleteFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[Unit] = {
+        fileSystems.find({ fs => !fs.organizations.isEmpty }) match {
+            case Some(found) => throw FilesystemNotPersistedException("FileSystem must be unmounted off all its organization before being deleted")
+            case None => {
+                Utils.igniteToScalaFuture(igniteCache.removeAllAsync(
+                    fileSystems.filter(_.organizations.isEmpty).map(_.id).toSet.asJava)
+                ).transformWith({
+                    case Success(value) => Future.unit
+                    case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
                 })
             }
-            case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
-        })
+        }
     }
 }
 
 object FileSystemStore {
     case class GetFileSystemsFilter(
-        id: List[String],
-        rootdirId: List[String],
-        label: List[String],
-        shared: Option[Boolean],
-        createdAt: Option[(String, Timestamp)],
-        updatedAt: Option[(String, Timestamp)]
+        id: List[String] = List(),
+        rootdirId: List[String] = List(),
+        label: List[String] = List(),
+        shared: Option[Boolean] = None,
+        createdAt: Option[(String, Timestamp)] = None,
+        updatedAt: Option[(String, Timestamp)] = None
     )
     case class GetFileSystemsFilters(
-        filters: List[GetFileSystemsFilter],
-        orderBy: List[(String, Int)]
+        filters: List[GetFileSystemsFilter] = List(),
+        orderBy: List[(String, Int)] = List()
     ) extends GetEntityFilters
-
-    object GetFileSystemsFilters {
-        def none: GetFileSystemsFilters = {
-            GetFileSystemsFilters(
-                List(),
-                List()
-            )
-        }
-    }
 }

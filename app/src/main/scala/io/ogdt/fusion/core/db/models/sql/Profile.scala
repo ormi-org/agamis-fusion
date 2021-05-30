@@ -9,6 +9,9 @@ import java.sql.Timestamp
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import java.time.Instant
+import io.ogdt.fusion.core.db.models.sql.generics.Email
+
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 
 /** A class that reflects the state of the profile entity in the database
   * 
@@ -122,6 +125,57 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     def setRelatedUser(user: User): Profile = {
         _relatedUser = Some(user)
         _userId = user.id
+        this
+    }
+
+    @transient
+    private var _mainEmail: Email = null
+    def mainEmail: Email = _mainEmail
+    def setMainEmail(email: Email): Profile = {
+        _emails =
+            _emails.map({ e =>
+                if (e._2.id == email.id) e.copy(_1 = false)
+                else e
+            })
+        _mainEmail = email
+        this
+    }
+
+    @transient
+    private var _emails: List[(Boolean, Email)] = List()
+    def emails: List[(Boolean, Email)] = _emails
+    def addEmail(email: Email): Profile = {
+        _emails.find(_._2.id == email.id) match {
+            case Some(found) => throw new RelationAlreadyExistsException()
+            case None => _emails ::= (true, email)
+        }
+        this
+    }
+    def removeEmail(email: Email): Profile = {
+        _emails =
+            _emails.map({ e =>
+                if (e._2.id == email.id) e.copy(_1 = false)
+                else e
+            })
+        this
+    }
+
+    @transient
+    private var _groups: List[(Boolean, Group)] = List()
+    def groups: List[(Boolean, Group)] = _groups
+    def addGroup(group: Group): Profile = {
+        _groups.find(_._2.id == group.id) match {
+            case Some(found) => throw new RelationAlreadyExistsException()
+            case None => _groups ::= (true, group)
+        }
+        this
+    }
+    def removeGroup(group: Group): Profile = {
+        _groups =
+            _groups.map({ g =>
+                if (g._2.id == group.id) g.copy(_1 = false)
+                else g
+            })
         this
     }
 
