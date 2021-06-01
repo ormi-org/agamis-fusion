@@ -61,7 +61,7 @@ class GroupRoutes(buildGroupRepository: ActorRef[GroupRepository.Command])(impli
                 get {
                     parameter("name".as[String]) { (name: String) => 
                     println(s"name is $name")
-                    onComplete(buildGroupRepository.ask(GroupRepository.GetGroupByPath(name,_))) {
+                    onComplete(buildGroupRepository.ask(GroupRepository.GetGroupByName(name,_))) {
                         case Success(group) => complete(StatusCodes.OK)
                         case Failure(reason) => reason match {
                             case _ => complete(StatusCodes.NotImplemented -> reason)

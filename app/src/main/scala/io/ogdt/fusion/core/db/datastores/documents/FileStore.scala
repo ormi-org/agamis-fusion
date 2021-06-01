@@ -37,7 +37,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
     override val collection: String = "files"
 
     // DEBUG
-    var logger: Logger = LoggerFactory.getLogger(getClass());
+    var logger: Logger = LoggerFactory.getLogger(getClass())
     // end-DEBUG
 
     override def insert(file: File): Future[WriteResult] = {

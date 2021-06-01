@@ -30,6 +30,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.7" % "test", 
   // JWT
   "com.github.jwt-scala" %% "jwt-core" % "7.1.5",
-  "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5"
+  "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5",
+  // Bcrypt 
+  "at.favre.lib" % "bcrypt" % "0.9.0"
 
 )

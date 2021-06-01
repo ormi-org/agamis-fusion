@@ -8,7 +8,10 @@ import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
 import scala.util.{Success, Failure}
 
 import io.ogdt.fusion.external.http.entities.User
+
 import io.ogdt.fusion.external.http.authorization.JwtAuthorization
+
+import io.ogdt.fusion.core.data.security.utils.HashPassword
 
 object UserRepository {
 
@@ -21,39 +24,48 @@ object UserRepository {
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddUser(user: User, replyTo: ActorRef[Response]) extends Command
-    final case class GetUserById(token: String, id: String, replyTo: ActorRef[User]) extends Command
-    final case class GetUserByName(name: String, replyTo: ActorRef[User]) extends Command
+    final case class AddUser(user: User, token: String, replyTo: ActorRef[Response]) extends Command
+    final case class GetUserById(id: String, token: String , replyTo: ActorRef[Response]) extends Command
+    final case class GetUserByName(name: String, token: String, replyTo: ActorRef[User]) extends Command
     final case class UpdateUser(user: User, replyTo: ActorRef[Response]) extends Command
     final case class DeleteUser(user: User, replyTo: ActorRef[Response]) extends Command
+    final case class Authenfication(token: String, username: String, password: String, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
-        case AddUser(user, replyTo) =>
-            if (user.checkPassword(user.username, user.password)) {
-                replyTo ! OK
-            } else {
-                replyTo ! KO("Problem with the creation of user")
-            }
+        case AddUser(user, token, replyTo) =>
+            // if(user.verifyPassword() != false ) { replyTo ! OK }
+            // else { replyTo ! KO("Problem with the creation of user") }
+            // if (user.checkPassword(user.username, user.password)) {
+            //     replyTo ! OK
+            // } else {
+            //     replyTo ! KO("Problem with the creation of user")
+            // }
+            replyTo ! OK
             Behaviors.same
-        case GetUserById(token,id, replyTo) =>
-            if (user.isTokenExpired(token)) {
-                throw new Exception("Token expired")
-            } else if (user.isTokenValid(token)) {
-                UserStore.getUserbyID(id).transformWith({
-                    case Success(user) => replyTo ! user
-                    case Failure(cause) => throw new Exception(cause)
-                })
-            } else {
-                throw new Exception("Token invalid") 
-            }
+        case GetUserById(id, token, replyTo) =>
+            replyTo ! OK
             Behaviors.same
-        case GetUserByName(name, replyTo) => 
+            
+            // UserStore.getUserbyID(id).transformWith({
+            //     case Success(user) => 
+            //         if (user.isTokenValid(token)) {
+            //             if (user.isTokenExpired(token)) { throw new Exception("Token expired") } 
+            //             else { throw new Exception("User authorized") }
+            //         } else { throw new Exception("Token invalid") }
+            //     case Failure(cause) => throw new Exception(cause)
+            // })
+
+            Behaviors.same
+        case GetUserByName(name, token, replyTo) => 
             replyTo ! User(UUID.randomUUID(),"","")
             Behaviors.same
         case UpdateUser(user, replyTo) =>
             replyTo ! OK
             Behaviors.same 
         case DeleteUser(user, replyTo) =>
+            replyTo ! OK
+            Behaviors.same
+        case Authenfication(token, username, password, replyTo) =>
             replyTo ! OK
             Behaviors.same
     }
