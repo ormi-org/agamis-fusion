@@ -15,6 +15,9 @@ import io.ogdt.fusion.core.db.datastores.sql.OrganizationTypeStore
 import io.ogdt.fusion.core.db.datastores.sql.generics.LanguageStore
 import io.ogdt.fusion.core.db.datastores.sql.generics.TextStore
 import io.ogdt.fusion.core.db.datastores.sql.generics.EmailStore
+import io.ogdt.fusion.core.db.datastores.sql.GroupStore
+import io.ogdt.fusion.core.db.datastores.sql.ApplicationStore
+import io.ogdt.fusion.core.db.datastores.sql.PermissionStore
 
 object FusionFS {
 
@@ -49,6 +52,9 @@ class FusionFS(context: ActorContext[FusionFS.Command]) extends AbstractBehavior
                 var fsStore = new FileSystemStore
                 var organizationStore = new OrganizationStore
                 var organizationTypeStore = new OrganizationTypeStore
+                var groupStore = new GroupStore
+                var applicationStore = new ApplicationStore
+                var permissionStore = new PermissionStore
 
                 // Generic stores
                 var languageStore = new LanguageStore

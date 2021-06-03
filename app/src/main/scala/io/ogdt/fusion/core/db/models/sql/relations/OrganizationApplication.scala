@@ -12,6 +12,9 @@ class OrganizationApplication private() {
     protected var _applicationId: UUID = null
 
     @QuerySqlField(name = "status", notNull = true)
+    protected var _statusValue: Int = OrganizationApplication.DISABLED.toInt
+
+    @transient
     protected var _status: OrganizationApplication.Status = OrganizationApplication.DISABLED
 
     @QuerySqlField(name = "license_file_fs_id", notNull = true)
@@ -28,14 +31,17 @@ object OrganizationApplication {
         relation._organizationId = organizationId
         relation._applicationId = applicationId
         relation._status = status
+        relation._statusValue = status.toInt
         relation
     }
 
-    sealed trait Status
+    sealed trait Status {
+        def toInt: Int
+    }
     case object DISABLED extends Status {
-        def toInt: Integer = 0
+        def toInt: Int = 0
     }
     case object ENABLED extends Status {
-        def toInt: Integer = 1
+        def toInt: Int = 1
     }
 }

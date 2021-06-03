@@ -28,7 +28,7 @@ import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExis
 class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Application] {
 
     override val schema: String = "FUSION"
-    override val cache: String = s"SQL_${schema}_Application"
+    override val cache: String = s"SQL_${schema}_APPLICATION"
     override protected var igniteCache: IgniteCache[UUID, Application] = wrapper.cacheExists(cache) match {
         case true => wrapper.getCache[UUID, Application](cache)
         case false => {
@@ -247,16 +247,16 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
 
 object ApplicationStore {
     case class GetApplicationsFilter(
-        id: List[String],
-        appUniversalId: List[String],
-        status: List[Application.Status],
-        manifestUrl: List[String],
-        storeUrl: List[String],
-        createdAt: Option[(String, Timestamp)],
-        updatedAt: Option[(String, Timestamp)]
+        id: List[String] = List(),
+        appUniversalId: List[String] = List(),
+        status: List[Application.Status] = List(),
+        manifestUrl: List[String] = List(),
+        storeUrl: List[String] = List(),
+        createdAt: Option[(String, Timestamp)] = None,
+        updatedAt: Option[(String, Timestamp)] = None
     )
     case class GetApplicationsFilters(
-        filters: List[GetApplicationsFilter],
-        orderBy: List[(String,Int)]
+        filters: List[GetApplicationsFilter] = List(),
+        orderBy: List[(String,Int)] = List()
     ) extends GetEntityFilters
 }

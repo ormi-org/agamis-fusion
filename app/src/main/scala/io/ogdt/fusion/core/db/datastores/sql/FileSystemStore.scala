@@ -40,6 +40,8 @@ import io.ogdt.fusion.core.db.datastores.sql.exceptions.filesystems.{
     FilesystemNotFoundException,
     FilesystemQueryExecutionException
 }
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.OrganizationNotFoundException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.DuplicateOrganizationException
 
 class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, FileSystem] {
 
@@ -74,22 +76,32 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
 
     def makeFileSystemsQuery(queryFilters: FileSystemStore.GetFileSystemsFilters): SqlStoreQuery = {
         var queryString: String = 
-            "SELECT fs_id, fs_rootdir_id, fs_label, fs_shared, fs_created_at, fs_updated_at, info_data, type_data, org_id " +
+            "SELECT fs_id, fs_rootdir_id, fs_label, fs_shared, fs_created_at, fs_updated_at, info_data, type_data " +
             "FROM " +
-            "(SELECT FS.id AS fs_id, rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at, ORG.id AS org_id, " +
-            "CONCAT_WS('||', ORG.id, ORG.label, ORG.created_at, ORG.updated_at) AS info_data, 'ORGANIZATION' AS type_data " +
+            "(SELECT FS.id AS fs_id, rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at, " +
+            "CONCAT_WS('||', ORG.id, ORG.label, ORG.queryable, ORG.created_at, ORG.updated_at) AS info_data, 'ORGANIZATION' AS type_data, ORG.id AS org_id " +
             s"FROM $schema.FILESYSTEM AS FS " +
             s"LEFT OUTER JOIN $schema.FILESYSTEM_ORGANIZATION as FS_ORG ON FS_ORG.filesystem_id = FS.id " +
             s"LEFT OUTER JOIN $schema.ORGANIZATION AS ORG ON FS_ORG.organization_id = ORG.id " +
             "UNION ALL " +
-            "SELECT FS.id AS fs_id, rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at, ORG.id AS org_id, " +
-            "CONCAT_WS('||', ORG.id, ORGTYPE.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data " +
+            "(SELECT fs_id, fs_rootdir_id, fs_label, fs_shared, fs_created_at, fs_updated_at, info_data, type_data, org_id " +
+            "FROM " +
+            "(SELECT FS.id AS fs_id, FS.rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at, " +
+            "CONCAT_WS('||', ORG.id, ORGTYPE.id, ORGTYPE.label_text_id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE' AS type_data, ORGTYPE.id AS orgtype_id, ORG.id AS org_id " +
+            s"FROM $schema.FILESYSTEM AS FS " +
+            s"LEFT OUTER JOIN $schema.FILESYSTEM_ORGANIZATION as FS_ORG ON FS_ORG.filesystem_id = FS.id " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATION AS ORG ON FS_ORG.organization_id = ORG.id " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
+            "UNION ALL " +
+            "(SELECT FS.id AS fs_id, FS.rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at, " +
+            "CONCAT_WS('||', ORG.id, ORGTYPE.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data, ORGTYPE.id AS orgtype_id, ORG.id AS org_id " +
             s"FROM $schema.FILESYSTEM AS FS " +
             s"LEFT OUTER JOIN $schema.FILESYSTEM_ORGANIZATION as FS_ORG ON FS_ORG.filesystem_id = FS.id " +
             s"LEFT OUTER JOIN $schema.ORGANIZATION AS ORG ON FS_ORG.organization_id = ORG.id " +
             s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
             s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
-            s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id)"
+            s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id " +
+            "))))"
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -193,66 +205,95 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                 }
                                 case _ => Right(fileSystem)
                             }
-                        } flatMap { fileSystem => // pass created filesystem to organization mapping step
+                        } flatMap { fileSystem => // pass created filesystem to relation mapping step
                             // filter entities to exclude results where compulsory fields are missing or set to NULL
-                            val organizations = entityReflection._2.groupBy(_(8)).foreach(organizationReflection => {
-                                val organizationDefinition = organizationReflection._2.filter(_(7) == "ORGANIZATION")
-                                    .last(6).asInstanceOf[String].split("||")
-                                if (organizationDefinition.length == 5) {
-                                    (for (
-                                        organization <- Right(new OrganizationStore()
-                                            .makeOrganization
-                                            .setId(organizationDefinition(0))
-                                            .setLabel(organizationDefinition(1))
-                                            .setCreatedAt(Timestamp.from(Instant.parse(organizationDefinition(3))) match {
-                                                case createdAt: Timestamp => createdAt
-                                                case _ => null
-                                            })
-                                            .setUpdatedAt(Timestamp.from(Instant.parse(organizationDefinition(4))) match {
-                                                case updatedAt: Timestamp => updatedAt
-                                                case _ => null
-                                            })
-                                        ) flatMap { organization =>
-                                            Try(organizationDefinition(2).toBoolean) match {
-                                                case Success(queryable) => {
-                                                    if (queryable) Right(organization.setQueryable)
-                                                    else Right(organization.setUnqueryable)
-                                                }
-                                                case Failure(cause) => Right(organization)
-                                            }
-                                            val orgTypeLangVariantReflections = organizationReflection._2.filter(_(7) == "ORGTYPE_LANG_VARIANT")
-                                                .map({ variant =>
-                                                    variant(6).asInstanceOf[String].split("||")
-                                                })
-                                                .filter(_.length == 8)
-                                            if (!orgTypeLangVariantReflections.isEmpty) {
-                                                val orgType = new OrganizationTypeStore()
-                                                .makeOrganizationType
-                                                .setId(orgTypeLangVariantReflections(0)(0))
-                                                .setCreatedAt(Try(orgTypeLangVariantReflections(0)(6).asInstanceOf[Timestamp]) match {
-                                                    case Success(createdAt) => createdAt
-                                                    case _ => null
-                                                })
-                                                .setUpdatedAt(Try(orgTypeLangVariantReflections(0)(7).asInstanceOf[Timestamp]) match {
-                                                    case Success(updatedAt) => updatedAt
-                                                    case _ => null
-                                                })
-                                                orgTypeLangVariantReflections.foreach({ orgLangVariant =>
-                                                    orgType.setLabel(
-                                                        Language.apply
-                                                        .setId(orgLangVariant(3))
-                                                        .setCode(orgLangVariant(2))
-                                                        .setLabel(orgLangVariant(4)),
-                                                        orgLangVariant(1)
-                                                    )
-                                                })
-                                                organization.setType(orgType)
-                                            }
-                                            Right(organization)
-                                        }
-                                    ) yield fileSystem.addOrganization(organization))
-                                }
+                            val groupedRows = entityReflection._2.map({ entityFields =>
+                                (entityFields(7).asInstanceOf[String], entityFields(6).asInstanceOf[String].split("||"))
                             })
+                            // group by relation id
+                            .groupBy(_._2(0))
+                            // map to iterable of entities
+                            .map(_._2)
+                            // group entities by types
+                            .groupBy(_(0)._1)
+
+                            // organization mapping
+                            val organizations = groupedRows.get("ORGANIZATION") match {
+                                case Some(organizationReflections) => {
+                                    organizationReflections.foreach(organizationReflection => {
+                                        organizationReflection.partition(_._1 == "ORGANIZATION") match {
+                                            case result => {
+                                                result._1.length match {
+                                                    case 0 => Future.failed(OrganizationNotFoundException(s"Filesystem ${entityReflection._2(0)(0).toString}:${entityReflection._2(0)(2).toString} might be orphan"))
+                                                    case 1 => {
+                                                        val orgDef = result._1(0)._2
+                                                        (for (
+                                                            organization <- Right(new OrganizationStore()
+                                                                .makeOrganization
+                                                                .setId(orgDef(0))
+                                                                .setLabel(orgDef(1))
+                                                                .setCreatedAt(Timestamp.from(Instant.parse(orgDef(3))) match {
+                                                                    case createdAt: Timestamp => createdAt
+                                                                    case _ => null
+                                                                })
+                                                                .setUpdatedAt(Timestamp.from(Instant.parse(orgDef(4))) match {
+                                                                    case updatedAt: Timestamp => updatedAt
+                                                                    case _ => null
+                                                                })
+                                                            ) flatMap { organization =>
+                                                                Try(orgDef(2).toBoolean) match {
+                                                                    case Success(queryable) => {
+                                                                        if (queryable) Right(organization.setQueryable)
+                                                                        else Right(organization.setUnqueryable)
+                                                                    }
+                                                                    case Failure(cause) => Right(organization)
+                                                                }
+                                                                result._2.partition(_._1 == "ORGTYPE") match {
+                                                                    case result => {
+                                                                        result._1.length match {
+                                                                            case 0 => 
+                                                                            case 1 => {
+                                                                                val orgTypeDef = result._1(0)._2
+                                                                                val orgType = new OrganizationTypeStore()
+                                                                                .makeOrganizationType
+                                                                                .setId(orgTypeDef(1))
+                                                                                .setLabelTextId(orgTypeDef(2))
+                                                                                .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
+                                                                                    case Success(createdAt) => createdAt
+                                                                                    case _ => null
+                                                                                })
+                                                                                .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
+                                                                                    case Success(updatedAt) => updatedAt
+                                                                                    case _ => null
+                                                                                })
+                                                                                result._2.foreach({ result =>
+                                                                                    val orgTypeLangVariantDef = result._2
+                                                                                    orgType.setLabel(
+                                                                                        Language.apply
+                                                                                        .setId(orgTypeLangVariantDef(4))
+                                                                                        .setCode(orgTypeLangVariantDef(3))
+                                                                                        .setLabel(orgTypeLangVariantDef(5)),
+                                                                                        orgTypeLangVariantDef(2)
+                                                                                    )
+                                                                                })
+                                                                                organization.setType(orgType)
+                                                                            }
+                                                                            case _ => 
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Right(organization)
+                                                            }
+                                                        ) yield fileSystem.addOrganization(organization))
+                                                    }
+                                                    case _ => Future.failed(DuplicateOrganizationException(s"Filesystem ${entityReflection._2(0)(0).toString}:${entityReflection._2(0)(2).toString} has duplicate organization relation"))
+                                                }
+                                            }
+                                        }
+                                    })
+                                }
+                                case None => {}
+                            }
                             Right(fileSystem)
                         }
                     ) yield fileSystem).getOrElse(null)                   
@@ -264,7 +305,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     }
 
     def getAllFileSystems(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
-        getFileSystems(FileSystemStore.GetFileSystemsFilters()).transformWith({
+        getFileSystems(FileSystemStore.GetFileSystemsFilters().copy(
+            orderBy = List(
+                ("fs_id", 1),
+                ("org_id", 1)
+            )
+        )).transformWith({
             case Success(fileSystems) => 
                 fileSystems.length match {
                     case 0 => Future.failed(new NoEntryException("FileSystem table is empty"))
@@ -281,6 +327,10 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                     FileSystemStore.GetFileSystemsFilter().copy(
                         id = List(id)
                     )
+                ),
+                orderBy = List(
+                    ("fs_id", 1),
+                    ("org_id", 1)
                 )
             )
         ).transformWith({

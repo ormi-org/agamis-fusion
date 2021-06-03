@@ -26,11 +26,23 @@ class Application(implicit @transient protected val store: ApplicationStore) ext
         this
     }
 
+    @QuerySqlField(name = "version", notNull = true)
+    private var _version: String = null
+    def version: String = _version
+    def setVersion(version: String): Application = {
+        _version = version
+        this
+    }
+
     @QuerySqlField(name = "status", notNull = true)
+    private var _statusValue: Int = Application.NOT_INSTALLED.toInt
+
+    @transient
     private var _status: Application.Status = Application.NOT_INSTALLED
     def status: Application.Status = _status
     def setStatus(status: Application.Status): Application = {
         _status = status
+        _statusValue = status.toInt
         this
     }
 
