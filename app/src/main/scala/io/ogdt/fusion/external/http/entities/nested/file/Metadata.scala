@@ -28,7 +28,7 @@ import org.xbill.DNS.Zone
 
 final case class Metadata(
     size: Option[Int],
-    creationDate: Instant, // to change
+    creationDate: Instant, // TODO : à changer
     lastVersionDate: Option[Instant],
     lastModificationDate: Instant,
     chainsCount: Option[Int],

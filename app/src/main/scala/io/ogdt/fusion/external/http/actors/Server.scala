@@ -10,7 +10,9 @@ import akka.actor.typed.scaladsl.Behaviors
 
 import scala.concurrent.Future
 
-import io.ogdt.fusion.external.http.routes.{FileRoutes, UserRoutes, GroupRoutes, ProfileRoutes, FileSystemRoutes}
+import io.ogdt.fusion.external.http.routes.{
+    FileRoutes, UserRoutes, GroupRoutes, ProfileRoutes, FileSystemRoutes, PermissionRoutes, OrganizationRoutes, AuthenticationRoutes
+}
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -40,8 +42,17 @@ object Server {
     val buildGroupRepository = ctx.spawn(GroupRepository(), "GroupRepository")
     val groupRoutes = new GroupRoutes(buildGroupRepository)
 
+    val buildOrganizationRepository = ctx.spawn(OrganizationRepository(), "OrganizationRepository")
+    val organizationRoutes = new OrganizationRoutes(buildOrganizationRepository)
+
     val buildProfileRepository = ctx.spawn(ProfileRepository(), "ProfileRepository")
     val profileRoutes = new ProfileRoutes(buildProfileRepository)
+
+    val buildPermissionRepository = ctx.spawn(PermissionRepository(), "PermissionRepository")
+    val permissionRoutes = new PermissionRoutes(buildPermissionRepository)
+
+    val buildAuthenticationRepository = ctx.spawn(AuthenticationRepository(), "AuthenticationRepository")
+    val authenticationRoutes = new AuthenticationRoutes(buildAuthenticationRepository)
 
     val topLevel: Route = 
         concat(
@@ -58,8 +69,19 @@ object Server {
                                     )
                                 )
                             ),
-                            profileRoutes.routes,
-                            groupRoutes.routes,
+                            pathPrefix("settings")(
+                                concat(
+                                    permissionRoutes.routes,
+                                    profileRoutes.routes,
+                                    groupRoutes.routes,
+                                    organizationRoutes.routes
+                                )
+                            ), 
+                            pathPrefix("authentication")(
+                                concat(
+                                    authenticationRoutes.routes
+                                )
+                            )
                         )
                     )
                 ) 

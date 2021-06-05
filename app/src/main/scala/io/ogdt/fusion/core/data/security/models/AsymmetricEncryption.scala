@@ -12,16 +12,19 @@ final case class AsymmetricEncryption(
     id: BSONObjectID,
     privateKey: String, 
     publicKey: String,
+    date: String
 )
 
 object AsymmetricEncryption {
+    
     implicit object AsymmetricEncryptionReader extends BSONDocumentReader[AsymmetricEncryption] {
 
         override def readDocument(doc: BSONDocument): Try[AsymmetricEncryption] = for {
             id <- doc.getAsTry[BSONObjectID]("_id")
             privateKey <- doc.getAsTry[String]("privateKey")
             publicKey <- doc.getAsTry[String]("publicKey")
-        } yield AsymmetricEncryption(id, privateKey, publicKey)
+            date <- doc.getAsTry[String]("date")
+        } yield AsymmetricEncryption(id, privateKey, publicKey, date)
 
     }
 
@@ -31,7 +34,8 @@ object AsymmetricEncryption {
             scala.util.Success(BSONDocument(
                 "_id" -> ae.id, 
                 "privateKey" -> ae.privateKey, 
-                "publicKey" -> ae.publicKey
+                "publicKey" -> ae.publicKey, 
+                "date" -> ae.date
             ))
 
     }

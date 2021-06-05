@@ -143,31 +143,6 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                     }
                 }
             )
-        ),
-        pathPrefix("authenticate")( 
-            concat( 
-                get {
-                    parameter("token".as[String],"username".as[String],"password".as[String]) { (token: String, username:String, password: String) => 
-                        if(checkPassword(username, password)) {
-                            if(!isTokenExpired(token)) {
-                                onComplete(buildUserRepository.ask(UserRepository.Authenfication(token,username,password,_))) {
-                                    case Success(response) => response match {
-                                        case UserRepository.OK => complete("OK")
-                                        case UserRepository.KO(cause) => cause match {
-                                            case _ => complete(StatusCodes.Forbidden -> new Error("Forbiden access"))
-                                        }
-                                    }
-                                    case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)
-                                }
-                            } else {
-                                complete(StatusCodes.Forbidden -> new Error("Token has expired"))    
-                            }
-                        } else {
-                            complete(StatusCodes.Forbidden -> new Error("Username and password mismatch"))
-                        }
-                    }
-                }
-            )
         )
     )
 }
