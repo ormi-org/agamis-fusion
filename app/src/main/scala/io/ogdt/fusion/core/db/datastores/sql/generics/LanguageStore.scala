@@ -110,7 +110,7 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
         getLanguages(LanguageStore.GetLanguagesFilters.none).transformWith({
             case Success(languages) => 
                 languages.length match {
-                    case 0 => Future.failed(new NoEntryException("Language table is empty"))
+                    case 0 => Future.failed(new NoEntryException("Language store is empty"))
                     case _ => Future.successful(languages)
                 }
             case Failure(cause) => Future.failed(cause)

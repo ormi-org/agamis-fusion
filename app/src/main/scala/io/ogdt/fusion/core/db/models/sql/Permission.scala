@@ -96,8 +96,8 @@ class Permission(implicit @transient protected val store: PermissionStore) exten
     @QuerySqlField(name = "app_id", notNull = true)
     private var _appId: UUID = null
     def appId: UUID = _appId
-    def setAppId(appId: UUID): Permission = {
-        _appId = appId
+    def setAppId(appId: String): Permission = {
+        _appId = UUID.fromString(appId)
         this
     }
 

@@ -31,3 +31,9 @@ class Email {
         this
     }
 }
+
+object Email {
+    def apply: Email = {
+        new Email()
+    }
+}

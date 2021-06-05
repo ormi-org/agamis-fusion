@@ -206,25 +206,18 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                 case _ => Right(fileSystem)
                             }
                         } flatMap { fileSystem => // pass created filesystem to relation mapping step
-                            // filter entities to exclude results where compulsory fields are missing or set to NULL
-                            val groupedRows = entityReflection._2.map({ entityFields =>
-                                (entityFields(7).asInstanceOf[String], entityFields(6).asInstanceOf[String].split("||"))
-                            })
-                            // group by relation id
-                            .groupBy(_._2(0))
-                            // map to iterable of entities
-                            .map(_._2)
-                            // group entities by types
-                            .groupBy(_(0)._1)
+                            
+                            // transform plain relation rows to iterables grouped by type and related entity id
+                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 6, 7)
 
                             // organization mapping
-                            val organizations = groupedRows.get("ORGANIZATION") match {
+                            groupedRows.get("ORGANIZATION") match {
                                 case Some(organizationReflections) => {
-                                    organizationReflections.foreach(organizationReflection => {
+                                    organizationReflections.foreach({ organizationReflection =>
                                         organizationReflection.partition(_._1 == "ORGANIZATION") match {
                                             case result => {
                                                 result._1.length match {
-                                                    case 0 => Future.failed(OrganizationNotFoundException(s"Filesystem ${entityReflection._2(0)(0).toString}:${entityReflection._2(0)(2).toString} might be orphan"))
+                                                    case 0 => Future.failed(OrganizationNotFoundException(s"Filesystem ${fileSystem.id}:${fileSystem.label} might be orphan"))
                                                     case 1 => {
                                                         val orgDef = result._1(0)._2
                                                         (for (
@@ -248,6 +241,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                                                     }
                                                                     case Failure(cause) => Right(organization)
                                                                 }
+                                                            } flatMap { organization =>
                                                                 result._2.partition(_._1 == "ORGTYPE") match {
                                                                     case result => {
                                                                         result._1.length match {
@@ -286,7 +280,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                                             }
                                                         ) yield fileSystem.addOrganization(organization))
                                                     }
-                                                    case _ => Future.failed(DuplicateOrganizationException(s"Filesystem ${entityReflection._2(0)(0).toString}:${entityReflection._2(0)(2).toString} has duplicate organization relation"))
+                                                    case _ => Future.failed(DuplicateOrganizationException(s"Filesystem ${fileSystem.id}:${fileSystem.label} has duplicate organization relation"))
                                                 }
                                             }
                                         }
@@ -313,7 +307,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         )).transformWith({
             case Success(fileSystems) => 
                 fileSystems.length match {
-                    case 0 => Future.failed(new NoEntryException("FileSystem table is empty"))
+                    case 0 => Future.failed(new NoEntryException("FileSystem store is empty"))
                     case _ => Future.successful(fileSystems)
                 }
             case Failure(cause) => Future.failed(cause)
