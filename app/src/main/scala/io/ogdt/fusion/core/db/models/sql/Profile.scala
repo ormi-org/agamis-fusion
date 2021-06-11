@@ -179,6 +179,25 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
         this
     }
 
+    @transient
+    private var _permissions: List[(Boolean, Permission)] = List()
+    def permissions: List[(Boolean, Permission)] = _permissions
+    def addPermission(permission: Permission): Profile = {
+        _permissions.find(_._2.id == permission.id) match {
+            case Some(found) => throw new RelationAlreadyExistsException()
+            case None => _permissions ::= (true, permission)
+        }
+        this
+    }
+    def removePermission(permission: Permission): Profile = {
+        _permissions =
+            _permissions.map({ p =>
+                if (p._2.id == permission.id) p.copy(_1 = false)
+                else p
+            })
+        this
+    }
+
     @QuerySqlField(name = "organization_id", notNull = true)
     private var _organizationId: UUID = null
 

@@ -7,6 +7,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
 import io.ogdt.fusion.core.db.models.sql.generics.Language
 
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+
 class Permission(implicit @transient protected val store: PermissionStore) extends Model {
 
     @QuerySqlField(name = "key", notNull = true)
@@ -93,11 +95,59 @@ class Permission(implicit @transient protected val store: PermissionStore) exten
         this
     }
 
-    @QuerySqlField(name = "app_id", notNull = true)
+    @QuerySqlField(name = "application_id", notNull = true)
     private var _appId: UUID = null
-    def appId: UUID = _appId
-    def setAppId(appId: String): Permission = {
-        _appId = UUID.fromString(appId)
+
+    @transient
+    private var _relatedApplication: Option[Application] = None
+
+    def relatedApplication: Option[Application] = _relatedApplication
+
+    def setRelatedApplication(application: Application): Permission = {
+        _relatedApplication = Some(application)
+        _appId = application.id
+        this
+    }
+
+    @transient
+    private var _owningGroups: List[(Boolean, Group)] = List()
+
+    def owningGroups: List[(Boolean, Group)] = _owningGroups
+
+    def addOwningGroup(group: Group): Permission = {
+        _owningGroups.indexWhere(_._2.id == group.id) match {
+            case -1 => _owningGroups ::= (true, group)
+            case index => _owningGroups = _owningGroups.updated(index, _owningGroups(index).copy(_1 = true))
+        }
+        this
+    }
+
+    def removeOwningGroup(group: Group): Permission = {
+        _owningGroups.indexWhere(_._2.id == group.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _owningGroups = _owningGroups.updated(index, _owningGroups(index).copy(_1 = false))
+        }
+        this
+    }
+
+    @transient
+    private var _owningProfiles: List[(Boolean, Profile)] = List()
+
+    def owningProfiles: List[(Boolean, Profile)] = _owningProfiles
+
+    def addOwningProfile(profile: Profile): Permission = {
+        _owningProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => _owningProfiles ::= (true, profile)
+            case index => _owningProfiles = _owningProfiles.updated(index, _owningProfiles(index).copy(_1 = true))
+        }
+        this
+    }
+
+    def removeOwningProfile(profile: Profile): Permission = {
+        _owningProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _owningProfiles = _owningProfiles.updated(index, _owningProfiles(index).copy(_1 = false))
+        }
         this
     }
 

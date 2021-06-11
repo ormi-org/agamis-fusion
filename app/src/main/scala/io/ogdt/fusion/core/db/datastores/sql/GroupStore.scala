@@ -112,7 +112,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
             "SELECT group_id, group_name, group_created_at, group_updated_at, info_data, type_data " +
             "FROM( " +
             "SELECT \"GROUP\".id AS group_id, \"GROUP\".name AS group_name, \"GROUP\".created_at AS group_created_at, \"GROUP\".updated_at AS group_updated_at, " +
-            "CONCAT_WS('||', PERMISSION.id, PERMISSION.key, PERMISSION.label_text_id, PERMISSION.description_text_id, PERMISSION.editable, PERMISSION.app_id, PERMISSION.created_at, PERMISSION.updated_at) AS info_data, 'PERMISSION' AS type_data, PERMISSION.id AS permission_id " +
+            "CONCAT_WS('||', PERMISSION.id, PERMISSION.key, PERMISSION.label_text_id, PERMISSION.description_text_id, PERMISSION.editable, PERMISSION.application_id, PERMISSION.created_at, PERMISSION.updated_at) AS info_data, 'PERMISSION' AS type_data, PERMISSION.id AS permission_id " +
             "FROM FUSION.\"GROUP\" AS \"GROUP\" " +
             "LEFT OUTER JOIN FUSION.GROUP_PERMISSION AS GROUP_PERMISSION ON GROUP_PERMISSION.group_id = \"GROUP\".id " +
             "LEFT OUTER JOIN FUSION.PERMISSION AS PERMISSION ON GROUP_PERMISSION.permission_id = PERMISSION.id " +
@@ -234,18 +234,18 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                                                     case lastLogin: Timestamp => lastLogin
                                                     case _ => null
                                                 })
-                                                .setCreatedAt(Timestamp.from(Instant.parse(profileDef(8))) match {
+                                                .setCreatedAt(Timestamp.from(Instant.parse(profileDef(6))) match {
                                                     case createdAt: Timestamp => createdAt
                                                     case _ => null
                                                 })
-                                                .setUpdatedAt(Timestamp.from(Instant.parse(profileDef(9))) match {
+                                                .setUpdatedAt(Timestamp.from(Instant.parse(profileDef(7))) match {
                                                     case updatedAt: Timestamp => updatedAt
                                                     case _ => null
                                                 })
                                             ) flatMap { profile =>
                                                 Try(profileDef(5).toBoolean) match {
-                                                    case Success(is_active) => {
-                                                        if (is_active) Right(profile.setActive)
+                                                    case Success(isActive) => {
+                                                        if (isActive) Right(profile.setActive)
                                                         else Right(profile.setInactive)
                                                     }
                                                     case Failure(cause) => Right(profile)
@@ -274,75 +274,75 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                                         case 1 => {
                                             val organizationReflection = organizationReflections.last
                                             organizationReflection.partition(_._1 == "ORGANIZATION") match {
-                                            case result => {
-                                                result._1.length match {
-                                                    case 0 => Future.failed(OrganizationNotFoundException(s"Group ${group.id}:${group.name} might be orphan"))
-                                                    case 1 => {
-                                                        val orgDef = result._1(0)._2
-                                                        (for (
-                                                            organization <- Right(new OrganizationStore()
-                                                                .makeOrganization
-                                                                .setId(orgDef(0))
-                                                                .setLabel(orgDef(1))
-                                                                .setCreatedAt(Timestamp.from(Instant.parse(orgDef(3))) match {
-                                                                    case createdAt: Timestamp => createdAt
-                                                                    case _ => null
-                                                                })
-                                                                .setUpdatedAt(Timestamp.from(Instant.parse(orgDef(4))) match {
-                                                                    case updatedAt: Timestamp => updatedAt
-                                                                    case _ => null
-                                                                })
-                                                            ) flatMap { organization =>
-                                                                Try(orgDef(2).toBoolean) match {
-                                                                    case Success(queryable) => {
-                                                                        if (queryable) Right(organization.setQueryable)
-                                                                        else Right(organization.setUnqueryable)
+                                                case result => {
+                                                    result._1.length match {
+                                                        case 0 => Future.failed(OrganizationNotFoundException(s"Group ${group.id}:${group.name} might be orphan"))
+                                                        case 1 => {
+                                                            val orgDef = result._1(0)._2
+                                                            (for (
+                                                                organization <- Right(new OrganizationStore()
+                                                                    .makeOrganization
+                                                                    .setId(orgDef(0))
+                                                                    .setLabel(orgDef(1))
+                                                                    .setCreatedAt(Timestamp.from(Instant.parse(orgDef(3))) match {
+                                                                        case createdAt: Timestamp => createdAt
+                                                                        case _ => null
+                                                                    })
+                                                                    .setUpdatedAt(Timestamp.from(Instant.parse(orgDef(4))) match {
+                                                                        case updatedAt: Timestamp => updatedAt
+                                                                        case _ => null
+                                                                    })
+                                                                ) flatMap { organization =>
+                                                                    Try(orgDef(2).toBoolean) match {
+                                                                        case Success(queryable) => {
+                                                                            if (queryable) Right(organization.setQueryable)
+                                                                            else Right(organization.setUnqueryable)
+                                                                        }
+                                                                        case Failure(cause) => Right(organization)
                                                                     }
-                                                                    case Failure(cause) => Right(organization)
-                                                                }
-                                                            } flatMap { organization =>
-                                                                result._2.partition(_._1 == "ORGTYPE") match {
-                                                                    case result => {
-                                                                        result._1.length match {
-                                                                            case 0 => 
-                                                                            case 1 => {
-                                                                                val orgTypeDef = result._1(0)._2
-                                                                                val orgType = new OrganizationTypeStore()
-                                                                                .makeOrganizationType
-                                                                                .setId(orgTypeDef(1))
-                                                                                .setLabelTextId(orgTypeDef(2))
-                                                                                .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
-                                                                                    case Success(createdAt) => createdAt
-                                                                                    case _ => null
-                                                                                })
-                                                                                .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
-                                                                                    case Success(updatedAt) => updatedAt
-                                                                                    case _ => null
-                                                                                })
-                                                                                result._2.foreach({ result =>
-                                                                                    val orgTypeLangVariantDef = result._2
-                                                                                    orgType.setLabel(
-                                                                                        Language.apply
-                                                                                        .setId(orgTypeLangVariantDef(4))
-                                                                                        .setCode(orgTypeLangVariantDef(3))
-                                                                                        .setLabel(orgTypeLangVariantDef(5)),
-                                                                                        orgTypeLangVariantDef(2)
-                                                                                    )
-                                                                                })
-                                                                                organization.setType(orgType)
+                                                                } flatMap { organization =>
+                                                                    result._2.partition(_._1 == "ORGTYPE") match {
+                                                                        case result => {
+                                                                            result._1.length match {
+                                                                                case 0 => 
+                                                                                case 1 => {
+                                                                                    val orgTypeDef = result._1(0)._2
+                                                                                    val orgType = new OrganizationTypeStore()
+                                                                                    .makeOrganizationType
+                                                                                    .setId(orgTypeDef(1))
+                                                                                    .setLabelTextId(orgTypeDef(2))
+                                                                                    .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
+                                                                                        case Success(createdAt) => createdAt
+                                                                                        case _ => null
+                                                                                    })
+                                                                                    .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
+                                                                                        case Success(updatedAt) => updatedAt
+                                                                                        case _ => null
+                                                                                    })
+                                                                                    result._2.foreach({ result =>
+                                                                                        val orgTypeLangVariantDef = result._2
+                                                                                        orgType.setLabel(
+                                                                                            Language.apply
+                                                                                            .setId(orgTypeLangVariantDef(4))
+                                                                                            .setCode(orgTypeLangVariantDef(3))
+                                                                                            .setLabel(orgTypeLangVariantDef(5)),
+                                                                                            orgTypeLangVariantDef(2)
+                                                                                        )
+                                                                                    })
+                                                                                    organization.setType(orgType)
+                                                                                }
+                                                                                case _ => 
                                                                             }
-                                                                            case _ => 
                                                                         }
                                                                     }
+                                                                    Right(organization)
                                                                 }
-                                                                Right(organization)
-                                                            }
-                                                        ) yield group.setRelatedOrganization(organization))
+                                                            ) yield group.setRelatedOrganization(organization))
+                                                        }
+                                                        case _ => Future.failed(DuplicateOrganizationException(s"Filesystem ${group.id}:${group.name} has duplicate organization relation"))
                                                     }
-                                                    case _ => Future.failed(DuplicateOrganizationException(s"Filesystem ${group.id}:${group.name} has duplicate organization relation"))
                                                 }
                                             }
-                                        }
                                         }
                                         case _ => Future.failed(DuplicateOrganizationException(s"Group ${group.id}:${group.name} has duplicate organization relation"))
                                     }
@@ -355,7 +355,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                                         permissionReflection.partition(_._1 == "PERMISSION") match {
                                             case result => {
                                                 result._1.length match {
-                                                    case 0 => Future.failed(PermissionNotFoundException(s"Group ${group.id}:${group.name} might be orphan"))
+                                                    case 0 => 
                                                     case _ => {
                                                         val permissionDef = result._1(0)._2
                                                         (for (
@@ -365,7 +365,10 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                                                                 .setKey(permissionDef(1))
                                                                 .setLabelTextId(permissionDef(2))
                                                                 .setDescriptionTextId(permissionDef(3))
-                                                                .setAppId(permissionDef(5))
+                                                                .setRelatedApplication(new ApplicationStore()
+                                                                    .makeApplication
+                                                                    .setId(permissionDef(5))
+                                                                )
                                                                 .setCreatedAt(Timestamp.from(Instant.parse(permissionDef(6))) match {
                                                                     case createdAt: Timestamp => createdAt
                                                                     case _ => null
@@ -428,7 +431,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     def getAllGroups(implicit ec: ExecutionContext): Future[List[Group]] = {
         getGroups(GroupStore.GetGroupsFilters().copy(
             orderBy = List(
-                ("group_id", 1)
+                ("id", 1)
             )
         )).transformWith({
             case Success(groups) =>
@@ -447,9 +450,6 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                     GroupStore.GetGroupsFilter().copy(
                         id = List(id)
                     )
-                ),
-                orderBy = List(
-                    ("group_id", 1)
                 )
             )
         ).transformWith({
@@ -496,6 +496,35 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                             .map(group.id +":"+ _._2.id).toSet[String].asJava
                         ))
                         // TODO Relations
+                    )
+                ).transformWith({
+                    case Success(value) => {
+                        commitTransaction(transaction).transformWith({
+                            case Success(value) => Future.unit
+                            case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
+                        })
+                    }
+                    case Failure(cause) => {
+                        rollbackTransaction(transaction)
+                        Future.failed(GroupNotPersistedException(cause))
+                    }
+                })
+            }
+            case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
+        }
+    }
+
+    def bulkPersistGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[Unit] = {
+        val transaction = makeTransaction
+        transaction match {
+            case Success(tx) => {
+                val relationCache: IgniteCache[String, GroupPermission] =
+                    wrapper.getCache[String, GroupPermission](cache)
+                Future.sequence(
+                    List(
+                        Utils.igniteToScalaFuture(igniteCache.putAllAsync(
+                            (groups.map(_.id) zip groups).toMap[UUID, Group].asJava
+                        ))
                     )
                 ).transformWith({
                     case Success(value) => {

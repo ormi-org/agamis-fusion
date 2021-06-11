@@ -101,7 +101,9 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
             s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
             s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id " +
-            "))))"
+            ")) " +
+            "ORDER BY org_id " +
+            "))"
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -248,29 +250,33 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                                                             case 0 => 
                                                                             case 1 => {
                                                                                 val orgTypeDef = result._1(0)._2
-                                                                                val orgType = new OrganizationTypeStore()
-                                                                                .makeOrganizationType
-                                                                                .setId(orgTypeDef(1))
-                                                                                .setLabelTextId(orgTypeDef(2))
-                                                                                .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
-                                                                                    case Success(createdAt) => createdAt
-                                                                                    case _ => null
-                                                                                })
-                                                                                .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
-                                                                                    case Success(updatedAt) => updatedAt
-                                                                                    case _ => null
-                                                                                })
-                                                                                result._2.foreach({ result =>
-                                                                                    val orgTypeLangVariantDef = result._2
-                                                                                    orgType.setLabel(
-                                                                                        Language.apply
-                                                                                        .setId(orgTypeLangVariantDef(4))
-                                                                                        .setCode(orgTypeLangVariantDef(3))
-                                                                                        .setLabel(orgTypeLangVariantDef(5)),
-                                                                                        orgTypeLangVariantDef(2)
-                                                                                    )
-                                                                                })
-                                                                                organization.setType(orgType)
+                                                                                (for (
+                                                                                    orgType <- Right(new OrganizationTypeStore()
+                                                                                        .makeOrganizationType
+                                                                                        .setId(orgTypeDef(1))
+                                                                                        .setLabelTextId(orgTypeDef(2))
+                                                                                        .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
+                                                                                            case Success(createdAt) => createdAt
+                                                                                            case _ => null
+                                                                                        })
+                                                                                        .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
+                                                                                            case Success(updatedAt) => updatedAt
+                                                                                            case _ => null
+                                                                                        })
+                                                                                    ) flatMap { orgType =>
+                                                                                        result._2.foreach({ result =>
+                                                                                            val orgTypeLangVariantDef = result._2
+                                                                                            orgType.setLabel(
+                                                                                                Language.apply
+                                                                                                .setId(orgTypeLangVariantDef(4))
+                                                                                                .setCode(orgTypeLangVariantDef(3))
+                                                                                                .setLabel(orgTypeLangVariantDef(5)),
+                                                                                                orgTypeLangVariantDef(2)
+                                                                                            )
+                                                                                        })
+                                                                                        Right(orgType)
+                                                                                    }
+                                                                                ) yield organization.setType(orgType))
                                                                             }
                                                                             case _ => 
                                                                         }
@@ -301,8 +307,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     def getAllFileSystems(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
         getFileSystems(FileSystemStore.GetFileSystemsFilters().copy(
             orderBy = List(
-                ("fs_id", 1),
-                ("org_id", 1)
+                ("id", 1)
             )
         )).transformWith({
             case Success(fileSystems) => 
@@ -321,10 +326,6 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                     FileSystemStore.GetFileSystemsFilter().copy(
                         id = List(id)
                     )
-                ),
-                orderBy = List(
-                    ("fs_id", 1),
-                    ("org_id", 1)
                 )
             )
         ).transformWith({
@@ -397,7 +398,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     // Save several object's modifications
     def bulkPersistFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[Unit] = {
         fileSystems.find({ fs => !fs.organizations.isEmpty }) match {
-            case Some(found) => throw FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted")
+            case Some(found) => Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
             case None => {
                 val transaction = makeTransaction
                 transaction match {

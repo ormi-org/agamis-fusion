@@ -1,5 +1,8 @@
 package io.ogdt.fusion.core.db.models.sql.relations
 
+import scala.util.Try
+import io.ogdt.fusion.core.db.models.sql.exceptions.organizations.InvalidOrganizationApplicationStatus
+
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 import java.util.UUID
 
@@ -37,6 +40,17 @@ object OrganizationApplication {
 
     sealed trait Status {
         def toInt: Int
+    }
+    object Status {
+        def fromInt(input: Int): Try[Status] = {
+            Try {
+                input match {
+                    case 0 => DISABLED
+                    case 1 => ENABLED
+                    case _ => throw InvalidOrganizationApplicationStatus(s"${input} is not a valid Status value")
+                }
+            }
+        }
     }
     case object DISABLED extends Status {
         def toInt: Int = 0

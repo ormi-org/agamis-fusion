@@ -59,7 +59,6 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
     def relatedProfiles: List[Profile] = _relatedProfiles
     def addRelatedProfile(profile: Profile): Organization = {
         _relatedProfiles ::= profile
-        profile.setRelatedOrganization(this)
         this
     }
     def removeRelatedProfile(profile: Profile): Organization = {
@@ -72,7 +71,6 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
     def relatedGroups: List[Group] = _relatedGroups
     def addRelatedGroup(group: Group): Organization = {
         _relatedGroups ::= group
-        group.setRelatedOrganization(this)
         this
     }
     def removeRelatedGroup(group: Group): Organization = {

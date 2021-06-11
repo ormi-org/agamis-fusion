@@ -30,6 +30,10 @@ class User(implicit @transient protected val store: UserStore) extends Model {
         _password = Security.hash(password)
         this
     }
+    def setPasswordHash(passwordHash: String): User = {
+        _password = passwordHash
+        this
+    }
 
     @transient
     private var _relatedProfiles: List[(Boolean, Profile)] = List()

@@ -12,6 +12,7 @@ import java.time.Instant
 import io.ogdt.fusion.core.db.models.sql.generics.Email
 
 import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 
 /** A class that reflects the state of the group entity in the database
   * 
@@ -42,18 +43,17 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
     private var _members: List[(Boolean, Profile)] = List()
     def members: List[(Boolean, Profile)] = _members
     def addMember(profile: Profile): Group = {
-        _members.find(_._2.id == profile.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _members ::= (true, profile)
+        _members.indexWhere(_._2.id == profile.id) match {
+            case -1 => _members ::= (true, profile)
+            case index => _members = _members.updated(index, _members(index).copy(_1 = true))
         }
         this
     }
     def removeMember(profile: Profile): Group = {
-        _members =
-            _members.map({ p =>
-                if (p._2.id == profile.id) p.copy(_1 = false)
-                else p
-            })
+        _members.indexWhere(_._2.id == profile.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _members = _members.updated(index, _members(index).copy(_1 = false))
+        }
         this
     }
 
@@ -61,18 +61,17 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
     private var _permissions: List[(Boolean, Permission)] = List()
     def permissions: List[(Boolean, Permission)] = _permissions
     def addPermission(permission: Permission): Group = {
-        _permissions.find(_._2.id == permission.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _permissions ::= (true, permission)
+        _permissions.indexWhere(_._2.id == permission.id) match {
+            case -1 => _permissions ::= (true, permission)
+            case index => _permissions = _permissions.updated(index, _permissions(index).copy(_1 = true))
         }
         this
     }
     def removePermission(permission: Permission): Group = {
-        _permissions =
-            _permissions.map({ p =>
-                if (p._2.id == permission.id) p.copy(_1 = false)
-                else p
-            })
+        _permissions.indexWhere(_._2.id == permission.id) match {
+            case -1 => throw new RelationAlreadyExistsException()
+            case index => _permissions = _permissions.updated(index, _permissions(index).copy(_1 = false))
+        }
         this
     }
 

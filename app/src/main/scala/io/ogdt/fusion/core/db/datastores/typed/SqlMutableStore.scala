@@ -43,6 +43,10 @@ abstract class SqlMutableStore[K, M](implicit wrapper: IgniteClientNodeWrapper) 
     /** A method for transforming plain relation rows into grouped data set
       * 
       * Result is grouped by related entity ID and then by data type (eg : ORGANIZATION, PROFILE, USER...)
+      * Structure : Map("<RELATION_TYPE>", [
+      *     Row list (all rows that reflects relation and its sub-relations data) :
+      *     (DATA_TYPE, ROW[FIELDS])
+      * ])
       *
       * @param relationRows the plain relation rows list to transform
       * @param dataFieldIndex the index of the field in the row where data are stored

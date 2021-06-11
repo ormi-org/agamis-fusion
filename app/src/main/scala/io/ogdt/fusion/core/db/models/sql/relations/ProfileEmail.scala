@@ -15,7 +15,13 @@ class ProfileEmail private() {
     protected var _isMain: Boolean = false
 }
 
-// object ProfileEmail {
+object ProfileEmail {
     
-//     def apply()
-// }
+    def apply(profileId: UUID, emailId: UUID, isMain: Boolean = false): ProfileEmail = {
+        var relation = new ProfileEmail()
+        relation._profileId = profileId
+        relation._emailId = emailId
+        relation._isMain = isMain
+        relation
+    }
+}

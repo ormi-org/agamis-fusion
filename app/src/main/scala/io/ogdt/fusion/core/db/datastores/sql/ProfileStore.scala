@@ -39,6 +39,15 @@ import scala.util.Try
 import io.ogdt.fusion.core.db.datastores.sql.generics.EmailStore
 import io.ogdt.fusion.core.db.models.sql.OrganizationType
 import io.ogdt.fusion.core.db.models.sql.generics.Language
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
+
+import io.ogdt.fusion.core.db.models.sql.relations.{
+    ProfileEmail,
+    ProfileGroup,
+    ProfilePermission
+}
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.users.UserNotFoundException
+import java.time.Instant
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Profile] {
 
@@ -223,123 +232,34 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
                                 case _ => Right(profile)
                             }
                         } flatMap { profile =>
-                            var orgType: Option[OrganizationType] = None
-                            entityReflection._2.foreach({ relation =>
-                                relation(8) match {
-                                    case "USER" => {
-                                        val userReflection = relation(7).asInstanceOf[String].split("||")
-                                        if (userReflection.length == 5) {
-                                            (for (
-                                                user <- Right(
-                                                    new UserStore().makeUser
-                                                    .setId(userReflection(0))
-                                                    .setUsername(userReflection(1))
-                                                    .setPassword(userReflection(2))
-                                                    .setCreatedAt(Try(userReflection(3).asInstanceOf[Timestamp]) match {
-                                                        case Success(createdAt) => createdAt
-                                                        case _ => null
-                                                    })
-                                                    .setUpdatedAt(Try(userReflection(4).asInstanceOf[Timestamp]) match {
-                                                        case Success(updatedAt) => updatedAt
-                                                        case _ => null
-                                                    })
-                                                )
-                                            ) yield {
-                                                profile.setRelatedUser(user)
-                                            })
-                                        }
-                                    }
-                                    case "EMAIL" => {
-                                        val emailReflection = relation(7).asInstanceOf[String].split("||")
-                                        if (emailReflection.length == 2) {
-                                            (for (
-                                                email <- Right(
-                                                    new EmailStore().makeEmail
-                                                    .setId(emailReflection(0))
-                                                    .setAddress(emailReflection(1))
-                                                )
-                                            ) yield {
-                                                emailReflection(2).toBooleanOption match {
-                                                    case Some(true) => profile.setMainEmail(email)
-                                                    case Some(false) => profile.addEmail(email)
-                                                    case None =>
-                                                }
-                                            })
-                                        }
-                                    }
-                                    case "ORGANIZATION" => {
-                                        val organizationReflection = relation(7).asInstanceOf[String].split("||")
-                                        if (organizationReflection.length == 5) {
-                                            (for (
-                                                organization <- Right(
-                                                    new OrganizationStore().makeOrganization
-                                                    .setId(organizationReflection(0))
-                                                    .setLabel(organizationReflection(1))
-                                                    .setCreatedAt(Try(organizationReflection(3).asInstanceOf[Timestamp]) match {
-                                                        case Success(createdAt) => createdAt
-                                                        case _ => null
-                                                    })
-                                                    .setUpdatedAt(Try(organizationReflection(4).asInstanceOf[Timestamp]) match {
-                                                        case Success(updatedAt) => updatedAt
-                                                        case _ => null
-                                                    })
-                                                ) flatMap { organization =>
-                                                    organizationReflection(2).toBooleanOption match {
-                                                        case Some(true) => Right(organization.setQueryable)
-                                                        case Some(false) => Right(organization.setUnqueryable)
-                                                        case None => Right(organization)
-                                                    }
-                                                }
-                                            ) yield {
-                                                profile.setRelatedOrganization(organization)
-                                            })
-                                        }
-                                    }
-                                    case "ORGTYPE_LANG_VARIANT" => {
-                                        val orgTypeLangVariantReflection = relation(7).asInstanceOf[String].split("||")
-                                        if (orgTypeLangVariantReflection.length == 7) {
-                                            orgType match {
-                                                case Some(value) => {
-                                                    orgType = Some(value.setLabel(
-                                                        Language.apply
-                                                        .setId(orgTypeLangVariantReflection(3).toString)
-                                                        .setCode(orgTypeLangVariantReflection(2).toString)
-                                                        .setLabel(orgTypeLangVariantReflection(4).toString),
-                                                        orgTypeLangVariantReflection(1).toString
-                                                    ))
-                                                }
-                                                case None => {
-                                                    orgType = Some(new OrganizationTypeStore().makeOrganizationType
-                                                        .setCreatedAt(Try(orgTypeLangVariantReflection(6).asInstanceOf[Timestamp]) match {
-                                                            case Success(createdAt) => createdAt
-                                                            case _ => null
-                                                        })
-                                                        .setUpdatedAt(Try(orgTypeLangVariantReflection(7).asInstanceOf[Timestamp]) match {
-                                                            case Success(updatedAt) => updatedAt
-                                                            case _ => null
-                                                        })
-                                                        .setLabelTextId(orgTypeLangVariantReflection(5).toString)
-                                                        .setLabel(
-                                                            Language.apply
-                                                            .setId(orgTypeLangVariantReflection(3).toString)
-                                                            .setCode(orgTypeLangVariantReflection(2).toString)
-                                                            .setLabel(orgTypeLangVariantReflection(4).toString),
-                                                            orgTypeLangVariantReflection(1).toString
-                                                        )
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+
+                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 7, 8)
+
+                            groupedRows.get("USER") match {
+                                case Some(userReflections) => {
+                                    userReflections.foreach({ userReflection =>
+                                        val userDef = userReflection(0)._2
+                                        (for (
+                                            user <- Right(new UserStore()
+                                                .makeUser
+                                                .setId(userDef(0))
+                                                .setUsername(userDef(1))
+                                                .setPasswordHash(userDef(2))
+                                                .setCreatedAt(Timestamp.from(Instant.parse(userDef(3))) match {
+                                                    case createdAt: Timestamp => createdAt
+                                                    case _ => null
+                                                })
+                                                .setUpdatedAt(Timestamp.from(Instant.parse(userDef(4))) match {
+                                                    case updatedAt: Timestamp => updatedAt
+                                                    case _ => null
+                                                })
+                                            )
+                                        ) yield profile.setRelatedUser(user))
+                                    })
                                 }
-                            })
-                            orgType match {
-                                case Some(orgTypeValue) => profile.relatedOrganization match {
-                                    case Some(orgValue) => profile.setRelatedOrganization(orgValue.setType(orgTypeValue))
-                                    case None => 
-                                }
-                                case None => 
+                                case None => Future.failed(new UserNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname}"))
                             }
+
                             Right(profile)
                         }
                     ) yield profile)
@@ -351,21 +271,33 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
         })
     }
 
+    def getAllProfiles(implicit ec: ExecutionContext): Future[List[Profile]] = {
+        getProfiles(
+            ProfileStore.GetProfilesFilters().copy(
+                orderBy = List(
+                    ("id", 1)
+                )
+            )
+        ).transformWith({
+            case Success(profiles) =>
+                profiles.length match {
+                    case 0 => Future.failed(new NoEntryException("Profile store is empty"))
+                    case _ => Future.successful(profiles)
+                }
+            case Failure(cause) => Future.failed(cause)
+        })
+    }
+
+    
+
     def getProfileById(id: String)(implicit ec: ExecutionContext): Future[Profile] = {
         getProfiles(
-            ProfileStore.GetProfilesFilters(
-                List(
-                    ProfileStore.GetProfilesFilter(
-                        List(id),
-                        List(),
-                        List(),
-                        None,
-                        None,
-                        None,
-                        None
+            ProfileStore.GetProfilesFilters().copy(
+                filters = List(
+                    ProfileStore.GetProfilesFilter().copy(
+                        id = List(id)
                     )
-                ),
-                List()
+                )
             )
         ).transformWith({
             case Success(profiles) =>
@@ -381,6 +313,106 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
     def persistProfile(profile: Profile)(implicit ec: ExecutionContext): Future[Unit] = {
         (profile.relatedUser, profile.relatedOrganization) match {
             case (Some(relatedUser), Some(relatedOrganization)) => {
+                val transaction = makeTransaction
+                transaction match {
+                    case Success(tx) => {
+                        val emailRelationCache: IgniteCache[String, ProfileEmail] =
+                            wrapper.getCache[String, ProfileEmail](cache)
+                        val groupRelationCache: IgniteCache[String, ProfileGroup] =
+                            wrapper.getCache[String, ProfileGroup](cache)
+                        val permissionRelationCache: IgniteCache[String, ProfilePermission] =
+                            wrapper.getCache[String, ProfilePermission](cache)
+                        Future.sequence(
+                            List(
+                                // Save entity
+                                Utils.igniteToScalaFuture(igniteCache.putAsync(
+                                    profile.id, profile
+                                )),
+                                // Save emails
+                                Utils.igniteToScalaFuture(emailRelationCache.putAllAsync(
+                                    (profile.emails
+                                    .filter(_._1 == true)
+                                    .map({ email =>
+                                        (
+                                            profile.id +":"+ email._2.id,
+                                            ProfileEmail(
+                                                profile.id,
+                                                email._2.id
+                                            )
+                                        )
+                                    }) ++ List(
+                                        (
+                                            profile.id +":"+ profile.mainEmail.id,
+                                            ProfileEmail(
+                                                profile.id,
+                                                profile.mainEmail.id,
+                                                true
+                                            )
+                                        )
+                                    )).toMap[String, ProfileEmail].asJava
+                                )),
+                                // Remove emails
+                                Utils.igniteToScalaFuture(emailRelationCache.removeAllAsync(
+                                    profile.emails
+                                    .filter(_._1 == false)
+                                    .map({ email => profile.id+":"+email._2.id }).toSet.asJava
+                                )),
+                                // Save groups
+                                Utils.igniteToScalaFuture(groupRelationCache.putAllAsync(
+                                    (profile.groups
+                                    .filter(_._1 == true)
+                                    .map({ group =>
+                                        (
+                                            profile.id+":"+group._2.id,
+                                            ProfileGroup(
+                                                profile.id,
+                                                group._2.id
+                                            )
+                                        )
+                                    })).toMap.asJava
+                                )),
+                                // Remove groups
+                                Utils.igniteToScalaFuture(groupRelationCache.removeAllAsync(
+                                    (profile.groups
+                                    .filter(_._1 == false)
+                                    .map({ group =>profile.id+":"+group._2.id })).toSet.asJava
+                                )),
+                                // Save permissions
+                                Utils.igniteToScalaFuture(permissionRelationCache.putAllAsync(
+                                    profile.permissions
+                                    .filter(_._1 == true)
+                                    .map({ permission => 
+                                        (
+                                            profile.id+":"+permission._2.id,
+                                            ProfilePermission(
+                                                profile.id,
+                                                permission._2.id
+                                            )
+                                        )
+                                    }).toMap.asJava
+                                )),
+                                // Remove permission
+                                Utils.igniteToScalaFuture(permissionRelationCache.removeAllAsync(
+                                    profile.permissions
+                                    .filter(_._1 == false)
+                                    .map({ permission => profile.id+":"+permission._2.id }).toSet.asJava
+                                ))
+                            )
+                        ).transformWith({
+                            case Success(value) => {
+                                commitTransaction(transaction).transformWith({
+                                    case Success(value) => Future.unit
+                                    case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
+                                })
+                            }
+                            case Failure(cause) => {
+                                rollbackTransaction(transaction)
+                                Future.failed(ProfileNotPersistedException(cause))
+                            }
+                        })
+                    }
+                    case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
+                }
                 Utils.igniteToScalaFuture(igniteCache.putAsync(
                     profile.id, profile
                 )).transformWith({

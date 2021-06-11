@@ -32,7 +32,16 @@ import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.{
     DuplicateOrganizationException,
     OrganizationNotFoundException
 }
+
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizationtypes.{
+    OrganizationtypeNotFoundException,
+    DuplicateOrganizationtypeException
+}
+
 import org.apache.ignite.cache.QueryEntity
+import java.time.Instant
+import io.ogdt.fusion.core.db.models.sql.generics.Email
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
 
 class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Organization] {
 
@@ -70,25 +79,33 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
             "SELECT org_id, org_label, org_queryable, org_created_at, org_updated_at, info_data, type_data " +
             "FROM " +
             "(SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
-            "CONCAT_WS('||', PROFILE.id, lastname, firstname, EMAIL.address, last_login, is_active, user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at) AS data, 'PROFILE' AS data_type " +
+            "CONCAT_WS('||',	PROFILE.id, lastname, firstname, EMAIL.address, last_login, is_active, user_id, PROFILE.organization_id , PROFILE.created_at , PROFILE.updated_at) AS info_data, 'PROFILE' AS type_data  " +
             s"FROM $schema.ORGANIZATION as ORG " +
             s"INNER JOIN $schema.PROFILE AS PROFILE ON PROFILE.organization_id = ORG.id " +
-            "LEFT OUTER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id" +
-	        "LEFT OUTER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id" +
-	        "WHERE PROFILE_EMAIL.is_main = TRUE" +
+            s"LEFT OUTER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id " +
+            s"LEFT OUTER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id " +
+            "WHERE PROFILE_EMAIL.is_main = TRUE " +
             "UNION ALL " +
             "SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
-            "CONCAT_WS('||', FS.id, rootdir_id, FS.label, shared, FS_ORG.is_default, FS.created_at, FS.updated_at) AS data, 'FS' AS data_type " +
+            "CONCAT_WS('||',FS.id, rootdir_id, FS.label, shared, FS_ORG.is_default, FS.created_at, FS.updated_at) AS info_data, 'FS' AS type_data " +
             s"FROM $schema.ORGANIZATION as ORG " +
             s"LEFT OUTER JOIN $schema.FILESYSTEM_ORGANIZATION AS FS_ORG ON FS_ORG.organization_id = ORG.id " +
-            s"LEFT OUTER JOIN $schema.FILESYSTEM AS FS ON FS_ORG.filesystem_id = FS.id" +
+            s"LEFT OUTER JOIN $schema.FILESYSTEM AS FS ON FS_ORG.filesystem_id = FS.id " +
             "UNION ALL " +
-            "SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
-            "CONCAT_WS('||', ORGTYPE.id, TEXT.content, LANG.code, LANG.label, TEXT.language_id, TEXT.id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data " +
-	        s"FROM $schema.ORGANIZATION as ORG " +
-	        s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORGTYPE.id = ORG.organizationtype_id " +
-	        s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
-	        s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON LANG.id = TEXT.language_id)"
+            "(SELECT org_id, org_label, org_queryable, org_created_at, org_updated_at, info_data, type_data " +
+            "FROM " +
+            "(SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
+            "CONCAT_WS('||', ORG.id, ORGTYPE.id, ORGTYPE.label_text_id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE' AS type_data, ORGTYPE.id AS orgtype_id " +
+            s"FROM $schema.ORGANIZATION AS ORG " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
+            "UNION ALL " +
+            "(SELECT ORG.id AS org_id, ORG.label AS org_label, queryable AS org_queryable, ORG.created_at AS org_created_at, ORG.updated_at AS org_updated_at, " +
+            "CONCAT_WS('||', ORG.id, ORGTYPE.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data, ORGTYPE.id AS orgtype_id " +
+            s"FROM $schema.ORGANIZATION AS ORG " +
+            s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
+            s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
+            s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id)) " +
+            "ORDER BY org_id, orgtype_id))"
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -193,118 +210,127 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                                 case _ => Right(organization)
                             }
                         } flatMap { organization =>
-                            var orgType: Option[OrganizationType] = None
-                            entityReflection._2.foreach({ relation =>
-                                relation(6) match {
-                                    case "FS" => {
-                                        val fileSystemReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (fileSystemReflection.length == 7) {
-                                            (for (
-                                                fileSystem <- Right(
-                                                    new FileSystemStore().makeFileSystem
-                                                    .setId(fileSystemReflection(0))
-                                                    .setRootdirId(fileSystemReflection(1))
-                                                    .setCreatedAt(Try(fileSystemReflection(5).asInstanceOf[Timestamp]) match {
-                                                        case Success(createdAt) => createdAt
-                                                        case _ => null 
-                                                    })
-                                                    .setUpdatedAt(Try(fileSystemReflection(6).asInstanceOf[Timestamp]) match {
-                                                        case Success(updatedAt) => updatedAt
-                                                        case _ => null
-                                                    })
-                                                ) flatMap { fileSystem =>
-                                                    Try(fileSystemReflection(3).asInstanceOf[Boolean]) match {
-                                                        case Success(shared) => {
-                                                            if (shared) Right(fileSystem.setShared)
-                                                            else Right(fileSystem.setUnshared)
-                                                        }
-                                                        case _ => Right(fileSystem)
+                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 5, 6)
+                            
+                            groupedRows.get("PROFILE") match {
+                                case Some(profileReflections) => {
+                                    profileReflections.foreach({ profileReflection =>
+                                        val profileDef = profileReflection(0)._2
+                                        (for (
+                                            profile <- Right(new ProfileStore()
+                                                .makeProfile
+                                                .setId(profileDef(0))
+                                                .setLastname(profileDef(1))
+                                                .setFirstname(profileDef(2))
+                                                .setLastLogin(Timestamp.from(Instant.parse(profileDef(4))) match {
+                                                    case lastLogin: Timestamp => lastLogin
+                                                    case _ => null
+                                                })
+                                                .setRelatedUser(new UserStore()
+                                                    .makeUser
+                                                    .setId(profileDef(6))
+                                                )
+                                                .setRelatedOrganization(new OrganizationStore()
+                                                    .makeOrganization
+                                                    .setId(profileDef(7))
+                                                )
+                                                .setCreatedAt(Timestamp.from(Instant.parse(profileDef(8))) match {
+                                                    case createdAt: Timestamp => createdAt
+                                                    case _ => null
+                                                })
+                                                .setUpdatedAt(Timestamp.from(Instant.parse(profileDef(9))) match {
+                                                    case updatedAt: Timestamp => updatedAt
+                                                    case _ => null
+                                                })
+                                            ) flatMap { profile =>
+                                                val profileMainEmailDef = profileDef(3).split(";")
+                                                profileMainEmailDef.length match {
+                                                    case 2 => {
+                                                        Right(profile.setMainEmail(Email.apply
+                                                            .setId(profileMainEmailDef(0))
+                                                            .setAddress(profileMainEmailDef(1))
+                                                        ))
                                                     }
-                                                } 
-                                            ) yield {
-                                                fileSystemReflection(4).toBooleanOption match {
-                                                    case Some(true) => organization.setDefaultFileSystem(fileSystem)
-                                                    case Some(false) => organization.addFileSystem(fileSystem)
-                                                    case None =>
+                                                    case _ => Right(profile)
                                                 }
-                                            })
-                                        }
-                                    }
-                                    case "PROFILE" => {
-                                        val profileReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (profileReflection.length == 9) {
-                                            (for (
-                                                profile <- Right(
-                                                    new ProfileStore().makeProfile
-                                                    .setId(profileReflection(0))
-                                                    .setLastname(profileReflection(1))
-                                                    .setFirstname(profileReflection(2))
-                                                    .setLastLogin(Try(profileReflection(3).asInstanceOf[Timestamp]) match {
-                                                        case Success(lastlogin) => lastlogin
-                                                        case _ => null
-                                                    })
-                                                    .setCreatedAt(Try(profileReflection(7).asInstanceOf[Timestamp]) match {
-                                                        case Success(createdAt) => createdAt
-                                                        case _ => null
-                                                    })
-                                                    .setUpdatedAt(Try(profileReflection(8).asInstanceOf[Timestamp]) match {
-                                                        case Success(updatedAt) => updatedAt
-                                                        case _ => null
-                                                    })
-                                                ) flatMap { profile =>
-                                                    profileReflection(4).toBooleanOption match {
-                                                        case Some(true) => Right(profile.setActive)
-                                                        case Some(false) => Right(profile.setInactive)
-                                                        case None => Right(profile)
+                                            }
+                                        ) yield organization.addRelatedProfile(profile))
+                                    })
+                                }
+                                case None => {}
+                            }
+
+                            groupedRows.get("FS") match {
+                                case Some(fsReflections) => {
+                                    fsReflections.foreach({ fsReflection =>
+                                        val fsDef = fsReflection(0)._2
+                                        (for (
+                                            fileSystem <- Right(new FileSystemStore()
+                                                .makeFileSystem
+                                                .setId(fsDef(0))
+                                                .setRootdirId(fsDef(1))
+                                                .setLabel(fsDef(2))
+                                                .setCreatedAt(Try(fsDef(5).asInstanceOf[Timestamp]) match {
+                                                    case Success(createdAt) => createdAt
+                                                    case _ => null
+                                                })
+                                                .setUpdatedAt(Try(fsDef(6).asInstanceOf[Timestamp]) match {
+                                                    case Success(updatedAt) => updatedAt
+                                                    case _ => null
+                                                })
+                                            ) flatMap { fileSystem =>
+                                                try {
+                                                    if (fsDef(3).toBoolean) Right(fileSystem.setShared)
+                                                    else Right(fileSystem.setUnshared)
+                                                } catch {
+                                                    case e: IllegalArgumentException => Right(fileSystem)
+                                                }
+                                            }
+                                        ) yield {
+                                            try {
+                                                if (fsDef(4).toBoolean) Right(organization.setDefaultFileSystem(fileSystem))
+                                                else Right(organization.addFileSystem(fileSystem))
+                                            } catch {
+                                                case e: IllegalArgumentException => Right(organization)
+                                            }
+                                        })
+                                    })
+                                }
+                                case None => {}
+                            }
+
+                            groupedRows.get("ORGTYPE") match {
+                                case Some(orgTypeReflections) => {
+                                    orgTypeReflections.foreach({ orgTypeReflection =>
+                                        orgTypeReflection.partition(_._1 == "ORGTYPE") match {
+                                            case result => {
+                                                result._1.length match {
+                                                    case 0 => Future.failed(OrganizationtypeNotFoundException(s"Organization type of organization ${organization.id}:${organization.label} might be undefined"))
+                                                    case 1 => {
+                                                        val orgTypeDef = result._1(0)._2
+                                                        (for (
+                                                            orgType <- Right(new OrganizationTypeStore()
+                                                                .makeOrganizationType
+                                                                .setId(orgTypeDef(1))
+                                                                .setLabelTextId(orgTypeDef(2))
+                                                                .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
+                                                                    case Success(createdAt) => createdAt
+                                                                    case _ => null
+                                                                })
+                                                                .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
+                                                                    case Success(updatedAt) => updatedAt
+                                                                    case _ => null
+                                                                })
+                                                            )
+                                                        ) yield organization.setType(orgType) )
                                                     }
-                                                }
-                                            ) yield {
-                                                organization.addRelatedProfile(profile)
-                                            })
-                                        }
-                                    }
-                                    case "ORGTYPE_LANG_VARIANT" => {
-                                        val orgTypeLangVariantReflection = relation(5).asInstanceOf[String].split("||")
-                                        if (orgTypeLangVariantReflection.length == 7) {
-                                            orgType match {
-                                                case Some(value) => {
-                                                    orgType = Some(value.setLabel(
-                                                        Language.apply
-                                                        .setId(orgTypeLangVariantReflection(3).toString)
-                                                        .setCode(orgTypeLangVariantReflection(2).toString)
-                                                        .setLabel(orgTypeLangVariantReflection(4).toString),
-                                                        orgTypeLangVariantReflection(1).toString
-                                                    ))
-                                                }
-                                                case None => {
-                                                    orgType = Some(new OrganizationTypeStore().makeOrganizationType
-                                                        .setId(orgTypeLangVariantReflection(0))
-                                                        .setCreatedAt(Try(orgTypeLangVariantReflection(6).asInstanceOf[Timestamp]) match {
-                                                            case Success(createdAt) => createdAt
-                                                            case _ => null
-                                                        })
-                                                        .setUpdatedAt(Try(orgTypeLangVariantReflection(7).asInstanceOf[Timestamp]) match {
-                                                            case Success(updatedAt) => updatedAt
-                                                            case _ => null
-                                                        })
-                                                        .setLabelTextId(orgTypeLangVariantReflection(5).toString)
-                                                        .setLabel(
-                                                            Language.apply
-                                                            .setId(orgTypeLangVariantReflection(3).toString)
-                                                            .setCode(orgTypeLangVariantReflection(2).toString)
-                                                            .setLabel(orgTypeLangVariantReflection(4).toString),
-                                                            orgTypeLangVariantReflection(1).toString
-                                                        )
-                                                    )
+                                                    case _ => Future.failed(DuplicateOrganizationtypeException(s"Organization ${organization.id}:${organization.label} has duplicate organization types"))
                                                 }
                                             }
                                         }
-                                    }
+                                    })
                                 }
-                            })
-                            orgType match {
-                                case Some(value) => organization.setType(value)
-                                case None =>
+                                case None => {}
                             }
                             Right(organization)
                         }
@@ -314,6 +340,21 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
                 Future.successful(organizations.toList)
             }
             case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
+        })
+    }
+
+    def getAllOrganizations(implicit ec: ExecutionContext): Future[List[Organization]] = {
+        getOrganizations(OrganizationStore.GetOrganizationsFilters().copy(
+            orderBy = List(
+                ("id", 1)
+            )
+        )).transformWith({
+            case Success(organizations) => 
+                organizations.length match {
+                    case 0 => Future.failed(new NoEntryException("Organization store is empty"))
+                    case _ => Future.successful(organizations)
+                }
+            case Failure(cause) => Future.failed(cause)
         })
     }
 
@@ -349,36 +390,19 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         })
     }
 
-    /** A result of bulkPersistOrganizations method
-      * 
-      * @constructor create a new BulkPersistOrganizationsResult with a count of inserted Organizations and a list of errors
-      * @param inserts a count of the effectively inserted Organizations
-      * @param errors a list of errors catched from a file deletion
-      */
-    case class BulkPersistOrganizationsResult(inserts: Int, errors: List[String])
-
     // Save several object's modifications
-    def bulkPersistOrganizations(organizations: List[Organization])(implicit ec: ExecutionContext): Future[BulkPersistOrganizationsResult] = {
+    def bulkPersistOrganizations(organizations: List[Organization])(implicit ec: ExecutionContext): Future[Unit] = {
         Utils.igniteToScalaFuture(igniteCache.putAllAsync(
             (organizations.map(_.id) zip organizations).toMap[UUID, Organization].asJava
         )).transformWith({
-            case Success(value) => {
-                Future.sequence(
-                    organizations.map(organization => Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(organization.id)))
-                ).map(lookup => (organizations zip lookup))
-                .transformWith(lookup => {
-                    Future.successful(BulkPersistOrganizationsResult(
-                        lookup.get.filter(_._2 == true).length,
-                        lookup.get.filter(_._2 == false).map("Insert organization "+_._1.toString+" failed")
-                    ))
-                })
-            }
+            case Success(value) => Future.unit
             case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
         })
     }
 
     // Delete organization from database
     def deleteOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
+        if (!organization.relatedProfiles.isEmpty) return Future.failed(OrganizationNotPersistedException("Organization still contains profiles and can't be deleted"))
         Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
         .transformWith({
             case Success(value) => Future.unit
@@ -386,31 +410,18 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
         })
     }
 
-    /** A result of bulkDeleteOrganizations method
-      * 
-      * @constructor create a new BulkDeleteOrganizationsResult with a count of deleted Organizations and a list of errors
-      * @param inserts a count of the effectively deleted Organizations
-      * @param errors a list of errors catched from an organization deletion
-      */
-    case class BulkDeleteOrganizationsResult(inserts: Int, errors: List[String])
-
     // Delete several organizations from database
-    def bulkDeleteOrganizations(organizations: List[Organization])(implicit ec: ExecutionContext): Future[BulkDeleteOrganizationsResult] = {
-        Utils.igniteToScalaFuture(igniteCache.removeAllAsync(organizations.map(_.id).toSet.asJava))
-        .transformWith({
-            case Success(value) => {
-                Future.sequence(
-                    organizations.map(profile => Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(profile.id)))
-                ).map(lookup => (organizations zip lookup))
-                .transformWith(lookup => {
-                    Future.successful(BulkDeleteOrganizationsResult(
-                        lookup.get.filter(_._2 == false).length,
-                        lookup.get.filter(_._2 == true).map("Failed to delete organization "+_._1.toString)
-                    ))
+    def bulkDeleteOrganizations(organizations: List[Organization])(implicit ec: ExecutionContext): Future[Unit] = {
+        organizations.find({ org => !org.relatedProfiles.isEmpty }) match {
+            case Some(found) => Future.failed(OrganizationNotPersistedException(s"Organization ${found.id}:${found.label} still contains profiles and can't be deleted"))
+            case None => {
+                Utils.igniteToScalaFuture(igniteCache.removeAllAsync(organizations.map(_.id).toSet.asJava))
+                .transformWith({
+                    case Success(value) => Future.unit
+                    case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
                 })
             }
-            case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
-        })
+        }
     }
 }
 
