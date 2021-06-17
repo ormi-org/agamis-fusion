@@ -78,7 +78,9 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
                     if(checkPassword(username, password)) {
                         onComplete(buildAuthenticationRepository.ask(AuthenticationRepository.Login(username,password,_))) {
                             case Success(response) => response match {
-                                case AuthenticationRepository.OK => complete("OK")
+                                case AuthenticationRepository.OK => respondWithHeaders(RawHeader("Access-Token", createToken()), RawHeader("Refresh-Token", refreshToken())) {
+                                    complete(HttpResponse(StatusCodes.OK, entity = "OK"))
+                                }
                                 case AuthenticationRepository.KO(cause) => cause match {
                                     case _ => complete(StatusCodes.Forbidden -> new Error("Forbiden access"))
                                 }
@@ -87,6 +89,21 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
                         }
                     } else {
                         complete(StatusCodes.Forbidden -> new Error("Username and password mismatch"))
+                    }
+                }
+            }
+        ), 
+        pathPrefix("logout")(
+            get {
+                parameter("token".as[String],"refreshToken".as[String]) { (token: String, refreshToken:String) => 
+                    onComplete(buildAuthenticationRepository.ask(AuthenticationRepository.Logout(token,refreshToken,_))) {
+                        case Success(response) => response match {
+                            case AuthenticationRepository.OK => complete("Token and refresh token has been deleted")
+                            case AuthenticationRepository.KO(cause) => cause match {
+                                case _ => complete(StatusCodes.Forbidden -> new Error("Problems")) // TODO : à changer
+                            }
+                        }
+                        case Failure(reason) => complete(StatusCodes.BadGateway -> reason)
                     }
                 }
             }

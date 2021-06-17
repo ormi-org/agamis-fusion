@@ -58,6 +58,11 @@ object Server {
         concat(
             pathPrefix("api")(
                 concat(
+                    pathPrefix("auth")(
+                        concat(
+                            authenticationRoutes.routes
+                        )
+                    ),
                     pathPrefix("v1")(
                         concat(
                             pathPrefix("fs")(
@@ -77,11 +82,6 @@ object Server {
                                     organizationRoutes.routes
                                 )
                             ), 
-                            pathPrefix("authentication")(
-                                concat(
-                                    authenticationRoutes.routes
-                                )
-                            )
                         )
                     )
                 ) 

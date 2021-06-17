@@ -14,8 +14,11 @@ import scala.concurrent.Future
 
 object JwtAuthorization {
 
+    import io.ogdt.fusion.core.data.security.utils.HashPassword._
+
     val privateKey = "test" // TODO à changer
     val publicKey =  "test" // TODO à changer
+    val algorithm = JwtAlgorithm.HS256
 
     val refreshTokenExpiration: Int = EnvContainer.getString("jwt.tokenExpiration.refreshTokenExpirationInSeconds").toInt
     val tokenExpiration: Int = EnvContainer.getString("jwt.tokenExpiration.tokenExpirationInSeconds").toInt
@@ -24,11 +27,11 @@ object JwtAuthorization {
     def refreshToken(/*user: User /*(db USER)*/*/): String = {
         val claims = JwtClaim(
             // Number in second
-            expiration = Some(System.currentTimeMillis() / 1000 + TimeUnit.SECONDS.toSeconds(refreshTokenExpiration)),
+            expiration = Some(System.currentTimeMillis() / 1000 + TimeUnit.SECONDS.toSeconds(20)),
             issuedAt = Some(System.currentTimeMillis() / 1000),
             issuer = Some("ogdt-fusion")
-        ).withContent("") // mettre le user sous forme de JSON sans le mdp et avec une concaténation complète de ses permissions (user et groupe) + la liste de ses groupes
-        JwtSprayJson.encode(claims,privateKey,JwtAlgorithm.RS512)
+        )/*.withContent("")*/ // mettre le user sous forme de JSON sans le mdp et avec une concaténation complète de ses permissions (user et groupe) + la liste de ses groupes
+        JwtSprayJson.encode(claims,privateKey,algorithm)
     }
 
     // encoding for the creation of token 
@@ -36,11 +39,11 @@ object JwtAuthorization {
     def createToken(/*user: User /*(db USER)*/*/): String = {
         val claims = JwtClaim(
             // Number in second
-            expiration = Some(System.currentTimeMillis() / 1000 + TimeUnit.SECONDS.toSeconds(tokenExpiration)),
+            expiration = Some(System.currentTimeMillis() / 1000 + TimeUnit.SECONDS.toSeconds(10)),
             issuedAt = Some(System.currentTimeMillis() / 1000),
             issuer = Some("ogdt-fusion")
-        ).withContent("") // mettre le user sous forme de JSON sans le mdp et avec une concaténation complète de ses permissions (user et groupe) + la liste de ses groupes
-        JwtSprayJson.encode(claims,privateKey,JwtAlgorithm.RS512)
+        ) // mettre le user sous forme de JSON sans le mdp et avec une concaténation complète de ses permissions (user et groupe) + la liste de ses groupes
+        JwtSprayJson.encode(claims,privateKey,algorithm)
     }
 
 
