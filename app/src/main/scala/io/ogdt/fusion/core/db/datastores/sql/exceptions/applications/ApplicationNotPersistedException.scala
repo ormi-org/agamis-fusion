@@ -11,18 +11,18 @@ object ApplicationNotPersistedException {
         message: String,
         cause: Throwable
     ): ApplicationNotPersistedException = {
-        ApplicationNotPersistedException(cause, message)
+        new ApplicationNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): ApplicationNotPersistedException = {
-        ApplicationNotPersistedException(cause)
+        new ApplicationNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): ApplicationNotPersistedException = {
-        ApplicationNotPersistedException(null, message)
+        new ApplicationNotPersistedException(null, message)
     }
 }

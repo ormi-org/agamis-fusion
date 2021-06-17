@@ -48,6 +48,11 @@ import io.ogdt.fusion.core.db.models.sql.relations.{
 }
 import io.ogdt.fusion.core.db.datastores.sql.exceptions.users.UserNotFoundException
 import java.time.Instant
+import io.ogdt.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
+import io.ogdt.fusion.core.db.models.sql.generics.Email
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.OrganizationNotFoundException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.DuplicateOrganizationException
+import io.ogdt.fusion.core.db.datastores.sql.generics.exceptions.emails.EmailNotFoundException
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Profile] {
 
@@ -84,32 +89,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
     }
 
     def makeProfilesQuery(queryFilters: ProfileStore.GetProfilesFilters): SqlStoreQuery = {
-        var queryString: String = 
-            "SELECT profile_id, profile_lastname, profile_firstname, profile_last_login, profile_is_active, profile_created_at, profile_updated_at, info_data, type_data " +
-            "FROM " +
-            "(SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
-            "CONCAT_WS('||', USER.id, username, password, USER.created_at, USER.updated_at) AS info_data, 'USER' AS type_data " +
-            s"FROM $schema.PROFILE AS PROFILE " +
-            s"INNER JOIN $schema.USER as USER ON USER.id = PROFILE.user_id " +
-            "UNION ALL " +
-            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at,  " +
-            "CONCAT_WS('||', ORG.id, ORG.label, ORG.queryable, ORG.created_at, ORG.updated_at) AS info_data, 'ORGANIZATION' AS type_data " +
-            s"FROM $schema.PROFILE AS PROFILE " +
-            s"INNER JOIN $schema.ORGANIZATION AS ORG ON PROFILE.organization_id = ORG.id " +
-            "UNION ALL " +
-            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
-            "CONCAT_WS('||', ORG.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data " +
-            s"FROM $schema.PROFILE AS PROFILE " +
-            s"LEFT OUTER JOIN $schema.ORGANIZATION AS ORG ON PROFILE.organization_id = ORG.id " +
-            s"LEFT OUTER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id " +
-            s"LEFT OUTER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id " +
-            s"LEFT OUTER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id " +
-            "UNION ALL " +
-            "SELECT PROFILE.id AS profile_id, lastname AS profile_lastname, firstname AS profile_firstname, last_login AS profile_last_login, is_active AS profile_is_active, PROFILE.created_at AS profile_created_at, PROFILE.updated_at AS profile_updated_at, " +
-            "CONCAT_WS('||', EMAIL.id, EMAIL.address) AS info_data, 'EMAIL' AS type_data " +
-            s"FROM $schema.PROFILE AS PROFILE " +
-            s"LEFT OUTER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id " +
-            s"LEFT OUTER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id)"
+        var baseQueryString = queryString.replace("$schema", schema)
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -185,11 +165,11 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
         })
         // compile whereStatements
         if (!whereStatements.isEmpty) {
-            queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
+            baseQueryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
         if (!queryFilters.orderBy.isEmpty) {
-            queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
+            baseQueryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
                 s"profile_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
@@ -197,75 +177,274 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             ).mkString(", ")}"
         }
         println(queryArgs)
-        makeQuery(queryString)
+        makeQuery(baseQueryString)
         .setParams(queryArgs.toList)
     }
 
     def getProfiles(queryFilters: ProfileStore.GetProfilesFilters)(implicit ec: ExecutionContext): Future[List[Profile]] = {
         executeQuery(makeProfilesQuery(queryFilters)).transformWith({
-            case Success(profileResults) => {
-                var profiles = profileResults.toList.groupBy(_(0)).map(entityReflection => {
-                    (for (
-                        profile <- Right(
-                            makeProfile
-                            .setId(entityReflection._2(0)(0).toString)
-                            .setLastname(entityReflection._2(0)(1).toString)
-                            .setFirstname(entityReflection._2(0)(2).toString)
-                            .setLastLogin(entityReflection._2(0)(3) match {
-                                case lastlogin: Timestamp => lastlogin
-                                case _ => null
-                            })
-                            .setCreatedAt(entityReflection._2(0)(5) match {
-                                case createdAt: Timestamp => createdAt
-                                case _ => null
-                            })
-                            .setUpdatedAt(entityReflection._2(0)(6) match {
-                                case updatedAt: Timestamp => updatedAt
-                                case _ => null
-                            })
-                        ) flatMap { profile =>
-                            entityReflection._2(0)(4) match {
-                                case active: Boolean => {
-                                    if (active) Right(profile.setActive)
-                                    else Right(profile.setInactive)
-                                }
-                                case _ => Right(profile)
-                            }
-                        } flatMap { profile =>
-
-                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 7, 8)
-
-                            groupedRows.get("USER") match {
-                                case Some(userReflections) => {
-                                    userReflections.foreach({ userReflection =>
-                                        val userDef = userReflection(0)._2
-                                        (for (
-                                            user <- Right(new UserStore()
-                                                .makeUser
-                                                .setId(userDef(0))
-                                                .setUsername(userDef(1))
-                                                .setPasswordHash(userDef(2))
-                                                .setCreatedAt(Timestamp.from(Instant.parse(userDef(3))) match {
-                                                    case createdAt: Timestamp => createdAt
-                                                    case _ => null
-                                                })
-                                                .setUpdatedAt(Timestamp.from(Instant.parse(userDef(4))) match {
-                                                    case updatedAt: Timestamp => updatedAt
-                                                    case _ => null
-                                                })
-                                            )
-                                        ) yield profile.setRelatedUser(user))
+            case Success(rows) => {
+                val entityReflections = rows.groupBy(_(0))
+                var profiles = rows.map(_(0)).distinct.map(entityReflections.get(_).get).map(entityReflection => {
+                    val groupedRows = getRelationsGroupedRowsFrom(entityReflection, 7, 8)
+                    groupedRows.get("PROFILE") match {
+                        case Some(profileReflections) => {
+                            val profileDef = profileReflections.head.head._2
+                            (for (
+                                //PROFILE.id, lastname, firstname, last_login, is_active, user_id, PROFILE.organization_id , PROFILE.created_at , PROFILE.updated_at
+                                profile <- Right(
+                                    makeProfile
+                                    .setId(profileDef(0).toString)
+                                    .setLastname(profileDef(1).toString)
+                                    .setFirstname(profileDef(2).toString)
+                                    .setLastLogin(Utils.timestampFromString(profileDef(3)) match {
+                                        case lastlogin: Timestamp => lastlogin
+                                        case _ => null
                                     })
-                                }
-                                case None => Future.failed(new UserNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname}"))
-                            }
+                                    .setCreatedAt(Utils.timestampFromString(profileDef(7)) match {
+                                        case createdAt: Timestamp => createdAt
+                                        case _ => null
+                                    })
+                                    .setUpdatedAt(Utils.timestampFromString(profileDef(8)) match {
+                                        case updatedAt: Timestamp => updatedAt
+                                        case _ => null
+                                    })
+                                ) flatMap { profile =>
+                                    Try(profileDef(4).toBoolean) match {
+                                        case Success(active) => {
+                                            if (active) Right(profile.setActive)
+                                            else Right(profile.setInactive)
+                                        }
+                                        case Failure(_) => Right(profile)
+                                    }
+                                } flatMap { profile =>
+                                    groupedRows.get("USER") match {
+                                        case Some(userReflections) => {
+                                            userReflections.foreach({ userReflection =>
+                                                val userDef = userReflection.head._2
+                                                (for (
+                                                    user <- Right(new UserStore()
+                                                        .makeUser
+                                                        .setId(userDef(0))
+                                                        .setUsername(userDef(1))
+                                                        .setPasswordHash(userDef(2))
+                                                        .setCreatedAt(Utils.timestampFromString(userDef(3)) match {
+                                                            case createdAt: Timestamp => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Utils.timestampFromString(userDef(4)) match {
+                                                            case updatedAt: Timestamp => updatedAt
+                                                            case _ => null
+                                                        })
+                                                    )
+                                                ) yield profile.setRelatedUser(user))
+                                            })
+                                        }
+                                        case None => Future.failed(new UserNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname}"))
+                                    }
 
-                            Right(profile)
+                                    groupedRows.get("EMAIL") match {
+                                        case Some(emailReflections) => {
+                                            emailReflections.isEmpty match {
+                                                case true => Future.failed(EmailNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might have no email address"))
+                                                case false => {
+                                                    emailReflections.foreach({ emailReflection =>
+                                                        val emailDef = emailReflection.head._2
+                                                        (for (
+                                                            email <- Right(Email.apply
+                                                            .setId(emailDef(0))
+                                                            .setAddress(emailDef(1)))
+                                                        ) yield {
+                                                            Try(emailDef(2).toBoolean) match {
+                                                                case Success(isMain) => {
+                                                                    if (isMain) profile.setMainEmail(email)
+                                                                    else profile.addEmail(email)
+                                                                }
+                                                                case Failure(_) => {}
+                                                            }
+                                                        })
+                                                    })
+                                                }
+                                            }
+                                        }
+                                        case None => {}
+                                    }
+
+                                    groupedRows.get("ORGANIZATION") match {
+                                        case Some(organizationReflections) => {
+                                            organizationReflections.size match {
+                                                case 0 => Future.failed(OrganizationNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"))
+                                                case 1 => {
+                                                    val organizationReflection = organizationReflections.head
+                                                    organizationReflection.partition(_._1 == "ORGANIZATION") match {
+                                                        case result => {
+                                                            result._1.length match {
+                                                                case 0 => Future.failed(OrganizationNotFoundException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"))
+                                                                case 1 => {
+                                                                    val orgDef = result._1(0)._2
+                                                                    (for (
+                                                                        organization <- Right(new OrganizationStore()
+                                                                            .makeOrganization
+                                                                            .setId(orgDef(0))
+                                                                            .setLabel(orgDef(1))
+                                                                            .setCreatedAt(Utils.timestampFromString(orgDef(3)) match {
+                                                                                case createdAt: Timestamp => createdAt
+                                                                                case _ => null
+                                                                            })
+                                                                            .setUpdatedAt(Utils.timestampFromString(orgDef(4)) match {
+                                                                                case updatedAt: Timestamp => updatedAt
+                                                                                case _ => null
+                                                                            })
+                                                                        ) flatMap { organization =>
+                                                                            Try(orgDef(2).toBoolean) match {
+                                                                                case Success(queryable) => {
+                                                                                    if (queryable) Right(organization.setQueryable)
+                                                                                    else Right(organization.setUnqueryable)
+                                                                                }
+                                                                                case Failure(cause) => Right(organization)
+                                                                            }
+                                                                        } flatMap { organization =>
+                                                                            result._2.partition(_._1 == "ORGTYPE") match {
+                                                                                case result => {
+                                                                                    result._1.length match {
+                                                                                        case 0 => 
+                                                                                        case 1 => {
+                                                                                            val orgTypeDef = result._1(0)._2
+                                                                                            val orgType = new OrganizationTypeStore()
+                                                                                            .makeOrganizationType
+                                                                                            .setId(orgTypeDef(1))
+                                                                                            .setLabelTextId(orgTypeDef(2))
+                                                                                            .setCreatedAt(Utils.timestampFromString(orgTypeDef(3)) match {
+                                                                                                case createdAt: Timestamp => createdAt
+                                                                                                case _ => null
+                                                                                            })
+                                                                                            .setUpdatedAt(Utils.timestampFromString(orgTypeDef(4)) match {
+                                                                                                case updatedAt: Timestamp => updatedAt
+                                                                                                case _ => null
+                                                                                            })
+                                                                                            result._2.foreach({ result =>
+                                                                                                val orgTypeLangVariantDef = result._2
+                                                                                                orgType.setLabel(
+                                                                                                    Language.apply
+                                                                                                    .setId(orgTypeLangVariantDef(4))
+                                                                                                    .setCode(orgTypeLangVariantDef(3))
+                                                                                                    .setLabel(orgTypeLangVariantDef(5)),
+                                                                                                    orgTypeLangVariantDef(2)
+                                                                                                )
+                                                                                            })
+                                                                                            organization.setType(orgType)
+                                                                                        }
+                                                                                        case _ => 
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            Right(organization)
+                                                                        }
+                                                                    ) yield profile.setRelatedOrganization(organization))
+                                                                }
+                                                                case _ => Future.failed(DuplicateOrganizationException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"))
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                case _ => Future.failed(DuplicateOrganizationException(s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"))
+                                            }
+                                        }
+                                        case None => {}
+                                    }
+
+                                    groupedRows.get("PERMISSION") match {
+                                        case Some(permissionReflections) => {
+                                            permissionReflections.foreach({ permissionReflection =>
+                                                permissionReflection.partition(_._1 == "PERMISSION") match {
+                                                    case result => {
+                                                        result._1.length match {
+                                                            case 0 => 
+                                                            case _ => {
+                                                                val permissionDef = result._1.head._2
+                                                                (for (
+                                                                    permission <- Right(new PermissionStore()
+                                                                        .makePermission
+                                                                        .setId(permissionDef(0))
+                                                                        .setKey(permissionDef(1))
+                                                                        .setLabelTextId(permissionDef(2))
+                                                                        .setDescriptionTextId(permissionDef(3))
+                                                                        .setCreatedAt(Utils.timestampFromString(permissionDef(6)) match {
+                                                                            case createdAt: Timestamp => createdAt
+                                                                            case _ => null
+                                                                        })
+                                                                        .setUpdatedAt(Utils.timestampFromString(permissionDef(7)) match {
+                                                                            case updatedAt: Timestamp => updatedAt
+                                                                            case _ => null
+                                                                        })
+                                                                    ) flatMap { permission =>
+                                                                        Try(permissionDef(4).toBoolean) match {
+                                                                            case Success(editable) => {
+                                                                                if (editable) Right(permission.setEditable)
+                                                                                else Right(permission.setReadonly)
+                                                                            }
+                                                                            case Failure(cause) => Right(permission)
+                                                                        }
+                                                                    } flatMap { permission =>
+                                                                        result._2.partition(_._1 == "PERMISSION_LABEL_LANG_VARIANT") match {
+                                                                            case result => {
+                                                                                result._1.isEmpty match {
+                                                                                    case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of label in any language"))
+                                                                                    case false => {
+                                                                                        result._1.foreach({ labelLangVariant =>
+                                                                                            val variantDef = labelLangVariant._2
+                                                                                            permission.setLabel(
+                                                                                                Language.apply
+                                                                                                .setId(variantDef(3).toString)
+                                                                                                .setCode(variantDef(2).toString)
+                                                                                                .setLabel(variantDef(4).toString),
+                                                                                                variantDef(1).toString
+                                                                                            )
+                                                                                        })
+                                                                                        result._2.filter(_._1 == "PERMISSION_DESC_LANG_VARIANT") match {
+                                                                                            case result => {
+                                                                                                result.isEmpty match {
+                                                                                                    case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of description in any language"))
+                                                                                                    case false => {
+                                                                                                        result.foreach({ descLangVariant =>
+                                                                                                            val variantDef = descLangVariant._2
+                                                                                                            permission.setDescription(
+                                                                                                                Language.apply
+                                                                                                                .setId(variantDef(3).toString)
+                                                                                                                .setCode(variantDef(2).toString)
+                                                                                                                .setLabel(variantDef(4).toString),
+                                                                                                                variantDef(1).toString
+                                                                                                            )
+                                                                                                        })
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        Right(permission)
+                                                                    }
+                                                                ) yield profile.addPermission(permission))
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            })
+                                        }
+                                        case None => {}
+                                    }
+
+                                    Right(profile)
+                                }
+                            ) yield profile)
+                            .getOrElse(null)
                         }
-                    ) yield profile)
-                    .getOrElse(null)
+                        case None => {}
+                    }
                 })
-                Future.successful(profiles.toList)
+                Future.successful(profiles.toList.asInstanceOf[List[Profile]])
             }
             case Failure(cause) => Future.failed(ProfileQueryExecutionException(cause))
         })
@@ -288,8 +467,6 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
         })
     }
 
-    
-
     def getProfileById(id: String)(implicit ec: ExecutionContext): Future[Profile] = {
         getProfiles(
             ProfileStore.GetProfilesFilters().copy(
@@ -303,7 +480,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             case Success(profiles) =>
                 profiles.length match {
                     case 0 => Future.failed(new ProfileNotFoundException(s"Profile ${id} couldn't be found"))
-                    case 1 => Future.successful(profiles(0))
+                    case 1 => Future.successful(profiles.head)
                     case _ => Future.failed(new DuplicateProfileException)
                 }
             case Failure(cause) => Future.failed(cause)

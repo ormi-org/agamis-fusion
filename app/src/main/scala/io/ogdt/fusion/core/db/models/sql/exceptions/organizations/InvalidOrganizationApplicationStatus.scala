@@ -11,18 +11,18 @@ object InvalidOrganizationApplicationStatus {
         message: String,
         cause: Throwable
     ): InvalidOrganizationApplicationStatus = {
-        InvalidOrganizationApplicationStatus(cause, message)
+        new InvalidOrganizationApplicationStatus(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): InvalidOrganizationApplicationStatus = {
-        InvalidOrganizationApplicationStatus(cause)
+        new InvalidOrganizationApplicationStatus(cause)
     }
 
     def apply(
         message: String
     ): InvalidOrganizationApplicationStatus = {
-        InvalidOrganizationApplicationStatus(null, message)
+        new InvalidOrganizationApplicationStatus(null, message)
     }
 }

@@ -11,12 +11,12 @@ object ProfileQueryExecutionException {
         message: String,
         cause: Throwable
     ): ProfileQueryExecutionException = {
-        ProfileQueryExecutionException(cause, message)
+        new ProfileQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): ProfileQueryExecutionException = {
-        ProfileQueryExecutionException(cause)
+        new ProfileQueryExecutionException(cause)
     }
 }

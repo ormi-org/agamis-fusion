@@ -33,6 +33,8 @@ import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ListBuffer
 
 import io.ogdt.fusion.core.db.models.sql.User
+import scala.util.Try
+import io.ogdt.fusion.core.db.models.sql.generics.Email
 
 class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, User] {
 
@@ -60,29 +62,25 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
     }
 
     def makeUsersQuery(queryFilters: UserStore.GetUsersFilters): SqlStoreQuery = {
-        var queryString: String = 
-            "SELECT USER.id, username, password, USER.created_at, USER.updated_at, " +
-            "PROFILE.id, lastname, firstname, last_login, is_active, PROFILE.created_at, PROFILE.updated_at " +
-            s"FROM $schema.USER as USER " +
-            s"INNER JOIN $schema.PROFILE as PROFILE ON PROFILE.user_id = USER.id"
+        var baseQueryString = queryString.replace("$schema", schema)
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
             var innerWhereStatement: ListBuffer[String] = ListBuffer()
             // manage ids search
             if (filter.id.length > 0) {
-                innerWhereStatement += s"USER.id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"user_id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.id
             }
             // manage usernames search
             if (filter.username.length > 0) {
-                innerWhereStatement += s"USER.username in (${(for (i <- 1 to filter.username.length) yield "?").mkString(",")})"
+                innerWhereStatement += s"user_username in (${(for (i <- 1 to filter.username.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.username
             }
             // manage metadate search
             filter.createdAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"USER.created_at ${
+                    innerWhereStatement += s"user_created_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -96,7 +94,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
             }
             filter.updatedAt match {
                 case Some((test, time)) => {
-                    innerWhereStatement += s"USER.updated_at ${
+                    innerWhereStatement += s"user_updated_at ${
                         test match {
                             case "eq" => "="
                             case "gt" => ">"
@@ -112,91 +110,124 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         })
         // compile whereStatements
         if (whereStatements.length > 0) {
-            queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
+            baseQueryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
         if (queryFilters.orderBy.length > 0) {
-            queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
-                s"USER.${o._1} ${o._2 match {
+            baseQueryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
+                s"user_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
                 }}"
             ).mkString(", ")}"
         }
-        makeQuery(queryString)
+        makeQuery(baseQueryString)
         .setParams(queryArgs.toList)
     }
 
     // Get existing users from database
     def getUsers(queryFilters: UserStore.GetUsersFilters)(implicit ec: ExecutionContext): Future[List[User]] = {
         executeQuery(makeUsersQuery(queryFilters)).transformWith({
-            case Success(userResults) => {
+            case Success(rows) => {
                 // map each user from queryResult by grouping results by USER.id and mapping to user objects creation
-                var users = userResults.toList.groupBy(_(0)).map(entityReflection => {
-                    (for (
-                        // Start a for comprehension
-                        user <- Right(makeUser
-                            .setId(entityReflection._2(0)(0).toString)
-                            .setUsername(entityReflection._2(0)(1).toString)
-                            .setPassword(entityReflection._2(0)(2).toString)
-                            .setCreatedAt(entityReflection._2(0)(3) match {
-                                case createdAt: Timestamp => createdAt
-                                case _ => null
-                            })
-                            .setUpdatedAt(entityReflection._2(0)(4) match {
-                                case updatedAt: Timestamp => updatedAt
-                                case _ => null
-                            })
-                        ) flatMap { user => // pass created user to profile mapping step
-                            // filter entities to exclude results where compulsory fields are missing or set to NULL
-                            entityReflection._2.filter(
-                                (row: List[_]) => (row(5) != null && row(6) != null && row(7) != null && row(8) != null && row(9) != null && row(10) != null && row(11) != null)
-                            ).collect(row => { // collect inner List to transform it to profile objects
-                                ( for(
-                                    profile <- Right(
-                                        new ProfileStore().makeProfile
-                                        .setId(row(5).toString)
-                                        .setLastname(row(6).toString)
-                                        .setFirstname(row(7).toString)
-                                        .setLastLogin(row(8) match {
-                                            case lastlogin: Timestamp => lastlogin
-                                            case _ => null
-                                        })
-                                        .setCreatedAt(row(10) match {
-                                            case createdAt: Timestamp => createdAt
-                                            case _ => null
-                                        })
-                                        .setUpdatedAt(row(11) match {
-                                            case updatedAt: Timestamp => updatedAt
-                                            case _ => null
-                                        })
-                                    ) flatMap { profile =>
-                                        row(9) match {
-                                            case isActive: Boolean => {
-                                                if (isActive) Right(profile.setActive)
-                                                else Right(profile.setInactive)
-                                            }
-                                            case _ => Right(profile)
+                val entityReflections = rows.groupBy(_(0))
+                var users = rows.map(_(0)).distinct.map(entityReflections.get(_).get).map(entityReflection => {
+                    val groupedRows = getRelationsGroupedRowsFrom(entityReflection, 5, 6)
+                    groupedRows.get("USER") match {
+                        case Some(userReflections) => {
+                            val userDef = userReflections.head.head._2
+                            (for (
+                                // Start a for comprehension
+                                user <- Right(makeUser
+                                    .setId(userDef(0).toString)
+                                    .setUsername(userDef(1).toString)
+                                    .setPassword(userDef(2).toString)
+                                    .setCreatedAt(Utils.timestampFromString(userDef(3)) match {
+                                        case createdAt: Timestamp => createdAt
+                                        case _ => null
+                                    })
+                                    .setUpdatedAt(Utils.timestampFromString(userDef(4)) match {
+                                        case updatedAt: Timestamp => updatedAt
+                                        case _ => null
+                                    })
+                                ) flatMap { user => // pass created user to profile mapping step
+                                    groupedRows.get("PROFILE") match {
+                                        case Some(profileReflections) => {
+                                            //PROFILE.id, PROFILE.lastname, PROFILE.firstname, v, PROFILE.last_login, PROFILE.is_active, PROFILE.user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at
+                                            profileReflections.foreach({ profileReflection =>
+                                                val profileDef = profileReflection.head._2
+                                                (for (
+                                                    profile <- Right(
+                                                        new ProfileStore().makeProfile
+                                                        .setId(profileDef(0).toString)
+                                                        .setLastname(profileDef(1).toString)
+                                                        .setFirstname(profileDef(2).toString)
+                                                        .setLastLogin(Utils.timestampFromString(profileDef(4)) match {
+                                                            case lastlogin: Timestamp => lastlogin
+                                                            case _ => null
+                                                        })
+                                                        .setRelatedUser(new UserStore()
+                                                            .makeUser
+                                                            .setId(profileDef(6))
+                                                        )
+                                                        .setRelatedOrganization(new OrganizationStore()
+                                                            .makeOrganization
+                                                            .setId(profileDef(7))
+                                                        )
+                                                        .setCreatedAt(Utils.timestampFromString(profileDef(8)) match {
+                                                            case createdAt: Timestamp => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Utils.timestampFromString(profileDef(9)) match {
+                                                            case updatedAt: Timestamp => updatedAt
+                                                            case _ => null
+                                                        })
+                                                    ) flatMap { profile =>
+                                                        Try(profileDef(5).toBoolean) match {
+                                                            case Success(isActive) => {
+                                                                if (isActive) Right(profile.setActive)
+                                                                else Right(profile.setInactive)
+                                                            }
+                                                            case Failure(_) => Right(profile)
+                                                        }
+                                                    } flatMap { profile =>
+                                                        val profileMainEmailDef = profileDef(3).split(";")
+                                                        profileMainEmailDef.length match {
+                                                            case 2 => {
+                                                                Right(profile.setMainEmail(Email.apply
+                                                                    .setId(profileMainEmailDef(0))
+                                                                    .setAddress(profileMainEmailDef(1))
+                                                                ))
+                                                            }
+                                                            case _ => Right(profile)
+                                                        }
+                                                    }
+                                                ) yield user.addRelatedProfile(profile))
+                                            })
                                         }
+                                        case None => {}
                                     }
-                                ) yield profile)
-                                .getOrElse(null)
-                            }).foreach(profile => {
-                                // Add each valid profiles to user
-                                user.addRelatedProfile(profile)
-                            })
-                            Right(user)
+                                    Right(user)
+                                }
+                            ) yield user).getOrElse(null)
                         }
-                    ) yield user).getOrElse(null)                   
+                        case None => {}
+                    }                   
                 })
-                Future.successful(users.toList)
+                Future.successful(users.toList.asInstanceOf[List[User]])
             }
             case Failure(cause) => Future.failed(UserQueryExecutionException(cause))
         })
     }
 
     def getAllUsers(implicit ec: ExecutionContext): Future[List[User]] = {
-        getUsers(UserStore.GetUsersFilters.none).transformWith({
+        getUsers(
+            UserStore.GetUsersFilters().copy(
+                orderBy = List(
+                    ("id", 1)
+                )
+            )
+        ).transformWith({
             case Success(users) => 
                 users.length match {
                     case 0 => Future.failed(new NoEntryException("User table is empty"))
@@ -208,22 +239,18 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
 
     def getUserById(id: String)(implicit ec: ExecutionContext): Future[User] = {
         getUsers(
-            UserStore.GetUsersFilters(
-                List(
-                    UserStore.GetUsersFilter(
-                        List(id),
-                        List(),
-                        None,
-                        None
+            UserStore.GetUsersFilters().copy(
+                filters = List(
+                    UserStore.GetUsersFilter().copy(
+                        id = List(id)
                     )
-                ),
-                List()
+                )
             )
         ).transformWith({
             case Success(users) =>
                 users.length match {
                     case 0 => Future.failed(new UserNotFoundException(s"User ${id} couldn't be found"))
-                    case 1 => Future.successful(users(0))
+                    case 1 => Future.successful(users.head)
                     case _ => Future.failed(new DuplicateUserException)
                 }
             case Failure(cause) => Future.failed(cause)
@@ -232,16 +259,12 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
 
     def getUserByUsername(username: String)(implicit ec: ExecutionContext): Future[User] = {
         getUsers(
-            UserStore.GetUsersFilters(
-                List(
-                    UserStore.GetUsersFilter(
-                        List(),
-                        List(username),
-                        None,
-                        None
+            UserStore.GetUsersFilters().copy(
+                filters = List(
+                    UserStore.GetUsersFilter().copy(
+                        username = List(username)
                     )
-                ),
-                List()
+                )
             )
         ).transformWith({
             case Success(users) =>
@@ -331,22 +354,13 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
 
 object UserStore {
     case class GetUsersFilter(
-        id: List[String],
-        username: List[String],
-        createdAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
-        updatedAt: Option[(String, Timestamp)], // (date, (eq, lt, gt, ne))
+        id: List[String] = List(),
+        username: List[String] = List(),
+        createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
+        updatedAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
     )
     case class GetUsersFilters(
-        filters: List[GetUsersFilter],
-        orderBy: List[(String, Int)] // (column, direction)
+        filters: List[GetUsersFilter] = List(),
+        orderBy: List[(String, Int)] = List() // (column, direction)
     ) extends GetEntityFilters
-
-    object GetUsersFilters {
-        def none: GetUsersFilters = {
-            GetUsersFilters(
-                List(),
-                List()
-            )
-        }
-    }
 }

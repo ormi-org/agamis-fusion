@@ -33,6 +33,7 @@ import scala.util.Try
 import io.ogdt.fusion.core.db.datastores.sql.exceptions.organizations.DuplicateOrganizationException
 import io.ogdt.fusion.core.db.models.sql.generics.Language
 import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
+import io.ogdt.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 
 class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Application] {
 
@@ -60,60 +61,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     }
 
     def makeApplicationQuery(queryFilters: ApplicationStore.GetApplicationsFilters): SqlStoreQuery = {
-        var queryString: String = 
-            "SELECT app_id, app_label, app_version, app_universal_id, app_status, app_manifest_url, app_store_url, app_created_at, app_updated_at, info_data, type_data" +
-            "FROM " +
-            "((SELECT app_id, app_label, app_version, app_universal_id, app_status, app_manifest_url, app_store_url, app_created_at, app_updated_at, info_data, type_data" +
-            "FROM " +
-            "(SELECT APP.id AS app_id, APP.label AS app_label, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at," +
-            "CONCAT_WS('||', ORG.id, ORG.label, ORG.queryable, ORG_APP.status, ORG_APP.license_file_fs_id, ORG_APP.license_file_id, ORG.created_at, ORG.updated_at) AS info_data, 'ORGANIZATION' AS type_data, ORG.id AS org_id" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "RIGHT OUTER JOIN FUSION.ORGANIZATION_APPLICATION AS ORG_APP ON APP.id = ORG_APP.application_id" +
-            "LEFT OUTER JOIN FUSION.ORGANIZATION AS ORG ON ORG_APP.organization_id = ORG.id" +
-            "UNION ALL" +
-            "(SELECT app_id, app_label, app_version, app_universal_id, app_status, app_manifest_url, app_store_url, app_created_at, app_updated_at, info_data, type_data, org_id" +
-            "FROM " +
-            "(SELECT APP.id AS app_id, APP.label AS app_label, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at," +
-            "CONCAT_WS('||', ORG.id, ORGTYPE.id, ORGTYPE.label_text_id, ORGTYPE.created_at, ORGTYPE.updated_at) AS info_data, 'ORGTYPE' AS type_data, ORGTYPE.id AS orgtype_id, ORG.id AS org_id" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "RIGHT OUTER JOIN FUSION.ORGANIZATION_APPLICATION AS ORG_APP ON APP.id = ORG_APP.application_id" +
-            "LEFT OUTER JOIN FUSION.ORGANIZATION AS ORG ON ORG_APP.organization_id = ORG.id" +
-            "LEFT OUTER JOIN FUSION.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id" +
-            "UNION ALL" +
-            "(SELECT APP.id AS app_id, APP.label AS app_label, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at," +
-            "CONCAT_WS('||', ORG.id, ORGTYPE.id, TEXT.content, LANG.code, TEXT.language_id, LANG.label) AS info_data, 'ORGTYPE_LANG_VARIANT' AS type_data, ORGTYPE.id AS orgtype_id, ORG.id AS org_id" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "RIGHT OUTER JOIN FUSION.ORGANIZATION_APPLICATION AS ORG_APP ON APP.id = ORG_APP.application_id" +
-            "LEFT OUTER JOIN FUSION.ORGANIZATION AS ORG ON ORG_APP.organization_id = ORG.id" +
-            "LEFT OUTER JOIN FUSION.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id" +
-            "LEFT OUTER JOIN FUSION.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id" +
-            "LEFT OUTER JOIN FUSION.LANGUAGE AS LANG ON TEXT.language_id = LANG.id))" +
-            "ORDER BY orgtype_id))" +
-            "ORDER BY app_id, org_id)" +
-            "UNION ALL" +
-            "(SELECT app_id, app_label, app_version, app_universal_id, app_status, app_manifest_url, app_store_url, app_created_at, app_updated_at, info_data, type_data" +
-            "FROM" +
-            "(SELECT APP.id AS app_id, APP.label AS app_label, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at," +
-            "CONCAT_WS('||', PERMISSION.id, PERMISSION.key, PERMISSION.label_text_id, PERMISSION.description_text_id, PERMISSION.editable, PERMISSION.application_id, PERMISSION.created_at, PERMISSION.updated_at) AS info_data, 'PERMISSION' AS type_data, PERMISSION.id AS permission_id" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "INNER JOIN FUSION.PERMISSION AS PERMISSION ON APP.id = PERMISSION.application_id" +
-            "UNION ALL" +
-            "(SELECT app_id, app_label, app_version, app_universal_id, app_status, app_manifest_url, app_store_url, app_created_at, app_updated_at," +
-            "CONCAT_WS('||', permission_id, GROUP_CONCAT(content SEPARATOR ';'), code, language_id, label, GROUP_CONCAT(text_id SEPARATOR ';')) AS info_data, 'PERMISSION_LANG_VARIANT' AS type_data, permission_id" +
-            "FROM " +
-            "(SELECT APP.id AS app_id, APP.label AS app_label, PERMISSION.id AS permission_id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id AS text_id, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "RIGHT OUTER JOIN FUSION.PERMISSION AS PERMISSION ON APP.id = PERMISSION.application_id" +
-            "LEFT OUTER JOIN FUSION.TEXT AS TEXT ON TEXT.id = PERMISSION.label_text_id" +
-            "LEFT OUTER JOIN FUSION.LANGUAGE AS LANG ON TEXT.language_id = LANG.id" +
-            "UNION ALL" +
-            "SELECT APP.id AS app_id, APP.label AS app_label, PERMISSION.id AS permission_id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id AS text_id, APP.version AS app_version, APP.app_universal_id AS app_universal_id, APP.status AS app_status, APP.manifest_url AS app_manifest_url, APP.store_url AS app_store_url, APP.created_at AS app_created_at, APP.updated_at AS app_updated_at" +
-            "FROM FUSION.APPLICATION AS APP" +
-            "RIGHT OUTER JOIN FUSION.PERMISSION AS PERMISSION ON APP.id = PERMISSION.application_id" +
-            "LEFT OUTER JOIN FUSION.TEXT AS TEXT ON TEXT.id = PERMISSION.description_text_id" +
-            "LEFT OUTER JOIN FUSION.LANGUAGE AS LANG ON TEXT.language_id = LANG.id)" +
-            "GROUP BY permission_id, language_id))" +
-            "ORDER BY app_id, permission_id))"
+        var baseQueryString = queryString.replace("$schema", schema)
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -178,220 +126,243 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
         })
         // compile whereStatements
         if (!whereStatements.isEmpty) {
-            queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
+            baseQueryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
         if (!queryFilters.orderBy.isEmpty) {
-            queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
+            baseQueryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
                 s"app_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
                 }}"
             ).mkString(", ")}"
         }
-        makeQuery(queryString)
+        makeQuery(baseQueryString)
         .setParams(queryArgs.toList)
     }
 
     // Get existing applications from database
     def getApplications(queryFilters: ApplicationStore.GetApplicationsFilters)(implicit ec: ExecutionContext): Future[List[Application]] = {
         executeQuery(makeApplicationQuery(queryFilters)).transformWith({
-            case Success(applicationResults) => {
-                val applications = applicationResults.toList.groupBy(_(0)).map(entityReflection => {
-                    (for (
-                        application <- Right(makeApplication
-                            .setId(entityReflection._2(0)(0).toString)
-                            .setLabel(entityReflection._2(0)(1).toString)
-                            .setVersion(entityReflection._2(0)(2).toString)
-                            .setAppUniversalId(entityReflection._2(0)(3).toString)
-                            .setManifestUrl(entityReflection._2(0)(5).toString)
-                            .setStoreUrl(entityReflection._2(0)(6).toString)
-                            .setCreatedAt(entityReflection._2(0)(7) match {
-                                case createdAt: Timestamp => createdAt
-                                case _ => null
-                            })
-                            .setUpdatedAt(entityReflection._2(0)(8) match {
-                                case updatedAt: Timestamp => updatedAt
-                                case _ => null
-                            })
-                        ) flatMap { application =>
-                            Application.Status.fromInt(entityReflection._2(0)(4).asInstanceOf[Int]) match {
-                                case Success(status) => {
-                                    Right(application.setStatus(status))
-                                }
-                                case Failure(cause) => Right(application)
-                            }
-                        } flatMap { application =>
-                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 9, 10)
-
-                            groupedRows.get("ORGANIZATION") match {
-                                case Some(organizationReflections) => {
-                                    organizationReflections.foreach({ organizationReflection =>
-                                        organizationReflection.partition(_._1 == "ORGANIZATION") match {
-                                            case result => {
-                                                result._1.length match {
-                                                    case 0 => Future.failed(OrganizationNotFoundException(s"Application ${application.id}:${application.label} might be orphan"))
-                                                    case 1 => {
-                                                        val orgDef = result._1(0)._2
-                                                        (for (
-                                                            organization <- Right(new OrganizationStore()
-                                                                .makeOrganization
-                                                                .setId(orgDef(0))
-                                                                .setLabel(orgDef(1))
-                                                                .setCreatedAt(Timestamp.from(Instant.parse(orgDef(6))) match {
-                                                                        case createdAt: Timestamp => createdAt
-                                                                        case _ => null
-                                                                    })
-                                                                    .setUpdatedAt(Timestamp.from(Instant.parse(orgDef(7))) match {
-                                                                        case updatedAt: Timestamp => updatedAt
-                                                                        case _ => null
-                                                                    })
-                                                            ) flatMap { organization =>
-                                                                Try(orgDef(2).toBoolean) match {
-                                                                    case Success(queryable) => {
-                                                                        if (queryable) Right(organization.setQueryable)
-                                                                        else Right(organization.setUnqueryable)
-                                                                    }
-                                                                    case Failure(cause) => Right(organization)
-                                                                }
-                                                            } flatMap { organization =>
-                                                                result._2.partition(_._1 == "ORGTYPE") match {
-                                                                    case result => {
-                                                                        result._1.length match {
-                                                                            case 0 =>
-                                                                            case 1 => {
-                                                                                val orgTypeDef = result._1(0)._2
-                                                                                (for (
-                                                                                    orgType <- Right(new OrganizationTypeStore()
-                                                                                        .makeOrganizationType
-                                                                                        .setId(orgTypeDef(1))
-                                                                                        .setLabelTextId(orgTypeDef(2))
-                                                                                        .setCreatedAt(Try(orgTypeDef(3).asInstanceOf[Timestamp]) match {
-                                                                                            case Success(createdAt) => createdAt
-                                                                                            case _ => null
-                                                                                        })
-                                                                                        .setUpdatedAt(Try(orgTypeDef(4).asInstanceOf[Timestamp]) match {
-                                                                                            case Success(updatedAt) => updatedAt
-                                                                                            case _ => null
-                                                                                        })
-                                                                                    ) flatMap { orgType =>
-                                                                                        result._2.foreach({ result =>
-                                                                                            val orgTypeLangVariantDef = result._2
-                                                                                            orgType.setLabel(
-                                                                                                Language.apply
-                                                                                                .setId(orgTypeLangVariantDef(4))
-                                                                                                .setCode(orgTypeLangVariantDef(3))
-                                                                                                .setLabel(orgTypeLangVariantDef(5)),
-                                                                                                orgTypeLangVariantDef(2)
-                                                                                            )
-                                                                                        })
-                                                                                        Right(orgType)
-                                                                                    }
-                                                                                ) yield organization.setType(orgType))
+            case Success(rows) => {
+                val entityReflections = rows.groupBy(_(0))
+                val applications = rows.map(_(0)).distinct.map(entityReflections.get(_).get).map(entityReflection => {
+                    val groupedRows = getRelationsGroupedRowsFrom(entityReflection, 9, 10)
+                    groupedRows.get("APPLICATION") match {
+                        case Some(applicationReflections) => {
+                            val appDef = applicationReflections.head.head._2
+                            (for (
+                                application <- Right(makeApplication
+                                    .setId(appDef(0).toString)
+                                    .setLabel(appDef(1).toString)
+                                    .setVersion(appDef(2).toString)
+                                    .setAppUniversalId(appDef(3).toString)
+                                    .setManifestUrl(appDef(5).toString)
+                                    .setStoreUrl(appDef(6).toString)
+                                    .setCreatedAt(Utils.timestampFromString(appDef(7)) match {
+                                        case createdAt: Timestamp => createdAt
+                                        case _ => null
+                                    })
+                                    .setUpdatedAt(Utils.timestampFromString(appDef(8)) match {
+                                        case updatedAt: Timestamp => updatedAt
+                                        case _ => null
+                                    })
+                                ) flatMap { application =>
+                                    Application.Status.fromInt(appDef(4).toInt) match {
+                                        case Success(status) => {
+                                            Right(application.setStatus(status))
+                                        }
+                                        case Failure(cause) => Right(application)
+                                    }
+                                } flatMap { application =>
+                                    groupedRows.get("ORGANIZATION") match {
+                                        case Some(organizationReflections) => {
+                                            organizationReflections.foreach({ organizationReflection =>
+                                                organizationReflection.partition(_._1 == "ORGANIZATION") match {
+                                                    case result => {
+                                                        result._1.length match {
+                                                            case 0 => Future.failed(OrganizationNotFoundException(s"Application ${application.id}:${application.label} might be orphan"))
+                                                            case 1 => {
+                                                                val orgDef = result._1(0)._2
+                                                                (for (
+                                                                    organization <- Right(new OrganizationStore()
+                                                                        .makeOrganization
+                                                                        .setId(orgDef(0))
+                                                                        .setLabel(orgDef(1))
+                                                                        .setCreatedAt(Utils.timestampFromString(orgDef(6)) match {
+                                                                            case createdAt: Timestamp => createdAt
+                                                                            case _ => null
+                                                                        })
+                                                                        .setUpdatedAt(Utils.timestampFromString(orgDef(7)) match {
+                                                                            case updatedAt: Timestamp => updatedAt
+                                                                            case _ => null
+                                                                        })
+                                                                    ) flatMap { organization =>
+                                                                        Try(orgDef(2).toBoolean) match {
+                                                                            case Success(queryable) => {
+                                                                                if (queryable) Right(organization.setQueryable)
+                                                                                else Right(organization.setUnqueryable)
                                                                             }
-                                                                            case _ =>
+                                                                            case Failure(cause) => Right(organization)
+                                                                        }
+                                                                    } flatMap { organization =>
+                                                                        result._2.partition(_._1 == "ORGTYPE") match {
+                                                                            case result => {
+                                                                                result._1.length match {
+                                                                                    case 0 =>
+                                                                                    case 1 => {
+                                                                                        val orgTypeDef = result._1(0)._2
+                                                                                        (for (
+                                                                                            orgType <- Right(new OrganizationTypeStore()
+                                                                                                .makeOrganizationType
+                                                                                                .setId(orgTypeDef(1))
+                                                                                                .setLabelTextId(orgTypeDef(2))
+                                                                                                .setCreatedAt(Try(Utils.timestampFromString(orgTypeDef(3))) match {
+                                                                                                    case Success(createdAt) => createdAt
+                                                                                                    case _ => null
+                                                                                                })
+                                                                                                .setUpdatedAt(Try(Utils.timestampFromString(orgTypeDef(4))) match {
+                                                                                                    case Success(updatedAt) => updatedAt
+                                                                                                    case _ => null
+                                                                                                })
+                                                                                            ) flatMap { orgType =>
+                                                                                                result._2.foreach({ result =>
+                                                                                                    val orgTypeLangVariantDef = result._2
+                                                                                                    orgType.setLabel(
+                                                                                                        Language.apply
+                                                                                                        .setId(orgTypeLangVariantDef(4))
+                                                                                                        .setCode(orgTypeLangVariantDef(3))
+                                                                                                        .setLabel(orgTypeLangVariantDef(5)),
+                                                                                                        orgTypeLangVariantDef(2)
+                                                                                                    )
+                                                                                                })
+                                                                                                Right(orgType)
+                                                                                            }
+                                                                                        ) yield organization.setType(orgType))
+                                                                                    }
+                                                                                    case _ =>
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        Right(organization)
+                                                                    };
+                                                                    licenseStore = orgDef(4).toString;
+                                                                    licenseFileId = orgDef(5).toString;
+                                                                    orgAppStatus <- Right {
+                                                                        OrganizationApplication.Status.fromInt(orgDef(3).toInt) match {
+                                                                            case Success(status) => status
+                                                                            case Failure(cause) => throw cause
                                                                         }
                                                                     }
-                                                                }
-                                                                Right(organization)
-                                                            };
-                                                            licenseStore = orgDef(4).toString;
-                                                            licenseFileId = orgDef(5).toString;
-                                                            orgAppStatus <- Right {
-                                                                OrganizationApplication.Status.fromInt(orgDef(3).asInstanceOf[Int]) match {
-                                                                    case Success(status) => status
-                                                                    case Failure(cause) => throw cause
-                                                                }
+                                                                ) yield application.addOrganization(
+                                                                    organization,
+                                                                    new FileSystemStore()
+                                                                        .makeFileSystem
+                                                                        .setId(licenseStore),
+                                                                    licenseFileId,
+                                                                    orgAppStatus
+                                                                ))
                                                             }
-                                                        ) yield application.addOrganization(
-                                                            organization,
-                                                            new FileSystemStore()
-                                                                .makeFileSystem
-                                                                .setId(licenseStore),
-                                                            licenseFileId,
-                                                            orgAppStatus
-                                                        ))
+                                                            case _ => Future.failed(DuplicateOrganizationException(s"Application ${application.id}:${application.label} has duplicate organization relation"))
+                                                        }
                                                     }
-                                                    case _ => Future.failed(DuplicateOrganizationException(s"Application ${application.id}:${application.label} has duplicate organization relation"))
                                                 }
-                                            }
+                                            })
                                         }
-                                    })
-                                }
-                                case None => {}
-                            }
+                                        case None => {}
+                                    }
 
-                            groupedRows.get("PERMISSION") match {
-                                case Some(permissionReflections) => {
-                                    permissionReflections.foreach({ permissionReflection =>
-                                        permissionReflection.partition(_._1 == "PERMISSION") match {
-                                            case result => {
-                                                result._1.length match {
-                                                    case 0 => 
-                                                    case _ => {
-                                                        val permissionDef = result._1(0)._2
-                                                        (for (
-                                                            permission <- Right(new PermissionStore()
-                                                                .makePermission
-                                                                .setId(permissionDef(0))
-                                                                .setKey(permissionDef(1))
-                                                                .setLabelTextId(permissionDef(2))
-                                                                .setDescriptionTextId(permissionDef(3))
-                                                                .setRelatedApplication(application)
-                                                                .setCreatedAt(Timestamp.from(Instant.parse(permissionDef(6))) match {
-                                                                    case createdAt: Timestamp => createdAt
-                                                                    case _ => null
-                                                                })
-                                                                .setUpdatedAt(Timestamp.from(Instant.parse(permissionDef(7))) match {
-                                                                    case updatedAt: Timestamp => updatedAt
-                                                                    case _ => null
-                                                                })
-                                                            ) flatMap { permission =>
-                                                                Try(permissionDef(4).toBoolean) match {
-                                                                    case Success(editable) => {
-                                                                        if (editable) Right(permission.setEditable)
-                                                                        else Right(permission.setReadonly)
+                                    groupedRows.get("PERMISSION") match {
+                                        case Some(permissionReflections) => {
+                                            permissionReflections.foreach({ permissionReflection =>
+                                                permissionReflection.partition(_._1 == "PERMISSION") match {
+                                                    case result => {
+                                                        result._1.length match {
+                                                            case 0 => 
+                                                            case _ => {
+                                                                val permissionDef = result._1(0)._2
+                                                                (for (
+                                                                    permission <- Right(new PermissionStore()
+                                                                        .makePermission
+                                                                        .setId(permissionDef(0))
+                                                                        .setKey(permissionDef(1))
+                                                                        .setLabelTextId(permissionDef(2))
+                                                                        .setDescriptionTextId(permissionDef(3))
+                                                                        .setRelatedApplication(application)
+                                                                        .setCreatedAt(Utils.timestampFromString(permissionDef(6)) match {
+                                                                            case createdAt: Timestamp => createdAt
+                                                                            case _ => null
+                                                                        })
+                                                                        .setUpdatedAt(Utils.timestampFromString(permissionDef(7)) match {
+                                                                            case updatedAt: Timestamp => updatedAt
+                                                                            case _ => null
+                                                                        })
+                                                                    ) flatMap { permission =>
+                                                                        Try(permissionDef(4).toBoolean) match {
+                                                                            case Success(editable) => {
+                                                                                if (editable) Right(permission.setEditable)
+                                                                                else Right(permission.setReadonly)
+                                                                            }
+                                                                            case Failure(cause) => Right(permission)
+                                                                        }
+                                                                    } flatMap { permission =>
+                                                                        result._2.partition(_._1 == "PERMISSION_LABEL_LANG_VARIANT") match {
+                                                                            case result => {
+                                                                                result._1.isEmpty match {
+                                                                                    case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of label in any language"))
+                                                                                    case false => {
+                                                                                        result._1.foreach({ labelLangVariant =>
+                                                                                            val variantDef = labelLangVariant._2
+                                                                                            permission.setLabel(
+                                                                                                Language.apply
+                                                                                                .setId(variantDef(3).toString)
+                                                                                                .setCode(variantDef(2).toString)
+                                                                                                .setLabel(variantDef(4).toString),
+                                                                                                variantDef(1).toString
+                                                                                            )
+                                                                                        })
+                                                                                        result._2.filter(_._1 == "PERMISSION_DESC_LANG_VARIANT") match {
+                                                                                            case result => {
+                                                                                                result.isEmpty match {
+                                                                                                    case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of description in any language"))
+                                                                                                    case false => {
+                                                                                                        result.foreach({ descLangVariant =>
+                                                                                                            val variantDef = descLangVariant._2
+                                                                                                            permission.setDescription(
+                                                                                                                Language.apply
+                                                                                                                .setId(variantDef(3).toString)
+                                                                                                                .setCode(variantDef(2).toString)
+                                                                                                                .setLabel(variantDef(4).toString),
+                                                                                                                variantDef(1).toString
+                                                                                                            )
+                                                                                                        })
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        Right(permission)
                                                                     }
-                                                                    case Failure(cause) => Right(permission)
-                                                                }
-                                                            } flatMap { permission =>
-                                                                result._2.foreach({ result =>
-                                                                    val permissionLangVariantDef = result._2
-                                                                    .updated(1, result._2(1).split(";"))
-                                                                    .updated(5, result._2(5).split(";"))
-
-                                                                    permission.setLabel(
-                                                                        Language.apply
-                                                                        .setId(permissionLangVariantDef(3).asInstanceOf[String])
-                                                                        .setCode(permissionLangVariantDef(2).asInstanceOf[String])
-                                                                        .setLabel(permissionLangVariantDef(1).asInstanceOf[String]),
-                                                                        permissionLangVariantDef(2).asInstanceOf[Array[String]](0)
-                                                                    )
-
-                                                                    permission.setDescription(
-                                                                        Language.apply
-                                                                        .setId(permissionLangVariantDef(3).asInstanceOf[String])
-                                                                        .setCode(permissionLangVariantDef(2).asInstanceOf[String])
-                                                                        .setLabel(permissionLangVariantDef(1).asInstanceOf[String]),
-                                                                        permissionLangVariantDef(2).asInstanceOf[Array[String]](0)
-                                                                    )
-                                                                })
-                                                                Right(permission)
+                                                                ) yield application.addPermission(permission))
                                                             }
-                                                        ) yield application.addPermission(permission))
+                                                        }
                                                     }
                                                 }
-                                            }
+                                            })
                                         }
-                                    })
+                                        case None => {}
+                                    }
+                                    Right(application)
                                 }
-                                case None => {}
-                            }
-                            Right(application)
+                            ) yield application).getOrElse(null)
                         }
-                    ) yield application).getOrElse(null)
+                        case None => {}
+                    }
                 })
-                Future.successful(applications.toList)
+                Future.successful(applications.toList.asInstanceOf[List[Application]])
             }
             case Failure(cause) => Future.failed(ApplicationQueryExecutionException(cause))
         })
@@ -408,7 +379,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
                     case 0 => Future.failed(new NoEntryException("Application store is empty"))
                     case _ => Future.successful(applications)
                 }
-            case Failure(cause) => Future.failed(cause)
+            case Failure(cause) => throw cause
         })
     }
 
@@ -425,7 +396,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
             case Success(applications) => 
                 applications.length match {
                     case 0 => Future.failed(new ApplicationNotFoundException(s"Application ${id} couldn't be found"))
-                    case 1 => Future.successful(applications(0))
+                    case 1 => Future.successful(applications.head)
                     case _ => Future.failed(new DuplicateApplicationException)
                 }
             case Failure(cause) => Future.failed(cause)

@@ -11,35 +11,35 @@ object UnsafeFilesystemUnmountException {
         message: String,
         cause: Throwable
     ): UnsafeFilesystemUnmountException = {
-        UnsafeFilesystemUnmountException(cause, message)
+        new UnsafeFilesystemUnmountException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): UnsafeFilesystemUnmountException = {
-        UnsafeFilesystemUnmountException(cause)
+        new UnsafeFilesystemUnmountException(cause)
     }
 
     def apply(
         message: String
     ): UnsafeFilesystemUnmountException = {
-        UnsafeFilesystemUnmountException(null, message)
+        new UnsafeFilesystemUnmountException(null, message)
     }
 
     sealed trait Cause
     case object IS_DEFAULT_FS extends Cause {
         def apply(): UnsafeFilesystemUnmountException = {
-            UnsafeFilesystemUnmountException("Default Filesystem can't be safely unmounted")
+            new UnsafeFilesystemUnmountException(null, "Default Filesystem can't be safely unmounted")
         }
     }
     case object IS_LICENSE_REPO extends Cause {
         def apply(): UnsafeFilesystemUnmountException = {
-            UnsafeFilesystemUnmountException("Filesystem containing license file(s) can't be safely unmounted")
+            new UnsafeFilesystemUnmountException(null, "Filesystem containing license file(s) can't be safely unmounted")
         }
     }
     case object IS_CONFIGURATION_REPO extends Cause {
         def apply(): UnsafeFilesystemUnmountException = {
-            UnsafeFilesystemUnmountException("Filesystem containing configuration file(s) can't be safely unmounted")
+            new UnsafeFilesystemUnmountException(null, "Filesystem containing configuration file(s) can't be safely unmounted")
         }
     }
 }

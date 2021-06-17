@@ -11,12 +11,12 @@ object OrganizationQueryExecutionException {
         message: String,
         cause: Throwable
     ): OrganizationQueryExecutionException = {
-        OrganizationQueryExecutionException(cause, message)
+        new OrganizationQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): OrganizationQueryExecutionException = {
-        OrganizationQueryExecutionException(cause)
+        new OrganizationQueryExecutionException(cause)
     }
 }

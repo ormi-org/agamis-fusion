@@ -11,18 +11,18 @@ object UserNotPersistedException {
         message: String,
         cause: Throwable
     ): UserNotPersistedException = {
-        UserNotPersistedException(cause, message)
+        new UserNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): UserNotPersistedException = {
-        UserNotPersistedException(cause)
+        new UserNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): UserNotPersistedException = {
-        UserNotPersistedException(null, message)
+        new UserNotPersistedException(null, message)
     }
 }

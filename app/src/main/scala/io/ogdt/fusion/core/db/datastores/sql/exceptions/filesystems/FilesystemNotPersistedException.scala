@@ -11,18 +11,18 @@ object FilesystemNotPersistedException {
         message: String,
         cause: Throwable
     ): FilesystemNotPersistedException = {
-        FilesystemNotPersistedException(cause, message)
+        new FilesystemNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): FilesystemNotPersistedException = {
-        FilesystemNotPersistedException(cause)
+        new FilesystemNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): FilesystemNotPersistedException = {
-        FilesystemNotPersistedException(null, message)
+        new FilesystemNotPersistedException(null, message)
     }
 }

@@ -11,25 +11,25 @@ object UnsafeFilesystemMountException {
         message: String,
         cause: Throwable
     ): UnsafeFilesystemMountException = {
-        UnsafeFilesystemMountException(cause, message)
+        new UnsafeFilesystemMountException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): UnsafeFilesystemMountException = {
-        UnsafeFilesystemMountException(cause)
+        new UnsafeFilesystemMountException(cause)
     }
 
     def apply(
         message: String
     ): UnsafeFilesystemMountException = {
-        UnsafeFilesystemMountException(null, message)
+        new UnsafeFilesystemMountException(null, message)
     }
 
     sealed trait Cause
     case object MUST_BE_MOUNTED_FIRST extends Cause {
         def apply(): UnsafeFilesystemMountException = {
-            UnsafeFilesystemMountException("The new default filesystem must be mounted first")
+            new UnsafeFilesystemMountException(null, "The new default filesystem must be mounted first")
         }
     }
 }

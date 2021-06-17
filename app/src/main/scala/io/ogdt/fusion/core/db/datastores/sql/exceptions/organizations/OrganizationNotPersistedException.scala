@@ -11,18 +11,18 @@ object OrganizationNotPersistedException {
         message: String,
         cause: Throwable
     ): OrganizationNotPersistedException = {
-        OrganizationNotPersistedException(cause, message)
+        new OrganizationNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): OrganizationNotPersistedException = {
-        OrganizationNotPersistedException(cause)
+        new OrganizationNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): OrganizationNotPersistedException = {
-        OrganizationNotPersistedException(null, message)
+        new OrganizationNotPersistedException(null, message)
     }
 }

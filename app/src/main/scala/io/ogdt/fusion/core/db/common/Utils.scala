@@ -3,6 +3,8 @@ package io.ogdt.fusion.core.db.common
 import scala.concurrent.Promise
 import org.apache.ignite.lang.IgniteFuture
 import scala.util.Try
+import java.time.Instant
+import java.sql.Timestamp
 
 object Utils {
     // Util method to convert igniteFutures to Scala Futures
@@ -12,5 +14,11 @@ object Utils {
             promise.tryComplete(Try(k.get))
         }
         promise.future
+    }
+
+    // Util method to convert h2 timestamp to sql
+    def timestampFromString(timestamp: String): Timestamp = {
+        val format = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        Timestamp.from(Instant.ofEpochMilli(format.parse(timestamp).getTime()))
     }
 }

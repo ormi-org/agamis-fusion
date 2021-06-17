@@ -11,18 +11,18 @@ object PermissionNotPersistedException {
         message: String,
         cause: Throwable
     ): PermissionNotPersistedException = {
-        PermissionNotPersistedException(cause, message)
+        new PermissionNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): PermissionNotPersistedException = {
-        PermissionNotPersistedException(cause)
+        new PermissionNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): PermissionNotPersistedException = {
-        PermissionNotPersistedException(null, message)
+        new PermissionNotPersistedException(null, message)
     }
 }

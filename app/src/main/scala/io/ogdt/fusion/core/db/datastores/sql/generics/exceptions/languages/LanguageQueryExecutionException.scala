@@ -11,12 +11,12 @@ object LanguageQueryExecutionException {
         message: String,
         cause: Throwable
     ): LanguageQueryExecutionException = {
-        LanguageQueryExecutionException(cause, message)
+        new LanguageQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): LanguageQueryExecutionException = {
-        LanguageQueryExecutionException(cause)
+        new LanguageQueryExecutionException(cause)
     }
 }

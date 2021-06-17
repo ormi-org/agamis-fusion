@@ -7,6 +7,7 @@ import io.ogdt.fusion.core.db.models.sql.typed.Model
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import io.ogdt.fusion.core.db.models.sql.generics.Language
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 
 class OrganizationType(implicit @transient protected val store: OrganizationTypeStore) extends Model {
 
@@ -43,14 +44,20 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
     }
 
     @transient
-    private var _relatedOrganizations: List[Organization] = List()
-    def relatedOrganizations: List[Organization] = _relatedOrganizations
+    private var _relatedOrganizations: List[(Boolean, Organization)] = List()
+    def relatedOrganizations: List[(Boolean, Organization)] = _relatedOrganizations
     def addRelatedOrganization(organization: Organization): OrganizationType = {
-        _relatedOrganizations ::= organization
+        _relatedOrganizations.indexWhere(_._2.id == organization.id) match {
+            case -1 => _relatedOrganizations ::= (true, organization)
+            case index => _relatedOrganizations = _relatedOrganizations.updated(index, _relatedOrganizations(index).copy(_1 = true))
+        }
         this
     }
     def removeRelatedOrganization(organization: Organization): OrganizationType = {
-        _relatedOrganizations = _relatedOrganizations.filterNot(o => o.id == organization.id)
+        _relatedOrganizations.indexWhere(_._2.id == organization.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _relatedOrganizations = _relatedOrganizations.updated(index, _relatedOrganizations(index).copy(_1 = false))
+        }
         this
     }
 

@@ -11,12 +11,12 @@ object LanguageNotPersistedException {
         message: String,
         cause: Throwable
     ): LanguageNotPersistedException = {
-        LanguageNotPersistedException(cause, message)
+        new LanguageNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): LanguageNotPersistedException = {
-        LanguageNotPersistedException(cause)
+        new LanguageNotPersistedException(cause)
     }
 }

@@ -18,7 +18,11 @@ import io.ogdt.fusion.core.db.models.sql.exceptions.organizations.{
     UnsafeFilesystemUnmountException,
     UnsafeFilesystemMountException
 }
-import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.{
+    RelationAlreadyExistsException,
+    RelationNotFoundException
+}
+import io.ogdt.fusion.core.db.models.sql.exceptions.applications.UnsafeApplicationRemovalException
 
 class Organization(implicit @transient protected val store: OrganizationStore) extends Model {
 
@@ -123,18 +127,21 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
     private var _applications: List[(Boolean, (OrganizationApplication.Status, Application))] = List()
     def applications: List[(Boolean, (OrganizationApplication.Status, Application))] = _applications
     def addApplication(application: Application, status: OrganizationApplication.Status): Organization = {
-        _applications.find(_._2._2.id == application.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _applications ::= (true, (status, application))
+        _applications.indexWhere(_._2._2.id == application.id) match {
+            case -1 => _applications ::= (true, (status, application))
+            case index => _applications = _applications.updated(index, _applications(index).copy(_1 = true))
         }
         this
     }
     def removeApplication(application: Application): Organization = {
-        _applications =
-            _applications.map({ a =>
-                if (a._2._2.id == application.id) a.copy(_1 = false)
-                else a
-            })
+        _applications.indexWhere(_._2._2.id == application.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => {
+                val a = _applications(index)
+                if (a._2._1 == OrganizationApplication.DISABLED) throw UnsafeApplicationRemovalException.IS_ENABLED()
+                else _applications = _applications.updated(index, a.copy(_1 = false))
+            }
+        }
         this
     }
 

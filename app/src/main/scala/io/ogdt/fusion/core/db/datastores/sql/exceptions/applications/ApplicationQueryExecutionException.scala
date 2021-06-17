@@ -11,12 +11,12 @@ object ApplicationQueryExecutionException {
         message: String,
         cause: Throwable
     ): ApplicationQueryExecutionException = {
-        ApplicationQueryExecutionException(cause, message)
+        new ApplicationQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): ApplicationQueryExecutionException = {
-        ApplicationQueryExecutionException(cause)
+        new ApplicationQueryExecutionException(cause)
     }
 }

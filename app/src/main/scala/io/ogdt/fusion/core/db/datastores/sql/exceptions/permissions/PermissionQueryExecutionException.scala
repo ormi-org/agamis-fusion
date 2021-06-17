@@ -11,12 +11,12 @@ object PermissionQueryExecutionException {
         message: String,
         cause: Throwable
     ): PermissionQueryExecutionException = {
-        PermissionQueryExecutionException(cause, message)
+        new PermissionQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): PermissionQueryExecutionException = {
-        PermissionQueryExecutionException(cause)
+        new PermissionQueryExecutionException(cause)
     }
 }

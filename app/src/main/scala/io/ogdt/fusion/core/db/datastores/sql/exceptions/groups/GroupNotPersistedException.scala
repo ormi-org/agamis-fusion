@@ -11,18 +11,18 @@ object GroupNotPersistedException {
         message: String,
         cause: Throwable
     ): GroupNotPersistedException = {
-        GroupNotPersistedException(cause, message)
+        new GroupNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): GroupNotPersistedException = {
-        GroupNotPersistedException(cause)
+        new GroupNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): GroupNotPersistedException = {
-        GroupNotPersistedException(null, message)
+        new GroupNotPersistedException(null, message)
     }
 }

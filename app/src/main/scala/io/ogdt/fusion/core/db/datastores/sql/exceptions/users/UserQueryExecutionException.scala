@@ -11,12 +11,12 @@ object UserQueryExecutionException {
         message: String,
         cause: Throwable
     ): UserQueryExecutionException = {
-        UserQueryExecutionException(cause, message)
+        new UserQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): UserQueryExecutionException = {
-        UserQueryExecutionException(cause)
+        new UserQueryExecutionException(cause)
     }
 }

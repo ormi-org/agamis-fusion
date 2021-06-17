@@ -11,12 +11,12 @@ object GroupQueryExecutionException {
         message: String,
         cause: Throwable
     ): GroupQueryExecutionException = {
-        GroupQueryExecutionException(cause, message)
+        new GroupQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): GroupQueryExecutionException = {
-        GroupQueryExecutionException(cause)
+        new GroupQueryExecutionException(cause)
     }
 }

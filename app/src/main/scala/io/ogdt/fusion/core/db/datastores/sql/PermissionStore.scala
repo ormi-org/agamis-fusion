@@ -24,6 +24,11 @@ import io.ogdt.fusion.core.db.models.sql.Application
 import io.ogdt.fusion.core.db.models.sql.exceptions.applications.InvalidApplicationStatus
 import scala.util.Try
 import io.ogdt.fusion.core.db.models.sql.generics.Email
+import io.ogdt.fusion.core.db.models.sql.generics.Language
+import io.ogdt.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.NoEntryException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.permissions.DuplicatePermissionException
+import io.ogdt.fusion.core.db.datastores.sql.exceptions.permissions.PermissionNotFoundException
 
 class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Permission] {
 
@@ -51,42 +56,7 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     }
 
     def makePermissionQuery(queryFilters: PermissionStore.GetPermissionsFilters): SqlStoreQuery = {
-        var queryString: String = 
-            "SELECT permission_id, permission_key, permission_editable, permission_label_text_id, permission_description_text_id, permission_created_at, permission_updated_at, info_data, type_data " +
-            "FROM " +
-            "(SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at, " +
-            "CONCAT_WS('||', PROFILE.id, lastname, firstname, CONCAT_WS(';', EMAIL.id, EMAIL.address), last_login, is_active, PROFILE.created_at , PROFILE.updated_at) AS info_data, 'PROFILE' AS type_data " +
-            "FROM FUSION.PERMISSION AS PERMISSION " +
-            "RIGHT OUTER JOIN FUSION.PROFILE_PERMISSION AS PROF_PER ON PROF_PER.permission_id = PERMISSION.id " +
-            "LEFT OUTER JOIN FUSION.PROFILE AS PROFILE ON PROFILE.id = PROF_PER.profile_id " +
-            "LEFT OUTER JOIN FUSION.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id " +
-            "LEFT OUTER JOIN FUSION.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id " +
-            "WHERE PROFILE_EMAIL.is_main = TRUE " +
-            "UNION ALL " +
-            "SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at, " +
-            "CONCAT_WS('||', \"GROUP\".id, \"GROUP\".name, \"GROUP\".created_at, \"GROUP\".updated_at) AS info_data, 'GROUP' AS type_data " +
-            "FROM FUSION.PERMISSION AS PERMISSION " +
-            "RIGHT OUTER JOIN FUSION.GROUP_PERMISSION AS GROUP_PER ON GROUP_PER.permission_id = PERMISSION.id " +
-            "LEFT OUTER JOIN FUSION.\"GROUP\" AS \"GROUP\" ON \"GROUP\".id = GROUP_PER.group_id " +
-            "UNION ALL " +
-            "SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at, " +
-            "CONCAT_WS('||', APP.id, APP.label, APP.version, APP.app_universal_id, APP.status, APP.manifest_url, APP.store_url, APP.created_at, APP.updated_at) AS info_data, 'APPLICATION' AS type_data " +
-            "FROM FUSION.PERMISSION AS PERMISSION " +
-            "INNER JOIN FUSION.APPLICATION AS APP ON APP.id = PERMISSION.application_id	" +
-            "UNION ALL " +
-            "(SELECT permission_id, permission_key, permission_editable, permission_label_text_id, permission_description_text_id, permission_created_at, permission_updated_at, " +
-            "CONCAT_WS('||', permission_id, GROUP_CONCAT(content SEPARATOR ';'), code, language_id, label, GROUP_CONCAT(text_id SEPARATOR ';')) AS info_data, 'PERMISSION_LANG_VARIANT' AS type_data " +
-            "FROM " +
-            "(SELECT PERMISSION.id AS permission_id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id AS text_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at " +
-            "FROM FUSION.PERMISSION AS PERMISSION " +
-            "LEFT OUTER JOIN FUSION.TEXT AS TEXT ON TEXT.id = PERMISSION.label_text_id " +
-            "LEFT OUTER JOIN FUSION.LANGUAGE AS LANG ON TEXT.language_id = LANG.id " +
-            "UNION ALL " +
-            "SELECT PERMISSION.id AS permission_id, TEXT.content, LANG.code, TEXT.language_id, LANG.label, TEXT.id AS text_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at " +
-            "FROM FUSION.PERMISSION AS PERMISSION " +
-            "LEFT OUTER JOIN FUSION.TEXT AS TEXT ON TEXT.id = PERMISSION.description_text_id " +
-            "LEFT OUTER JOIN FUSION.LANGUAGE AS LANG ON TEXT.language_id = LANG.id) " +
-            "GROUP BY permission_id, language_id))"
+        var baseQueryString = queryString.replace("$schema", schema)
         var queryArgs: ListBuffer[String] = ListBuffer()
         var whereStatements: ListBuffer[String] = ListBuffer()
         queryFilters.filters.foreach({ filter =>
@@ -142,165 +112,268 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         })
         // compile whereStatements
         if (!whereStatements.isEmpty) {
-            queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
+            baseQueryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
         if (!queryFilters.orderBy.isEmpty) {
-            queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
+            baseQueryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
                 s"permission_${o._1} ${o._2 match {
                     case 1 => "ASC"
                     case -1 => "DESC"
                 }}"
             ).mkString(", ")}"
         }
-        makeQuery(queryString)
+        makeQuery(baseQueryString)
         .setParams(queryArgs.toList)
     }
 
     def getPermissions(queryFilters: PermissionStore.GetPermissionsFilters)(implicit ec: ExecutionContext): Future[List[Permission]] = {
-        executeQuery(makePermissionQuery(queryFilters)).transformWith({
-            case Success(permissionResults) => {
-                val permissions = permissionResults.toList.groupBy(_(0)).map(entityReflection => {
-                    (for (
-                        permission <- Right(makePermission
-                            .setId(entityReflection._2(0)(0).toString)
-                            .setKey(entityReflection._2(0)(1).toString)
-                            .setLabelTextId(entityReflection._2(0)(3).toString)
-                            .setDescriptionTextId(entityReflection._2(0)(4).toString)
-                            .setCreatedAt(entityReflection._2(0)(5) match {
-                                case createdAt: Timestamp => createdAt
-                                case _ => null
-                            })
-                            .setUpdatedAt(entityReflection._2(0)(6) match {
-                                case updatedAt: Timestamp => updatedAt
-                                case _ => null
-                            })
-                        ) flatMap { permission =>
-                            entityReflection._2(0)(2) match {
-                                case editable: Boolean => {
-                                    if (editable) Right(permission.setEditable)
-                                    else Right(permission.setReadonly)
-                                }
-                                case _ => Right(permission)
-                            }
-                        } flatMap { permission =>
-
-                            val groupedRows = getRelationsGroupedRowsFrom(entityReflection._2, 7, 8)
-
-                            groupedRows.get("APPLICATION") match {
-                                case Some(applicationReflections) => {
-                                    applicationReflections.foreach({ applicationReflection =>
-                                        val applicationDef = applicationReflection(0)._2
-                                        (for (
-                                            application <- Right(new ApplicationStore()
-                                                .makeApplication
-                                                .setId(applicationDef(0))
-                                                .setLabel(applicationDef(1))
-                                                .setVersion(applicationDef(2))
-                                                .setAppUniversalId(applicationDef(3))
-                                                .setManifestUrl(applicationDef(5))
-                                                .setStoreUrl(applicationDef(6))
-                                                .setCreatedAt(Timestamp.from(Instant.parse(applicationDef(7))) match {
-                                                    case createdAt: Timestamp => createdAt
-                                                    case _ => null
-                                                })
-                                                .setUpdatedAt(Timestamp.from(Instant.parse(applicationDef(8))) match {
-                                                    case updatedAt: Timestamp => updatedAt
-                                                    case _ => null
-                                                })
-                                            ) flatMap { application =>
-                                                try {
-                                                    application.setStatus(Application.Status.fromInt(applicationDef(4).asInstanceOf[Int]).get)
-                                                } catch {
-                                                    case e: InvalidApplicationStatus => Future.failed(new PermissionQueryExecutionException(e))
-                                                    case e: Throwable => Future.failed(e)
-                                                }
-                                                Right(application)
-                                            }
-                                        ) yield permission.setRelatedApplication(application))
+        executeQuery(
+            makePermissionQuery(queryFilters)
+        ).transformWith({
+            case Success(rows) => {
+                val entityReflections = rows.groupBy(_(0))
+                val permissions = rows.map(_(0)).distinct.map(entityReflections.get(_).get).map(entityReflection => {
+                    //permission_id, permission_key, permission_editable, permission_label_text_id, permission_description_text_id, permission_created_at, permission_updated_at, info_data, type_data
+                    val groupedRows = getRelationsGroupedRowsFrom(entityReflection, 7, 8)
+                    groupedRows.get("PERMISSION") match {
+                        case Some(permissionReflections) => {
+                            val permissionDef = permissionReflections.head.head._2
+                            (for (
+                                permission <- Right(makePermission
+                                    .setId(permissionDef(0))
+                                    .setKey(permissionDef(1))
+                                    .setLabelTextId(permissionDef(3))
+                                    .setDescriptionTextId(permissionDef(4))
+                                    .setCreatedAt(Utils.timestampFromString(permissionDef(5)) match {
+                                        case createdAt: Timestamp => createdAt
+                                        case _ => null
                                     })
-                                }
-                                case None => {}
-                            }
-
-                            groupedRows.get("PROFILE") match {
-                                case Some(profileReflections) => {
-                                    profileReflections.foreach({ profileReflection =>
-                                        val profileDef = profileReflection(0)._2
-                                        (for (
-                                            profile <- Right(new ProfileStore()
-                                                .makeProfile
-                                                .setId(profileDef(0))
-                                                .setLastname(profileDef(1))
-                                                .setFirstname(profileDef(2))
-                                                .setLastLogin(Timestamp.from(Instant.parse(profileDef(4))) match {
-                                                    case lastLogin: Timestamp => lastLogin
-                                                    case _ => null
-                                                })
-                                                .setCreatedAt(Timestamp.from(Instant.parse(profileDef(6))) match {
-                                                    case createdAt: Timestamp => createdAt
-                                                    case _ => null
-                                                })
-                                                .setUpdatedAt(Timestamp.from(Instant.parse(profileDef(7))) match {
-                                                    case updatedAt: Timestamp => updatedAt
-                                                    case _ => null
-                                                })
-                                            ) flatMap { profile =>
-                                                Try(profileDef(5).toBoolean) match {
-                                                    case Success(isActive) => {
-                                                        if (isActive) Right(profile.setActive)
-                                                        else Right(profile.setInactive)
-                                                    }
-                                                    case Failure(cause) => Right(profile)
-                                                }
-                                            } flatMap { profile =>
-                                                val profileMainEmailDef = profileDef(3).split(";")
-                                                profileMainEmailDef.length match {
-                                                    case 2 => {
-                                                        Right(profile.setMainEmail(Email.apply
-                                                            .setId(profileMainEmailDef(0))
-                                                            .setAddress(profileMainEmailDef(1))
-                                                        ))
-                                                    }
-                                                    case _ => Right(profile)
+                                    .setUpdatedAt(Utils.timestampFromString(permissionDef(6)) match {
+                                        case updatedAt: Timestamp => updatedAt
+                                        case _ => null
+                                    })
+                                ) flatMap { permission =>
+                                    Try(permissionDef(2).toBoolean) match {
+                                        case Success(editable) => {
+                                            if (editable) Right(permission.setEditable)
+                                            else Right(permission.setReadonly)
+                                        }
+                                        case Failure(_) => Right(permission)
+                                    }
+                                } flatMap { permission =>
+                                    permissionReflections.head.partition(_._1 == "PERMISSION_LABEL_LANG_VARIANT") match {
+                                        case result => {
+                                            result._1.isEmpty match {
+                                                case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of label in any language"))
+                                                case false => {
+                                                    result._1.foreach({ labelLangVariant =>
+                                                        val variantDef = labelLangVariant._2
+                                                        permission.setLabel(
+                                                            Language.apply
+                                                            .setId(variantDef(3).toString)
+                                                            .setCode(variantDef(2).toString)
+                                                            .setLabel(variantDef(4).toString),
+                                                            variantDef(1).toString
+                                                        )
+                                                    })
                                                 }
                                             }
-                                        ) yield permission.addOwningProfile(profile))
-                                    })
-                                }
-                                case None => {}
-                            }
+                                            result._2.filter(_._1 == "PERMISSION_DESC_LANG_VARIANT") match {
+                                                case result => {
+                                                    result.isEmpty match {
+                                                        case true => Future.failed(TextNotFoundException(s"Permission ${permission.id} might lack of description in any language"))
+                                                        case false => {
+                                                            result.foreach({ descLangVariant =>
+                                                                val variantDef = descLangVariant._2
+                                                                permission.setDescription(
+                                                                    Language.apply
+                                                                    .setId(variantDef(3).toString)
+                                                                    .setCode(variantDef(2).toString)
+                                                                    .setLabel(variantDef(4).toString),
+                                                                    variantDef(1).toString
+                                                                )
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Right(permission)
+                                } flatMap { permission =>
+                                    groupedRows.get("APPLICATION") match {
+                                        case Some(applicationReflections) => {
+                                            applicationReflections.foreach({ applicationReflection =>
+                                                val applicationDef = applicationReflection(0)._2
+                                                (for (
+                                                    application <- Right(new ApplicationStore()
+                                                        .makeApplication
+                                                        .setId(applicationDef(0))
+                                                        .setLabel(applicationDef(1))
+                                                        .setVersion(applicationDef(2))
+                                                        .setAppUniversalId(applicationDef(3))
+                                                        .setManifestUrl(applicationDef(5))
+                                                        .setStoreUrl(applicationDef(6))
+                                                        .setCreatedAt(Utils.timestampFromString(applicationDef(7)) match {
+                                                            case createdAt: Timestamp => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Utils.timestampFromString(applicationDef(8)) match {
+                                                            case updatedAt: Timestamp => updatedAt
+                                                            case _ => null
+                                                        })
+                                                    ) flatMap { application =>
+                                                        try {
+                                                            application.setStatus(Application.Status.fromInt(applicationDef(4).asInstanceOf[Int]).get)
+                                                        } catch {
+                                                            case e: InvalidApplicationStatus => Future.failed(new PermissionQueryExecutionException(e))
+                                                            case e: Throwable => Future.failed(e)
+                                                        }
+                                                        Right(application)
+                                                    }
+                                                ) yield permission.setRelatedApplication(application))
+                                            })
+                                        }
+                                        case None => {}
+                                    }
 
-                            groupedRows.get("GROUP") match {
-                                case Some(groupReflections) =>  {
-                                    groupReflections.foreach({ groupReflection =>
-                                        val groupDef = groupReflection(0)._2
-                                        (for (
-                                            group <- Right(new GroupStore()
-                                                .makeGroup
-                                                .setId(groupDef(0))
-                                                .setName(groupDef(1))
-                                                .setCreatedAt(Timestamp.from(Instant.parse(groupDef(2))) match {
-                                                    case createdAt: Timestamp => createdAt
-                                                    case _ => null
-                                                })
-                                                .setUpdatedAt(Timestamp.from(Instant.parse(groupDef(3))) match {
-                                                    case updatedAt: Timestamp => updatedAt
-                                                    case _ => null
-                                                })
-                                            )
-                                        ) yield permission.addOwningGroup(group))
-                                    })
+                                    groupedRows.get("PROFILE") match {
+                                        case Some(profileReflections) => {
+                                            profileReflections.foreach({ profileReflection =>
+                                                val profileDef = profileReflection(0)._2
+                                                (for (
+                                                    profile <- Right(new ProfileStore()
+                                                        .makeProfile
+                                                        .setId(profileDef(0))
+                                                        .setLastname(profileDef(1))
+                                                        .setFirstname(profileDef(2))
+                                                        .setLastLogin(Utils.timestampFromString(profileDef(4)) match {
+                                                            case lastLogin: Timestamp => lastLogin
+                                                            case _ => null
+                                                        })
+                                                        .setCreatedAt(Utils.timestampFromString(profileDef(6)) match {
+                                                            case createdAt: Timestamp => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Utils.timestampFromString(profileDef(7)) match {
+                                                            case updatedAt: Timestamp => updatedAt
+                                                            case _ => null
+                                                        })
+                                                    ) flatMap { profile =>
+                                                        Try(profileDef(5).toBoolean) match {
+                                                            case Success(isActive) => {
+                                                                if (isActive) Right(profile.setActive)
+                                                                else Right(profile.setInactive)
+                                                            }
+                                                            case Failure(cause) => Right(profile)
+                                                        }
+                                                    } flatMap { profile =>
+                                                        val profileMainEmailDef = profileDef(3).split(";")
+                                                        profileMainEmailDef.length match {
+                                                            case 2 => {
+                                                                Right(profile.setMainEmail(Email.apply
+                                                                    .setId(profileMainEmailDef(0))
+                                                                    .setAddress(profileMainEmailDef(1))
+                                                                ))
+                                                            }
+                                                            case _ => Right(profile)
+                                                        }
+                                                    }
+                                                ) yield permission.addOwningProfile(profile))
+                                            })
+                                        }
+                                        case None => {}
+                                    }
+
+                                    groupedRows.get("GROUP") match {
+                                        case Some(groupReflections) =>  {
+                                            groupReflections.foreach({ groupReflection =>
+                                                val groupDef = groupReflection(0)._2
+                                                (for (
+                                                    group <- Right(new GroupStore()
+                                                        .makeGroup
+                                                        .setId(groupDef(0))
+                                                        .setName(groupDef(1))
+                                                        .setCreatedAt(Utils.timestampFromString(groupDef(2)) match {
+                                                            case createdAt: Timestamp => createdAt
+                                                            case _ => null
+                                                        })
+                                                        .setUpdatedAt(Utils.timestampFromString(groupDef(3)) match {
+                                                            case updatedAt: Timestamp => updatedAt
+                                                            case _ => null
+                                                        })
+                                                    )
+                                                ) yield permission.addOwningGroup(group))
+                                            })
+                                        }
+                                        case None => {}
+                                    }
+                                    Right(permission)
                                 }
-                                case None => {}
-                            }
-                            Right(permission)
+                            ) yield permission).getOrElse(null)
                         }
-                    ) yield permission).getOrElse(null)
+                        case None => {}
+                    }
                 })
-                Future.successful(permissions.toList)
+                Future.successful(permissions.toList.asInstanceOf[List[Permission]])
             }
             case Failure(cause) => Future.failed(PermissionQueryExecutionException(cause))
+        })
+    }
+
+    def getAllPermissions(implicit ec: ExecutionContext): Future[List[Permission]] = {
+        getPermissions(PermissionStore.GetPermissionsFilters().copy(
+            orderBy = List(
+                ("id", 1)
+            )
+        )).transformWith({
+            case Success(permissions) =>
+                permissions.isEmpty match {
+                    case true => Future.failed(new NoEntryException("Permission store is empty"))
+                    case false => Future.successful(permissions)
+                }
+            case Failure(cause) => Future.failed(cause)
+        })
+    }
+
+    def getPermissionById(id: String)(implicit ec: ExecutionContext): Future[Permission] = {
+        getPermissions(
+            PermissionStore.GetPermissionsFilters().copy(
+                filters = List(
+                    PermissionStore.GetPermissionsFilter().copy(
+                        id = List(id)
+                    )
+                )
+            )
+        ).transformWith({
+            case Success(permissions) =>
+                permissions.length match {
+                    case 0 => Future.failed(new PermissionNotFoundException(s"Permission ${id} couldn't be found"))
+                    case 1 => Future.successful(permissions.head)
+                    case _ => Future.failed(new DuplicatePermissionException)
+                }
+            case Failure(cause) => Future.failed(cause)
+        })
+    }
+
+    def getPermissionByKey(key: String)(implicit ec: ExecutionContext): Future[Permission] = {
+        getPermissions(
+            PermissionStore.GetPermissionsFilters().copy(
+                filters = List(
+                    PermissionStore.GetPermissionsFilter().copy(
+                        key = List(key)
+                    )
+                )
+            )
+        ).transformWith({
+            case Success(permissions) =>
+                permissions.length match {
+                    case 0 => Future.failed(new PermissionNotFoundException(s"Permission ${key} couldn't be found"))
+                    case 1 => Future.successful(permissions.head)
+                    case _ => Future.failed(new DuplicatePermissionException)
+                }
+            case Failure(cause) => Future.failed(cause)
         })
     }
 

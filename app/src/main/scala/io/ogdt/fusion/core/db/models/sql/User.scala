@@ -12,6 +12,7 @@ import java.sql.Timestamp
 import java.beans.Transient
 
 import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 
 class User(implicit @transient protected val store: UserStore) extends Model {
 
@@ -39,18 +40,17 @@ class User(implicit @transient protected val store: UserStore) extends Model {
     private var _relatedProfiles: List[(Boolean, Profile)] = List()
     def relatedProfiles: List[(Boolean, Profile)] = _relatedProfiles
     def addRelatedProfile(profile: Profile): User = {
-        _relatedProfiles.find(_._2.id == profile.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _relatedProfiles ::= (true, profile)
+        _relatedProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => _relatedProfiles ::= (true, profile)
+            case index => _relatedProfiles = _relatedProfiles.updated(index, _relatedProfiles(index).copy(_1 = true))
         }
         this
     }
     def removeRelatedProfile(profile: Profile): User = {
-        _relatedProfiles =
-            _relatedProfiles.map({ p =>
-                if (p._2.id == profile.id) p.copy(_1 = false)
-                else p
-            })
+        _relatedProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _relatedProfiles = _relatedProfiles.updated(index, _relatedProfiles(index).copy(_1 = false))
+        }
         this
     }
 

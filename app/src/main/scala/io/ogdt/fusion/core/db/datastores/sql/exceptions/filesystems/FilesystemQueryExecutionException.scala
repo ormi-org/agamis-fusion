@@ -11,12 +11,12 @@ object FilesystemQueryExecutionException {
         message: String,
         cause: Throwable
     ): FilesystemQueryExecutionException = {
-        FilesystemQueryExecutionException(cause, message)
+        new FilesystemQueryExecutionException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): FilesystemQueryExecutionException = {
-        FilesystemQueryExecutionException(cause)
+        new FilesystemQueryExecutionException(cause)
     }
 }

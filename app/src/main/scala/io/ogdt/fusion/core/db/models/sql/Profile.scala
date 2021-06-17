@@ -12,6 +12,7 @@ import java.time.Instant
 import io.ogdt.fusion.core.db.models.sql.generics.Email
 
 import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
+import io.ogdt.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 
 /** A class that reflects the state of the profile entity in the database
   * 
@@ -132,11 +133,10 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     private var _mainEmail: Email = null
     def mainEmail: Email = _mainEmail
     def setMainEmail(email: Email): Profile = {
-        _emails =
-            _emails.map({ e =>
-                if (e._2.id == email.id) e.copy(_1 = false)
-                else e
-            })
+        _emails.indexWhere(_._2.id == email.id) match {
+            case -1 => {}
+            case index => _emails = _emails.updated(index, _emails(index).copy(_1 = false))
+        }
         _mainEmail = email
         this
     }
@@ -145,18 +145,17 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     private var _emails: List[(Boolean, Email)] = List()
     def emails: List[(Boolean, Email)] = _emails
     def addEmail(email: Email): Profile = {
-        _emails.find(_._2.id == email.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _emails ::= (true, email)
+        _emails.indexWhere(_._2.id == email.id) match {
+            case -1 => _emails ::= (true, email)
+            case index => _emails = _emails.updated(index, _emails(index).copy(_1 = true))
         }
         this
     }
     def removeEmail(email: Email): Profile = {
-        _emails =
-            _emails.map({ e =>
-                if (e._2.id == email.id) e.copy(_1 = false)
-                else e
-            })
+        _emails.indexWhere(_._2.id == email.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _emails = _emails.updated(index, _emails(index).copy(_1 = false))
+        }
         this
     }
 
@@ -164,18 +163,17 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     private var _groups: List[(Boolean, Group)] = List()
     def groups: List[(Boolean, Group)] = _groups
     def addGroup(group: Group): Profile = {
-        _groups.find(_._2.id == group.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _groups ::= (true, group)
+        _groups.indexWhere(_._2.id == group.id) match {
+            case -1 => _groups ::= (true, group)
+            case index => _groups = _groups.updated(index, _groups(index).copy(_1 = true))
         }
         this
     }
     def removeGroup(group: Group): Profile = {
-        _groups =
-            _groups.map({ g =>
-                if (g._2.id == group.id) g.copy(_1 = false)
-                else g
-            })
+        _groups.indexWhere(_._2.id == group.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _groups = _groups.updated(index, _groups(index).copy(_1 = false))
+        }
         this
     }
 
@@ -183,18 +181,17 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     private var _permissions: List[(Boolean, Permission)] = List()
     def permissions: List[(Boolean, Permission)] = _permissions
     def addPermission(permission: Permission): Profile = {
-        _permissions.find(_._2.id == permission.id) match {
-            case Some(found) => throw new RelationAlreadyExistsException()
-            case None => _permissions ::= (true, permission)
+        _permissions.indexWhere(_._2.id == permission.id) match {
+            case -1 => _permissions ::= (true, permission)
+            case index => _permissions = _permissions.updated(index, _permissions(index).copy(_1 = true))
         }
         this
     }
     def removePermission(permission: Permission): Profile = {
-        _permissions =
-            _permissions.map({ p =>
-                if (p._2.id == permission.id) p.copy(_1 = false)
-                else p
-            })
+        _permissions.indexWhere(_._2.id == permission.id) match {
+            case -1 => throw new RelationNotFoundException()
+            case index => _permissions = _permissions.updated(index, _permissions(index).copy(_1 = false))
+        }
         this
     }
 

@@ -11,12 +11,12 @@ object EmailNotPersistedException {
         message: String,
         cause: Throwable
     ): EmailNotPersistedException = {
-        EmailNotPersistedException(cause, message)
+        new EmailNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): EmailNotPersistedException = {
-        EmailNotPersistedException(cause)
+        new EmailNotPersistedException(cause)
     }
 }

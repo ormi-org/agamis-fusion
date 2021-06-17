@@ -11,18 +11,18 @@ object ProfileNotPersistedException {
         message: String,
         cause: Throwable
     ): ProfileNotPersistedException = {
-        ProfileNotPersistedException(cause, message)
+        new ProfileNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): ProfileNotPersistedException = {
-        ProfileNotPersistedException(cause)
+        new ProfileNotPersistedException(cause)
     }
 
     def apply(
         message: String
     ): ProfileNotPersistedException = {
-        ProfileNotPersistedException(null, message)
+        new ProfileNotPersistedException(null, message)
     }
 }

@@ -11,12 +11,12 @@ object TextNotPersistedException {
         message: String,
         cause: Throwable
     ): TextNotPersistedException = {
-        TextNotPersistedException(cause, message)
+        new TextNotPersistedException(cause, message)
     }
 
     def apply(
         cause: Throwable
     ): TextNotPersistedException = {
-        TextNotPersistedException(cause)
+        new TextNotPersistedException(cause)
     }
 }

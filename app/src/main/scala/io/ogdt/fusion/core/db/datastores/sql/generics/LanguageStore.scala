@@ -94,7 +94,7 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
     private def getLanguages(queryFilters: LanguageStore.GetLanguagesFilters)(implicit ec: ExecutionContext): Future[List[Language]] = {
         executeQuery(makeLanguageQuery(queryFilters)).transformWith({
             case Success(languageResults) =>  {
-                var languages = languageResults.par map(row => {
+                var languages = languageResults.map(row => {
                     Language.apply
                     .setId(row(0).toString)
                     .setCode(row(1).toString)
