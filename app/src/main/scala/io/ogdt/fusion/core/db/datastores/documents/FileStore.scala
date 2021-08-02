@@ -12,7 +12,7 @@ import reactivemongo.api.commands.WriteResult
 
 import io.ogdt.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 import io.ogdt.fusion.core.db.datastores.typed.DocumentStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.{
@@ -123,9 +123,9 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                 val bulkDeleteResult = Future.sequence(deletes).flatMap{ ops => deleteBuilder.many(ops) }
                 bulkDeleteResult.transformWith({
                     case Success(result) => {
-                        if(result.ok) {
+                        if (result.ok) {
                             Future.successful(result.n)
-                        }else{
+                        } else {
                             throw new Exception(result.errmsg.get)
                         }
                     } 

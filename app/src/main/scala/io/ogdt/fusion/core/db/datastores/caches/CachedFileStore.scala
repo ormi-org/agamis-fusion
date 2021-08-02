@@ -2,7 +2,7 @@ package io.ogdt.fusion.core.db.datastores.caches
 
 import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.ogdt.fusion.core.db.datastores.typed.CacheStore
-import io.ogdt.fusion.core.db.datastores.models.documents.File
+import io.ogdt.fusion.core.db.models.documents.File
 
 import org.apache.ignite.IgniteCache
 

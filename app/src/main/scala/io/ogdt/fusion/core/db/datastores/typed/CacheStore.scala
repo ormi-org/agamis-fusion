@@ -6,10 +6,11 @@ import org.apache.ignite.lang.IgniteFuture
 import scala.concurrent.Promise
 import scala.util.Try
 import scala.concurrent.Future
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Success
 import scala.util.Failure
 import scala.language.postfixOps
+import io.ogdt.fusion.core.db.common.Utils
 
 abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
 
@@ -19,7 +20,7 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
     protected var igniteCache: IgniteCache[K, M]
 
     protected def init() = {
-        if(wrapper.cacheExists(cache)) {
+        if (wrapper.cacheExists(cache)) {
             igniteCache = wrapper.getCache[K, M](cache)
         }
     }
@@ -32,39 +33,30 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
         (globalPrefix + cachePrefix + subject).asInstanceOf[K]
     }
 
-    // Util method to convert igniteFutures to Scala Futures
-    private def igniteToScalaFuture[T](igniteFuture: IgniteFuture[T]) = {
-        val promise = Promise[T]()
-        igniteFuture.listen { k =>
-            promise.tryComplete(Try(k.get))
-        }
-        promise.future
-    }
-
     // Check if a value is set for specified key
     def exists(search: K): Future[java.lang.Boolean] = {
-        igniteToScalaFuture(igniteCache.containsKeyAsync(search))
+        Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(search))
     }
 
     // Put a value for a specified key
     def put(value: M): Future[Void] = {
-        igniteToScalaFuture(igniteCache.putAsync(key(value), value))
+        Utils.igniteToScalaFuture(igniteCache.putAsync(key(value), value))
     }
 
     // Put many values for specified keys
     def putMany(values: List[M]): Future[_] = {
-        igniteToScalaFuture(igniteCache.putAllAsync(
+        Utils.igniteToScalaFuture(igniteCache.putAllAsync(
             (values map (value => key(value) -> value) toMap ).asJava
         ))
     }
 
     // Get the value for specified key
     def get(search: String): Future[M] = {
-        igniteToScalaFuture(igniteCache.getAsync(key(search)))
+        Utils.igniteToScalaFuture(igniteCache.getAsync(key(search)))
     }
 
     def getMany(searches: List[String]): Future[java.util.Map[K, M]] = {
-        igniteToScalaFuture(igniteCache.getAllAsync(
+        Utils.igniteToScalaFuture(igniteCache.getAllAsync(
             searches.map(search => {
                 key(search)
             }).toSet.asJava
@@ -72,11 +64,11 @@ abstract class CacheStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
     }
 
     def delete(value: M): Future[java.lang.Boolean] = {
-        igniteToScalaFuture(igniteCache.removeAsync(key(value)))
+        Utils.igniteToScalaFuture(igniteCache.removeAsync(key(value)))
     }
 
     def deleteMany(values: List[M]): Future[Void] = {
-        igniteToScalaFuture(igniteCache.removeAllAsync(
+        Utils.igniteToScalaFuture(igniteCache.removeAllAsync(
             values.map(value => {
                 key(value)
             }).toSet.asJava
