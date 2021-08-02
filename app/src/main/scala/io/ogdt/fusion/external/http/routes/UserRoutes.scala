@@ -50,11 +50,8 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                 // create user
                 post {
                     entity(as[User]) { user =>
-                        //val token = createToken(user.username,1)
-                        val token: String = createToken()
-                        // if checkPassword(user.username, user.password)
-                        onComplete(buildUserRepository.ask(UserRepository.AddUser(user,token,_))) {
-                            case Success(value) => respondWithHeader(RawHeader("Access-Token",token)) { complete(StatusCodes.OK) }  
+                        onComplete(buildUserRepository.ask(UserRepository.AddUser(user,_))) {
+                            case Success(value) => respondWithHeaders(RawHeader("Access-Token",createToken()),RawHeader("Refresh-Token",refreshToken())) { complete(StatusCodes.OK) }
                             case Failure(reason) => complete(HttpResponse(StatusCodes.InternalServerError, entity = reason.toString()))
                         }
                     }
@@ -63,26 +60,6 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
         ),
         pathPrefix("user")(
             concat(
-                // get refresh token
-                //get by name
-                // get {
-                //     parameter("name".as[String]) { (name: String) => 
-                //         optionalHeaderValueByName("Authorization") {
-                //             case Some(token) =>
-                //                 if(tokenValidation(token)) {
-                //                     if (decode(token)) {
-                //                         onComplete(buildUserRepository.ask(UserRepository.GetUserByName(name,token,_))) {
-                //                             case Success(user) => complete(StatusCodes.OK -> user)
-                //                             case Failure(reason) => reason match {
-                //                                 case _ => complete(HttpResponse(StatusCodes.InternalServerError, entity = reason.toString()))
-                //                             }
-                //                         } 
-                //                     } else { complete("User authorrized") }
-                //                 } else { complete(HttpResponse(StatusCodes.Unauthorized, entity = "Token is invalid" )) }
-                //             case _ => complete(HttpResponse(StatusCodes.Unauthorized, entity = "No token provided"))
-                //         }
-                //     }
-                // },
                 //get by id
                 get {
                     parameter("id".as[String]) { (userUuid: String) => 

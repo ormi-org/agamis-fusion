@@ -24,7 +24,7 @@ object UserRepository {
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddUser(user: User, token: String, replyTo: ActorRef[Response]) extends Command
+    final case class AddUser(user: User, replyTo: ActorRef[Response]) extends Command
     final case class GetUserById(id: String, token: String , replyTo: ActorRef[Response]) extends Command
     final case class GetUserByName(name: String, token: String, replyTo: ActorRef[User]) extends Command
     final case class UpdateUser(user: User, replyTo: ActorRef[Response]) extends Command
@@ -32,14 +32,9 @@ object UserRepository {
     final case class Authenfication(token: String, username: String, password: String, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
-        case AddUser(user, token, replyTo) =>
-            // if(user.verifyPassword() != false ) { replyTo ! OK }
-            // else { replyTo ! KO("Problem with the creation of user") }
-            // if (user.checkPassword(user.username, user.password)) {
-            //     replyTo ! OK
-            // } else {
-            //     replyTo ! KO("Problem with the creation of user")
-            // }
+        case AddUser(user, replyTo) =>
+            //hashPassword(user.password)
+            //insert user in database
             replyTo ! OK
             Behaviors.same
         case GetUserById(id, token, replyTo) =>

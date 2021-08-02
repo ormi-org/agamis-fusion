@@ -20,10 +20,6 @@ import org.slf4j.LoggerFactory
 
 object TreeManager {
 
-    // DEBUG
-    var logger: Logger = LoggerFactory.getLogger(getClass());
-    // end-DEBUG
-
     def createFile(file: File)(implicit wrapper: ReactiveMongoWrapper, ec: ExecutionContext): Future[Unit] = {
         file.path match {
             case Some(path: String) => {

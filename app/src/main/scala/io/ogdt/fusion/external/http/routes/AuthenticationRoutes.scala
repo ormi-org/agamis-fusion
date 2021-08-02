@@ -46,13 +46,12 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
         pathPrefix("authenticate")( 
             concat( 
                 get {
-                    parameter("token".as[String],"refreshToken".as[String]) { (token: String, refreshToken:String) => 
-                        if(isTokenValid(token)) {
-                            if(isTokenValid(refreshToken)) {
-                                if(!isTokenExpired(token)) {
+                    parameter("token".as[String],"refreshToken".as[String]) { (token: String, refreshToken: String) => 
+                        if((isTokenValid(token)) || (isTokenValid(refreshToken))) {
+                                if((!isTokenExpired(token)) || (!isTokenExpired(refreshToken))) {
                                     onComplete(buildAuthenticationRepository.ask(AuthenticationRepository.AuthenticationWithToken(token,_))) {
                                         case Success(response) => response match {
-                                            case AuthenticationRepository.OK => complete("OK")
+                                            case AuthenticationRepository.OK => complete("Connected")
                                             case AuthenticationRepository.KO(cause) => cause match {
                                                 case _ => complete(StatusCodes.Forbidden -> new Error("Forbiden access"))
                                             }
@@ -62,11 +61,8 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
                                 } else {
                                     complete(StatusCodes.Forbidden -> new Error("Token has expired"))    
                                 }
-                            } else {
-                                redirect("/login", StatusCodes.PermanentRedirect)
-                            }
                         } else {
-                            complete(StatusCodes.Forbidden -> new Error("Username and password mismatch"))
+                            complete(StatusCodes.Forbidden -> new Error("Token not valid"))
                         }
                     }
                 }
@@ -74,8 +70,8 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
         ), 
         pathPrefix("login")(
             get {
-                parameter("username".as[String],"password".as[String]) { (username:String, password: String) => 
-                    if(checkPassword(username, password)) {
+                parameter("username".as[String],"password".as[String]) { (username: String, password: String) => 
+                    if(checkPassword(password)) { 
                         onComplete(buildAuthenticationRepository.ask(AuthenticationRepository.Login(username,password,_))) {
                             case Success(response) => response match {
                                 case AuthenticationRepository.OK => respondWithHeaders(RawHeader("Access-Token", createToken()), RawHeader("Refresh-Token", refreshToken())) {
@@ -88,7 +84,7 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
                             case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)
                         }
                     } else {
-                        complete(StatusCodes.Forbidden -> new Error("Username and password mismatch"))
+                        complete(StatusCodes.Forbidden -> new Error("Password is wrong"))
                     }
                 }
             }
