@@ -19,7 +19,7 @@ import scala.util.Try
 import org.slf4j.Logger
 
 class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
-    
+
     private val cfg: IgniteConfiguration = new IgniteConfiguration()
     cfg.setClientMode(true)
     // doit aussi être activé dans les noeuds serveurs
@@ -76,7 +76,6 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     }
 
     def cacheExists(cache: String): Boolean = {
-        getLogger().info(ignite.cacheNames().toString())
         ignite.cacheNames().contains(cache)
     }
 }

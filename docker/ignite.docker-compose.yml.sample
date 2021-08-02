@@ -17,9 +17,6 @@ services:
     image: apacheignite/ignite
     volumes:
       - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
-      - <rootdir>/ignite/control-center-agent/bin/management.sh:/opt/ignite/apache-ignite/bin/management.sh
-      - <rootdir>/ignite/control-center-agent/bin/management.bat:/opt/ignite/apache-ignite/bin/management.bat
-      - <rootdir>/ignite/control-center-agent/libs/control-center-agent:/opt/ignite/apache-ignite/libs/control-center-agent
       - ignite-persistence-volume-1:/opt/storage
     environment:
       - CONFIG_URI=/ignite-config/ignite-default-config.xml
@@ -32,9 +29,6 @@ services:
     image: apacheignite/ignite
     volumes:
       - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
-      - <rootdir>/ignite/control-center-agent/bin/management.sh:/opt/ignite/apache-ignite/bin/management.sh
-      - <rootdir>/ignite/control-center-agent/bin/management.bat:/opt/ignite/apache-ignite/bin/management.bat
-      - <rootdir>/ignite/control-center-agent/libs/control-center-agent:/opt/ignite/apache-ignite/libs/control-center-agent
       - ignite-persistence-volume-2:/opt/storage
     environment:
       - CONFIG_URI=/ignite-config/ignite-default-config.xml

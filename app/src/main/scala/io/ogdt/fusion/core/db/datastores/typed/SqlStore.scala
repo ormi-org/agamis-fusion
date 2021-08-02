@@ -1,78 +1,61 @@
 package io.ogdt.fusion.core.db.datastores.typed
 
-import scala.reflect.{ClassTag,classTag}
-
-import scala.collection.mutable.Map
-import scala.collection.mutable.Buffer
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.transactions.Transaction
-import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.query.{SqlFieldsQuery, FieldsQueryCursor}
 
-import scala.util.{Failure, Success}
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.parallel.mutable.ParArray
-
-import org.slf4j.LoggerFactory
-
-import java.util.UUID
-
-import io.ogdt.fusion.env.EnvContainer
 import io.ogdt.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
-import io.ogdt.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 
-abstract class SqlStore[K: ClassTag, M: ClassTag](implicit wrapper: IgniteClientNodeWrapper) {
+import org.apache.ignite.transactions.TransactionConcurrency
+import org.apache.ignite.transactions.TransactionIsolation
+
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+
+import io.ogdt.fusion.core.db.common.Utils
+
+abstract class SqlStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
 
     val schema: String
     val cache: String
-    var igniteCache: IgniteCache[K, M]
+    protected var igniteCache: IgniteCache[K, M]
 
-    protected def init() = {
-        if(wrapper.cacheExists(cache)) {
-            igniteCache = wrapper.getCache[K, M](cache)
-        } else {
-            var userCacheCfg = wrapper.makeCacheConfig[K, M]()
-            userCacheCfg
-            .setCacheMode(CacheMode.PARTITIONED)
-            .setDataRegionName("Fusion")
-            .setName(cache)
-            .setSqlSchema(schema)
-            .setBackups(EnvContainer.getString("fusion.core.db.ignite.backups").toInt)
-            .setIndexedTypes(classTag[K].runtimeClass, classTag[M].runtimeClass)
-            igniteCache = wrapper.createCache[K, M](userCacheCfg)
+    /** A method for initiating a new Ignite K/V transaction
+      *
+      * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
+      * @return transaction instance
+      */
+    def makeTransaction(implicit ec: ExecutionContext): Try[Transaction] = {
+        Try(wrapper.ignite.transactions().txStart(TransactionConcurrency.PESSIMISTIC, TransactionIsolation.READ_COMMITTED))
+    }
+
+    /** A method for commiting an existing transaction resulting in writing modifications to cache
+      *
+      * @param tx a [[org.apache.ignite.transactions.Transaction Transaction]] instance to commit
+      * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
+      * @return a future result
+      */
+    def commitTransaction(tx: Try[Transaction])(implicit ec: ExecutionContext): Future[Void] = {
+        tx match {
+            case Success(tx) => Utils.igniteToScalaFuture(tx.commitAsync())
+            case Failure(cause) => Future.failed(cause)
         }
     }
 
-    def makeQuery(queryString: String): SqlStoreQuery = {
-        new SqlStoreQuery(queryString)
-    }
-    
-    def executeQuery(sqlQuery: SqlStoreQuery): Future[ParArray[List[_]]] = {
-        var queryString: String = sqlQuery.query
-        Future {
-            var query = igniteCache.query(new SqlFieldsQuery(queryString))
-            var res = query.getAll()
-            var scalaRes = Buffer[List[_]]()
-            res.forEach(item => {
-                scalaRes.addOne(item.asScala.toList)
-            })
-            ParArray.fromIterables(scalaRes)
+    /** A method for rolling back a transaction thus canceling all uncommited operations
+      *
+      * @param tx a [[org.apache.ignite.transactions.Transaction Transaction]] instance to rollback
+      * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
+      * @return a future result
+      */
+    def rollbackTransaction(tx: Try[Transaction])(implicit ec: ExecutionContext): Future[Void] = {
+        tx match {
+            case Success(tx) => Utils.igniteToScalaFuture(tx.rollbackAsync())
+            case Failure(cause) => Future.failed(cause)
         }
     }
-
-    // def makeTransaction(): Transaction = {
-        
-    // }
-
-    // def commitTransaction(): Unit = {
-        
-    // }
-
-    // def rollbackTransaction(tx: Transaction): Unit = {
-
-    // }
 }

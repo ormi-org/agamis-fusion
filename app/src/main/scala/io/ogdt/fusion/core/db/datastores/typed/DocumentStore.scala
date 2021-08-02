@@ -8,7 +8,6 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import reactivemongo.api.DB
-import reactivemongo.api.bson.BSONDocument
 import reactivemongo.api.commands.WriteResult
 
 abstract class DocumentStore[M](implicit wrapper: ReactiveMongoWrapper) {

@@ -3,21 +3,15 @@ package io.ogdt.fusion.core.db.datastores.documents.aggregations
 import io.ogdt.fusion.core.db.datastores.documents.aggregations.typed.{Pipeline, PipelineWrapper}
 
 import reactivemongo.api.bson.collection.BSONCollection
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import reactivemongo.api.bson.BSONDocument
-import reactivemongo.api.bson.BSONValue
-import reactivemongo.api.bson.BSONString
-import reactivemongo.api.bson.BSONObjectID
+import reactivemongo.api.bson.{
+    BSONDocument,
+    BSONString,
+    BSONObjectID
+}
 
 object GetFilesFromId extends PipelineWrapper {
 
     class GetFilesFromIdPipeline(protected val _collection: BSONCollection) extends Pipeline {
-
-
-        // DEBUG
-        var logger: Logger = LoggerFactory.getLogger(getClass());
-        // end-DEBUG
 
         private var _ids: List[BSONDocument] = List()
 
@@ -71,16 +65,16 @@ object GetFilesFromId extends PipelineWrapper {
                     "acl" -> 1,
                     "owner" -> 1,
                     "path" -> BSONDocument(
-                        "$concat" -> List[BSONValue](
+                        "$concat" -> List(
                             BSONDocument(
                                 "$reduce" -> BSONDocument(
                                     "input" -> BSONString("$ancestors"),
                                     "initialValue" -> "",
                                     "in" -> BSONDocument(
-                                        "$concat" -> List[BSONValue](
+                                        "$concat" -> List(
                                             BSONString("$$value"),
                                             BSONDocument(
-                                                "$cond" -> Array[BSONValue](
+                                                "$cond" -> Array(
                                                     BSONDocument(
                                                         "$eq" -> Array("$$value", "/")
                                                     ),

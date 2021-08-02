@@ -12,8 +12,15 @@ object FusionApp {
     
     def main(args: Array[String]): Unit = {
         
-        // val system = ActorSystem[FusionFS.Command](FusionFS(), "fusion-system")
-        implicit val system = ActorSystem(Server("localhost", 8080), "FusionSystem")
+        //implicit val system = ActorSystem(Server("localhost", 8080), "FusionSystem")
+        val system = ActorSystem[FusionFS.Command](FusionFS(), "fusion-system")
+
+        val fusionfs: ActorRef[FusionFS.Command] = system
+
+        if (args.contains("--init")) {
+            // init db
+            fusionfs ! FusionFS.InitDb
+        }
 
         implicit val executionContext = system.executionContext
     }
