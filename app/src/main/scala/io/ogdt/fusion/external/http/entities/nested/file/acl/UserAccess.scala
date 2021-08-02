@@ -10,25 +10,25 @@ import io.ogdt.fusion.external.http.entities.nested.file.acl.access.RightsJsonPr
 
 import io.ogdt.fusion.external.http.entities.common.JsonFormatters._
 
-import io.ogdt.fusion.core.db.models.documents.nested.file.acl.{UserAccess => UserAccessDocument}
+import io.ogdt.fusion.core.db.models.documents.nested.file.acl.{ProfileAccess => ProfileAccessDocument}
 
 final case class UserAccess(
-    userId: UUID,
+    profileId: UUID,
     rights: Rights
 )
 
 object UserAccess {
     
-    implicit def userAccessToDocument(ua: UserAccess): UserAccessDocument = {
-        UserAccessDocument(
-            ua.userId, 
+    implicit def userAccessToDocument(ua: UserAccess): ProfileAccessDocument = {
+        ProfileAccessDocument(
+            ua.profileId, 
             ua.rights
         )
     }
 
-    implicit def documentToUser(doc: UserAccessDocument): UserAccess = {
+    implicit def documentToUser(doc: ProfileAccessDocument): UserAccess = {
         UserAccess(
-            doc.userId, 
+            doc.profileId, 
             doc.rights
         )
     }

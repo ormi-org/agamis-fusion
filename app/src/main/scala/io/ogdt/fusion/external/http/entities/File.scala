@@ -11,7 +11,6 @@ import spray.json._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, DeserializationException, JsValue, JsString}
 
 import io.ogdt.fusion.core.db.models.documents.{File => FileDocument}
-import io.ogdt.fusion.core.db.models.documents.nested.file.acl.UserAccess
 
 import io.ogdt.fusion.external.http.entities.File.DIRECTORY
 import io.ogdt.fusion.external.http.entities.File.FILE
