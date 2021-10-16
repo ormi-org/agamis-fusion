@@ -5,6 +5,7 @@ import io.ogdt.fusion.core.db.models.documents.nested.file.metadata.FusionXmlMet
 import scala.util.Try
 
 import java.time.Instant
+import java.util.Date
 
 import reactivemongo.api.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter}
 

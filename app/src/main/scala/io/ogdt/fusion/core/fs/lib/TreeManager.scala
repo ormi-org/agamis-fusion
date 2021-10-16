@@ -11,7 +11,9 @@ import scala.util.Success
 import scala.util.Failure
 import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+
+import io.ogdt.fusion.core.db.datastores.documents.exceptions.FileNotFoundException
+import scala.concurrent.ExecutionContext.Implicits.global // TODO : Replace by injecting ec
 
 /** Utilities for File Tree manipulation */
 object TreeManager {
@@ -39,6 +41,41 @@ object TreeManager {
       * @param igniteWrapper    the '''implicit''' Apache Ignite wrapper used to write cache
       * @return                 a future boolean that attests the actual creation of the file
       */
+
+    // def createFile(file: File)(implicit wrapper: ReactiveMongoWrapper, igniteWrapper: IgniteClientNodeWrapper): Future[Boolean] = {
+    //     file.path match {
+    //         case Some(path: String) => {
+    //             getFileFromPath(path).transformWith({
+    //                 case Success(existingFile) => Future.failed(new Exception("File already exists")) // TODO : changer pour une custom
+    //                 case Failure(cause) => {
+    //                     cause match {
+    //                         case e: FileNotFoundException => {
+    //                             getFileFromPath(path.replaceAll("/"+file.name, "")).transformWith({
+    //                                 case Success(dir) => {
+    //                                     if (!dir.isDirectory) Future.failed(new Exception(s"${dir.path.get} is not a directory")) // TODO : changer pour une custom
+    //                                     val fileToInsert: File = file.copy(parent = Some(dir.id))
+    //                                     new FileStore()
+    //                                     .insert(fileToInsert).transformWith({
+    //                                         case Success(result) => {
+    //                                             new CachedFileStore()
+    //                                             .put(fileToInsert)
+    //                                             Future.successful(true)
+    //                                         }
+    //                                         case Failure(cause) => Future.successful(false)
+    //                                     })
+    //                                 }
+    //                                 case Failure(cause) => Future.failed(cause)
+    //                             })
+    //                         }
+    //                         case e: Throwable => Future.failed(new Exception("Unhandled error", e)) // TODO : changer pour une custom
+    //                         case _ => Future.failed(new Exception("Unknown error")) // TODO : changer pour une custom
+    //                     }
+    //                 }
+    //             })
+    //         }
+    //         case None => Future.failed(new Exception("Couldn't parse value 'path' from File object")) // TODO : changer pour une custom
+
+    // TODO : IMPLEMENT FILE EXISTENCE VERIFICATION  
     def createFile(file: File)(implicit wrapper: ReactiveMongoWrapper, igniteWrapper: IgniteClientNodeWrapper): Future[Boolean] = {
         file.path match {
             case Some(path: String) => {
@@ -60,7 +97,7 @@ object TreeManager {
             }
             case None => Future.failed(new Exception("Couldn't parse value 'path' from File object"))
         }
-    }
+    }   
 
     /** A method for getting an existing file in the '''File Tree''' by its '''id'''
       *

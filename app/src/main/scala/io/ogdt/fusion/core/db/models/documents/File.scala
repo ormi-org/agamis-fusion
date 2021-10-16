@@ -19,14 +19,18 @@ final case class File(
     id: BSONObjectID,
     name: String,
     `type`: File.FileType,
-    path: Option[String],
+    @transient path: Option[String],
     parent: Option[BSONObjectID],
     chunkList: Option[List[UUID]],
     metadata: Metadata,
     versioned: Option[Boolean],
     acl: Acl,
     owner: UUID
-)
+) {
+    def isDirectory: Boolean = {
+        this.`type` == File.DIRECTORY
+    }
+}
 
 object File {
 

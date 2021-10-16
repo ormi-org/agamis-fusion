@@ -21,6 +21,7 @@ import io.ogdt.fusion.core.db.datastores.documents.aggregations.{
     GetFilesFromId,
     GetFileChildrenFromId
 }
+import java.io.FileNotFoundException
 
 class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[File] {
 
@@ -34,10 +35,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                     case Success(result) => {
                         Future.successful(result)
                     }
-                    case Failure(cause) => throw cause
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -52,20 +53,20 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                             throw new Exception(result.errmsg.get)
                         }
                     }
-                    case Failure(cause) => throw cause
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
     override def update(file: File): Future[Option[File]] = {
         wrapper.getCollection(database,collection).transformWith({
             case Success(col) => {
-                col.findAndUpdate[BSONDocument, File](BSONDocument("_id" -> file.id), file, upsert = true)
+                col.findAndUpdate[BSONDocument, File](BSONDocument("_id" -> file.id), file, upsert = false)
                 .map(_.result[File])
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -91,10 +92,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                             throw new Exception(result.errmsg.get)
                         }
                     }
-                    case Failure(cause) => throw cause
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -104,7 +105,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                 col.findAndRemove[BSONDocument](BSONDocument("_id" -> file.id))
                 .map(_.result[File])
             }
-            case Failure(exception) => throw new Exception(exception) 
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom 
         })
     }
 
@@ -129,10 +130,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                             throw new Exception(result.errmsg.get)
                         }
                     } 
-                    case Failure(cause) => throw cause
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -143,7 +144,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                     pipeline = pipeline.get.asInstanceOf[List[col.AggregationFramework.PipelineOperator]]
                 ).prepared.cursor.collect[List]()
             }
-            case Failure(cause) => throw new Exception(cause)
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -151,11 +152,17 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) => {
                 aggregate(pipeline = GetFileFromId.pipeline(col).setId(id)).transformWith({
-                    case Success(files) => Future.successful(files(0))
-                    case Failure(cause) => throw new Exception(cause)
+                    case Success(files) => {
+                        files.length match {
+                            case 0 => Future.failed(new Exception("Couldn't find file with specified id")) // TODO : changer pour une custom
+                            case 1 => Future.successful(files(0))
+                            case _ => Future.failed(new Exception("File id duplication issue")) // TODO : changer pour une custom
+                        }
+                    }
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw new Exception(cause)
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -164,13 +171,16 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
             case Success(col) => {
                 aggregate(pipeline = GetFileFromPath.pipeline(col).setPath(path)).transformWith({
                     case Success(files) => {
-                        if (files.length == 0) throw new Exception("Couldn't find file with specified path")
-                        Future.successful(files(0))
+                        files.length match {
+                            case 0 => Future.failed(new FileNotFoundException("Couldn't find file with specified path"))
+                            case 1 => Future.successful(files(0))
+                            case _ => Future.failed(new Exception("File path duplication issue")) // TODO : changer pour une custom
+                        }                        
                     }
-                    case Failure(cause) => throw new Exception(cause)
+                    case Failure(cause) => Future.failed(new Exception("findByPath pipeline execution failure", cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw new Exception(cause)
+            case Failure(cause) => Future.failed(new Exception("Failed to get collection", cause)) // TODO : changer pour une custom
         })  
     }
 
@@ -185,10 +195,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                     case Success(files) => {
                         Future.successful(files)
                     }
-                    case Failure(cause) => throw new Exception(cause)
+                    case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
                 })
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla",cause)) // TODO : changer pour une custom
         })
     }
 
@@ -205,10 +215,10 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
                             case Failure(cause) => throw cause
                         })
                     }
-                    case None => throw new Exception("Couldn't parse value 'path' from File object")
+                    case None => Future.failed(new Exception("Couldn't parse value 'path' from File object")) // TODO : changer pour une custom
                 }
             }
-            case Failure(cause) => throw cause
+            case Failure(cause) => Future.failed(new Exception("bla bla bla", cause)) // TODO : changer pour une custom
         })
     }
 }
