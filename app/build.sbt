@@ -10,6 +10,8 @@ lazy val igniteVersion = "2.10.0"
 
 autoAPIMappings := true
 
+scalacOptions ++= Seq("-feature", "-deprecation")
+
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2",
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,

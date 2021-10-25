@@ -5,6 +5,7 @@ target/
 .classpath
 
 .idea
+.bsp
 *.iml
 
 .metals
