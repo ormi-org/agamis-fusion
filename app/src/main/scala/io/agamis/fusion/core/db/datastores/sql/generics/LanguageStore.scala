@@ -57,28 +57,28 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
         queryFilters.filters.foreach({ filter =>
             var innerWhereStatement: ListBuffer[String] = ListBuffer()
             // manage ids search
-            if (filter.id.length > 0) {
-                innerWhereStatement += s"LANGUAGE.id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
+            if (filter.id.nonEmpty) {
+                innerWhereStatement += s"language_id in (${(for (i <- 1 to filter.id.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.id
             }
             // manage codes search
-            if (filter.code.length > 0) {
-                innerWhereStatement += s"LANGUAGE.code in (${(for (i <- 1 to filter.code.length) yield "?").mkString(",")})"
+            if (filter.code.nonEmpty) {
+                innerWhereStatement += s"language_code in (${(for (i <- 1 to filter.code.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.code
             }
             // manage label search
-            if (filter.label.length > 0) {
-                innerWhereStatement += s"LANGUAGE.label in (${(for (i <- 1 to filter.label.length) yield "?").mkString(",")})"
+            if (filter.label.nonEmpty) {
+                innerWhereStatement += s"language_label in (${(for (i <- 1 to filter.label.length) yield "?").mkString(",")})"
                 queryArgs ++= filter.label
             }
             whereStatements += innerWhereStatement.mkString(" AND ")
         })
         // compile whereStatements
-        if (whereStatements.length > 0) {
+        if (whereStatements.nonEmpty) {
             queryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
         }
         // manage order
-        if (queryFilters.orderBy.length > 0) {
+        if (queryFilters.orderBy.nonEmpty) {
             queryString += s" ORDER BY ${queryFilters.orderBy.map( o =>
                 s"LANGUAGE.${o._1} ${o._2 match {
                     case 1 => "ASC"
@@ -92,15 +92,14 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
 
     private def getLanguages(queryFilters: LanguageStore.GetLanguagesFilters)(implicit ec: ExecutionContext): Future[List[Language]] = {
         executeQuery(makeLanguageQuery(queryFilters)).transformWith({
-            case Success(languageResults) =>  {
+            case Success(languageResults) =>
                 var languages = languageResults.map(row => {
                     Language.apply
-                    .setId(row(0).toString)
+                    .setId(row.head.toString)
                     .setCode(row(1).toString)
                     .setLabel(row(2).toString)
                 })
                 Future.successful(languages.toList)
-            }
             case Failure(cause) => Future.failed(new LanguageQueryExecutionException)
         })
     }
@@ -109,7 +108,7 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
         getLanguages(LanguageStore.GetLanguagesFilters.none).transformWith({
             case Success(languages) => 
                 languages.length match {
-                    case 0 => Future.failed(new NoEntryException("Language store is empty"))
+                    case 0 => Future.failed(NoEntryException("Language store is empty"))
                     case _ => Future.successful(languages)
                 }
             case Failure(cause) => Future.failed(cause)
@@ -131,8 +130,8 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
         ).transformWith({
             case Success(languages) =>
                 languages.length match {
-                    case 0 => Future.failed(new LanguageNotFoundException(s"Language ${code} couldn't be found"))
-                    case 1 => Future.successful(languages(0))
+                    case 0 => Future.failed(LanguageNotFoundException(s"Language $code couldn't be found"))
+                    case 1 => Future.successful(languages.head)
                     case _ => Future.failed(new DuplicateLanguageException)
                 }
             case Failure(cause) => Future.failed(cause)
@@ -143,7 +142,7 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
         getLanguageByCode(code).transformWith({
             case Success(language) => Future.successful(language)
             case Failure(cause) => cause match {
-                case _: LanguageNotFoundException => {
+                case _: LanguageNotFoundException =>
                     val language = Language.apply
                     .setId(UUID.randomUUID().toString)
                     .setCode(code)
@@ -154,7 +153,6 @@ class LanguageStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutabl
                         case Success(value) => Future.successful(language)
                         case Failure(cause) => Future.failed(LanguageNotPersistedException(cause))
                     })
-                }
                 case _ => Future.failed(new Error())
             }
         })

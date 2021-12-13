@@ -45,11 +45,22 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     )
   }
 
+  /** A factory method that generates a new group object
+    *
+    * [[Group Group]] is generated along with its '''implicit''' [[GroupStore GroupStore]]
+    *
+    * @return a simple [[Group Group]]
+    */
   def makeGroup: Group = {
-    implicit val profileStore: GroupStore = this
+    implicit val groupStore: GroupStore = this
     new Group
   }
 
+  /** A factory method that generates an SQL query based on provided filters
+    *
+    * @param queryFilters the filters used to populate the query
+    * @return a simple [[SqlStoreQuery SqlStoreQuery]]
+    */
   def makeGroupsQuery(queryFilters: GroupStore.GetGroupsFilters): SqlStoreQuery = {
     var baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
@@ -116,7 +127,14 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
       .setParams(queryArgs.toList)
   }
 
-  //Get existing Groups from database
+  /** A method that gets several existing groups from database based on provided filters
+    *
+    * @note used as a generic methods wich parse result in Object sets to process it; it is used in regular SELECT based methods
+    *
+    * @param queryFilters the filters used to populate the query
+    * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[List List]] of [[Group Group]]
+    */
   def getGroups(queryFilters: GroupStore.GetGroupsFilters)(implicit ec: ExecutionContext): Future[List[Group]] = {
     executeQuery(makeGroupsQuery(queryFilters)).transformWith({
       case Success(rows) =>
@@ -342,6 +360,11 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     })
   }
 
+  /** A method that gets all existing
+    *
+    * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[List List]] of [[Group Group]]
+    */
   def getAllGroups(implicit ec: ExecutionContext): Future[List[Group]] = {
     getGroups(GroupStore.GetGroupsFilters().copy(
       orderBy = List(

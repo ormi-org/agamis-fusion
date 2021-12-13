@@ -59,6 +59,20 @@ class FileSystem(implicit @transient protected val store: FileSystemStore) exten
         this
     }
 
+    /**
+      * An unpersisted state that reflects installed applications
+      */
+    @transient
+    private var _licensedApplications: List[Application] = List()
+    def licensedApplications: List[Application] = _licensedApplications
+    def addLicensedApplication(application: Application): FileSystem = {
+        _licensedApplications.indexWhere(_._id == application.id) match {
+            case -1 => _licensedApplications ::= application
+            case index => _licensedApplications = _licensedApplications.updated(index, application)
+        }
+        this
+    }
+
     def persist(implicit ec: ExecutionContext): Future[Unit] = {
         store.persistFileSystem(this)
     }

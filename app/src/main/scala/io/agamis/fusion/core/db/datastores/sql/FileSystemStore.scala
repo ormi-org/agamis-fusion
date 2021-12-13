@@ -6,7 +6,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.filesystems.{Dup
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{DuplicateOrganizationException, OrganizationNotFoundException}
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{GetEntityFilters, SqlStoreQuery}
-import io.agamis.fusion.core.db.models.sql.FileSystem
+import io.agamis.fusion.core.db.models.sql.{Application, FileSystem}
 import io.agamis.fusion.core.db.models.sql.generics.Language
 import io.agamis.fusion.core.db.models.sql.relations.FilesystemOrganization
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
@@ -20,6 +20,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
+/** A class to manage and reflects [[FileSystem FileSystem]] life-cycle in the SQL database
+  *
+  * @param wrapper the '''implicit''' [[IgniteClientNodeWrapper IgniteClientNodeWrapper]] used to handle SQL & key-value operations
+  */
 class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, FileSystem] {
 
     override val schema: String = "FUSION"
@@ -44,12 +48,22 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         )
     }
 
-    // Create and get new FileSystem Object
+    /** A factory method that generates a new fileSystem object
+      *
+      * [[FileSystem FileSystem]] is generated along with its '''implicit''' [[ApplicationStore ApplicationStore]]
+      *
+      * @return a simple [[FileSystem FileSystem]]
+      */
     def makeFileSystem: FileSystem = {
         implicit val fileSystemStore: FileSystemStore = this
         new FileSystem
     }
 
+    /** A factory method that generates an SQL query based on provided filters
+      *
+      * @param queryFilters the filters used to populate the query
+      * @return a simple [[SqlStoreQuery SqlStoreQuery]]
+      */
     def makeFileSystemsQuery(queryFilters: FileSystemStore.GetFileSystemsFilters): SqlStoreQuery = {
         var baseQueryString = queryString.replace("$schema", schema)
         val queryArgs: ListBuffer[String] = ListBuffer()
@@ -124,7 +138,14 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         .setParams(queryArgs.toList)
     }
 
-    // Get existing fileSystems from database
+    /** A method that gets several existing fileSystems from database based on provided filters
+      *
+      * @note used as a generic methods wich parse result in Object sets to process it; it is used in regular SELECT based methods
+      *
+      * @param queryFilters the filters used to populate the query
+      * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[List List]] of [[FileSystem FileSystem]]
+      */
     def getFileSystems(queryFilters: FileSystemStore.GetFileSystemsFilters)(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
         executeQuery(makeFileSystemsQuery(queryFilters)).transformWith({
             case Success(rows) =>
@@ -156,6 +177,43 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
                                             else Right(fileSystem.setUnshared())
                                         case Failure(_) => Right(fileSystem)
                                     }
+                                } flatMap { fileSystem =>
+                                    groupedRows.get("APPLICATION") match {
+                                        case Some(applicationReflections) =>
+                                            applicationReflections.foreach({ applicationReflection =>
+                                                applicationReflection.partition(_._1 == "APPLICATION") match {
+                                                    case result =>
+                                                        val appDef = result._1(0)._2
+                                                        for (
+                                                            application <- Right(new ApplicationStore()
+                                                                .makeApplication
+                                                                .setId(appDef(0))
+                                                                .setLabel(appDef(1))
+                                                                .setVersion(appDef(2))
+                                                                .setAppUniversalId(appDef(3))
+                                                                .setManifestUrl(appDef(5))
+                                                                .setStoreUrl(appDef(6))
+                                                                .setCreatedAt(Utils.timestampFromString(appDef(7)) match {
+                                                                    case createdAt: Timestamp => createdAt
+                                                                    case _ => null
+                                                                })
+                                                                .setUpdatedAt(Utils.timestampFromString(appDef(8)) match {
+                                                                    case updatedAt: Timestamp => updatedAt
+                                                                    case _ => null
+                                                                })
+                                                            ) flatMap { application =>
+                                                                Application.Status.fromInt(appDef(4).toInt) match {
+                                                                    case Success(status) =>
+                                                                        Right(application.setStatus(status))
+                                                                    case Failure(_) => Right(application)
+                                                                }
+                                                            }
+                                                        ) yield fileSystem.addLicensedApplication(application)
+                                                }
+                                            })
+                                        case None =>
+                                    }
+                                    Right(fileSystem)
                                 } flatMap { fileSystem => // pass created filesystem to relation mapping step
                                     // organization mapping
                                     groupedRows.get("ORGANIZATION") match {
@@ -244,6 +302,11 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         })
     }
 
+    /** A method that gets all existing fileSystems
+      *
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[List List]] of [[FileSystem FileSystem]]
+      */
     def getAllFileSystems(implicit ec: ExecutionContext): Future[List[FileSystem]] = {
         getFileSystems(FileSystemStore.GetFileSystemsFilters().copy(
             orderBy = List(
@@ -259,6 +322,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         })
     }
 
+    /** A method that fetches fileSystem by its id
+      *
+      * @param id the id of the fileSystem to be fetched
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[FileSystem FileSystem]] which reflects application state fetched from database
+      */
     def getFileSystemById(id: String)(implicit ec: ExecutionContext): Future[FileSystem] = {
         getFileSystems(
             FileSystemStore.GetFileSystemsFilters().copy(
@@ -279,7 +348,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         })
     }
 
-    // Save user object's modification to database
+    /** A method that persist fileSystem state in the database
+      *
+      * @param fileSystem the fileSystem object to persist
+      * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future confirmation of the state change
+      */
     def persistFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
         if (!fileSystem.organizations.exists(_._1 == true))
             Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
@@ -332,7 +406,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         }
     }
 
-    // Save several object's modifications
+    /** A method that persist several fileSystems state in the database
+      *
+      * @param fileSystems fileSystems objects to persist
+      * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future confirmation of the state change
+      */
     def bulkPersistFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[Unit] = {
         fileSystems.find({ fs => fs.organizations.nonEmpty }) match {
             case Some(_) => Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
@@ -376,7 +455,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         }
     }
 
-    // Delete fileSystem from database
+    /** A method that deletes fileSystem
+      *
+      * @param fileSystem the fileSystem to be deleted
+      * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future confirmation of state change
+      */
     def deleteFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
         if (fileSystem.organizations.nonEmpty) Future.failed(FilesystemNotPersistedException("fileSystem is still attached to some organization and can't be deleted"))
         else {
@@ -390,10 +474,15 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
         }
     }
 
-    // Delete several users from database
+    /** A method that deletes several fileSystems
+      *
+      * @param fileSystems the fileSystems to be deleted
+      * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future confirmation of state change
+      */
     def bulkDeleteFileSystems(fileSystems: List[FileSystem])(implicit ec: ExecutionContext): Future[Unit] = {
         fileSystems.find({ fs => fs.organizations.nonEmpty }) match {
-            case Some(_) => throw FilesystemNotPersistedException("FileSystem must be unmounted off all its organization before being deleted")
+            case Some(_) => throw FilesystemNotPersistedException("FileSystem must be unmounted of all its organization before being deleted")
             case None =>
                 Utils.igniteToScalaFuture(igniteCache.removeAllAsync(
                     fileSystems.filter(_.organizations.isEmpty).map(_.id).toSet.asJava)

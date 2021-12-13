@@ -24,7 +24,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
       * @note This methods is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[WriteResult WriteResult]]
       *
       * @param file the file to insert
-      * @param ec   the '''implicit''' ExecutionContext used to parallelize computing
+      * @param ec   the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
       * @return a future [[WriteResult WriteResult]] which attests the acutal creation of the file
       */
     override def insert(file: File)(implicit ec: ExecutionContext): Future[WriteResult] = {
@@ -46,7 +46,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
       * @note This methods is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[scala.Int Int]]
       *
       * @param files the files to insert
-      * @param ec   the '''implicit''' ExecutionContext used to parallelize computing
+      * @param ec   the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
       * @return a future integer which attests the acutal creation of the file
       */
     override def insertMany(files: List[File])(implicit ec: ExecutionContext): Future[Int] = {
@@ -72,7 +72,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
       * @note This methods is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[WriteResult WriteResult]]
       *
       * @param file the file to update
-      * @param ec   the '''implicit''' ExecutionContext used to parallelize computing
+      * @param ec   the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
       * @return a future [[Option Option]] of [[File File]] which reflect new file state in the database
       */
     override def update(file: File)(implicit ec: ExecutionContext): Future[Option[File]] = {
@@ -91,7 +91,7 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
       * @note This methods is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[WriteResult WriteResult]]
       *
       * @param files a list of files to be updated
-      * @param ec   the '''implicit''' ExecutionContext used to parallelize computing
+      * @param ec   the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
       * @return a future [[Option Option]] of [[File File]] which reflect new file state in the database
       */
     override def updateMany(files: List[File])(implicit ec: ExecutionContext): Future[List[File]] = {
@@ -121,6 +121,12 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for deleting an existing file in database
+      *
+      * @param file the file to delete
+      * @param ec   the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[Option Option]] of [[File File]] which reflects the file state that has been removed from database
+      */
     override def delete(file: File)(implicit ec: ExecutionContext): Future[Option[File]] = {
         wrapper.getCollection(database,collection).transformWith({
             case Success(col) =>
@@ -130,6 +136,12 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for deleting several existing files in database
+      *
+      * @param files the list of files to be deleted
+      * @param ec    the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[Int Int]] which reflects the count of deleted files
+      */
     override def deleteMany(files: List[File])(implicit ec: ExecutionContext): Future[Int] = {
         wrapper.getCollection(database,collection).transformWith({
             case Success(col) =>
@@ -156,6 +168,12 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for executing MongoDB aggregation
+      *
+      * @param pipeline the parametarized pipeline to execute
+      * @param ec       the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[List List]] of [[File File]] which reflects the state of fetched files in database
+      */
     override def aggregate(pipeline: Pipeline)(implicit ec: ExecutionContext): Future[List[File]] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) =>
@@ -166,6 +184,14 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for retrieving a specific file by its id
+      *
+      * @note based on aggregation, it calls aggregate(Pipeline)
+      *
+      * @param id the id of the file to fetch
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[File File]] which reflects the state of fetched file in database
+      */
     def findByID(id: String)(implicit ec: ExecutionContext): Future[File] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) =>
@@ -182,6 +208,14 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for retrieving a specific file by its path in the file tree
+      *
+      * @note based on aggregation, it calls aggregate(Pipeline)
+      *
+      * @param path the path of the file to fetch
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[File File]] which reflects the state of fetched file in database
+      */
     def findByPath(path: String)(implicit ec: ExecutionContext): Future[File] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) =>
@@ -198,6 +232,14 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })  
     }
 
+    /** A method for retrieving specific files by their ids
+      *
+      * @note based on aggregation, it calls aggregate(Pipeline)
+      *
+      * @param ids the list of ids of files to fetch
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[List List]] of [[File File]] which reflects the state of fetched files in database
+      */
     def findMany(ids: List[String])(implicit ec: ExecutionContext): Future[List[File]] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) =>
@@ -214,6 +256,14 @@ class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[Fi
         })
     }
 
+    /** A method for retrieving specific children files by their parent ref
+      *
+      * @note based on aggregation, it calls aggregate(Pipeline)
+      *
+      * @param dir the directory to search file in
+      * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+      * @return a future [[List List]] of [[File File]] which reflects the state of fetched files in database
+      */
     def getFileChildren(dir: File)(implicit ec: ExecutionContext): Future[List[File]] = {
         wrapper.getCollection(database, collection).transformWith({
             case Success(col) =>

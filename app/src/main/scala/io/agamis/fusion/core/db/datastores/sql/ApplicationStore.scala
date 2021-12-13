@@ -22,6 +22,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
+/** A class to manage and reflects [[Application Application]] life-cycle in the SQL database
+  *
+  * @param wrapper the '''implicit''' [[IgniteClientNodeWrapper IgniteClientNodeWrapper]] used to handle SQL & key-value operations
+  */
 class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Application] {
 
   override val schema: String = "FUSION"
@@ -40,12 +44,22 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     )
   }
 
-  // Create Application object
+  /** A factory method that generates a new application object
+    *
+    * [[Application Application]] is generated along with its '''implicit''' [[ApplicationStore ApplicationStore]]
+    *
+    * @return a simple [[Application Application]]
+    */
   def makeApplication: Application = {
     implicit val ApplicationStore: ApplicationStore = this
     new Application
   }
 
+  /** A factory method that generates an SQL query based on provided filters
+    *
+    * @param queryFilters the filters used to populate the query
+    * @return a simple [[SqlStoreQuery SqlStoreQuery]]
+    */
   def makeApplicationQuery(queryFilters: ApplicationStore.GetApplicationsFilters): SqlStoreQuery = {
     var baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
@@ -129,7 +143,14 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
       .setParams(queryArgs.toList)
   }
 
-  // Get existing applications from database
+  /** A method that gets several existing applications from database based on provided filters
+    *
+    * @note used as a generic methods wich parse result in Object sets to process it; it is used in regular SELECT based methods
+    *
+    * @param queryFilters the filters used to populate the query
+    * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[List List]] of [[Application Application]]
+    */
   def getApplications(queryFilters: ApplicationStore.GetApplicationsFilters)(implicit ec: ExecutionContext): Future[List[Application]] = {
     executeQuery(makeApplicationQuery(queryFilters)).transformWith({
       case Success(rows) =>
@@ -339,6 +360,11 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     })
   }
 
+  /** A method that gets all existing applications
+    *
+    * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[List List]] of [[Application Application]]
+    */
   def getAllApplications(implicit ec: ExecutionContext): Future[List[Application]] = {
     getApplications(ApplicationStore.GetApplicationsFilters().copy(
       orderBy = List(
@@ -354,6 +380,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     })
   }
 
+  /** A method that fetches application by its id
+    *
+    * @param id the id of the application to be fetched
+    * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[Application Application]] which reflects application state fetched from database
+    */
   def getApplicationById(id: String)(implicit ec: ExecutionContext): Future[Application] = {
     getApplications(
       ApplicationStore.GetApplicationsFilters().copy(
@@ -374,6 +406,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     })
   }
 
+  /** A method that persist application state in the database
+    *
+    * @param application the application object to persist
+    * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of the state change
+    */
   def persistApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
@@ -445,6 +483,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     }
   }
 
+  /** A method that persist several applications state in the database
+    *
+    * @param applications applications objects to persist
+    * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of the state change
+    */
   def bulkPersistApplications(applications: List[Application])(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
@@ -518,6 +562,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     }
   }
 
+  /** A method that deletes application
+    *
+    * @param application the application to be deleted
+    * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of state change
+    */
   def deleteApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {

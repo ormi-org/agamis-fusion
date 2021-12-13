@@ -26,4 +26,10 @@ FROM
 	INNER JOIN $schema.ORGANIZATIONTYPE AS ORGTYPE ON ORG.organizationtype_id = ORGTYPE.id
 	INNER JOIN $schema.TEXT AS TEXT ON TEXT.id = ORGTYPE.label_text_id
 	INNER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id
+	UNION ALL
+	SELECT FS.id AS fs_id, FS.rootdir_id AS fs_rootdir_id, FS.label AS fs_label, shared AS fs_shared, FS.created_at AS fs_created_at, FS.updated_at AS fs_updated_at,
+	CONCAT_WS('||', APP.id, APP.label, APP.version, APP.app_universal_id, APP.status, APP.manifest_url, APP.store_url, APP.created_at, APP.updated_at) AS info_data, 'APPLICATION'
+	FROM $schema.FILESYSTEM AS FS
+	INNER JOIN $schema.ORGANIZATION_APPLICATION as ORG_APP ON ORG_APP.license_file_fs_id = FS.id
+	INNER JOIN $schema.APPLICATION as APP ON APP.id = ORG_APP.application_id
 )
