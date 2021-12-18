@@ -7,7 +7,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.groups.{Duplicat
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{DuplicateOrganizationException, OrganizationNotFoundException}
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{GetEntityFilters, SqlStoreQuery}
-import io.agamis.fusion.core.db.models.sql.Group
+import io.agamis.fusion.core.db.models.sql.{Group, Organization}
 import io.agamis.fusion.core.db.models.sql.generics.{Email, Language}
 import io.agamis.fusion.core.db.models.sql.relations.GroupPermission
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
@@ -130,7 +130,6 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
   /** A method that gets several existing groups from database based on provided filters
     *
     * @note used as a generic methods wich parse result in Object sets to process it; it is used in regular SELECT based methods
-    *
     * @param queryFilters the filters used to populate the query
     * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future [[List List]] of [[Group Group]]
@@ -360,7 +359,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     })
   }
 
-  /** A method that gets all existing
+  /** A method that gets all existing groups
     *
     * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future [[List List]] of [[Group Group]]
@@ -380,6 +379,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     })
   }
 
+  /** A method that gets an existing group by its id
+    *
+    * @param id id of the group to retrieve
+    * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[Group Group]] that corresponds to the provided id
+    */
   def getGroupById(id: String)(implicit ec: ExecutionContext): Future[Group] = {
     getGroups(
       GroupStore.GetGroupsFilters().copy(
@@ -400,6 +405,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     })
   }
 
+  /** A method that persist a group to reflect changes in the database
+    *
+    * @param group the group to persist
+    * @param ec    the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of the state change
+    */
   def persistGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
@@ -472,6 +483,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     }
   }
 
+  /** A method that persist several groups state in the database
+    *
+    * @param groups groups objects to persist
+    * @param ec     the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of the state change
+    */
   def bulkPersistGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
@@ -546,6 +563,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     }
   }
 
+  /** A method that delete group
+    *
+    * @param group the group to be deleted
+    * @param ec    the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of state change
+    */
   def deleteGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
@@ -561,8 +584,8 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
             // Delete permission relations
             Utils.igniteToScalaFuture(relationCache.removeAllAsync(
               group.permissions
-                .map({ org =>
-                  s"${group.id}:${org._2.id}"
+                .map({ p =>
+                  s"${group.id}:${p._2.id}"
                 }).toSet[String].asJava
             )),
             // Delete member (Profile) relations
@@ -603,25 +626,78 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     }
   }
 
-  /** A result of bulkDeleteGroups method
+  /** A method that deletes several groups
     *
-    * @constructor create a new bulkDeleteGroupsResult with a count of deleted Groups and a list of errors
-    * @param inserts a count of the actually deleted Groups
-    * @param errors  a list of errors catched from groups deletions
+    * @param groups groups to be deleted
+    * @param ec     the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future confirmation of state change
     */
-  case class BulkDeleteGroupsResult(inserts: Int, errors: List[String])
-
-  // TODO: bulkDeleteGroups
-//  def bulkDeleteGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[BulkDeleteGroupsResult] = {
-//    Utils.igniteToScalaFuture(igniteCache.removeAllAsync(
-//      groups.filter(group => {
-//        if (group.members.nonEmpty) false
-//        true
-//      }).map(_.id).toSet.asJava
-//    )).transformWith({
-//      case Success
-//    })
-//  }
+  def bulkDeleteGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[Unit] = {
+    val transaction = makeTransaction
+    transaction match {
+      case Success(_) =>
+        val relationCache: IgniteCache[String, GroupPermission] =
+          wrapper.getCache[String, GroupPermission](cache)
+        val profileStore = new ProfileStore()
+        val organizationStore = new OrganizationStore()
+        Future.sequence(
+          List(
+            Utils.igniteToScalaFuture(igniteCache.removeAllAsync(groups.map(_.id).toSet.asJava)),
+            // Delete relations
+            // Delete permission relations
+            Utils.igniteToScalaFuture(relationCache.removeAllAsync(groups.flatMap(g =>
+              g.permissions
+                .map({ p =>
+                  s"${g.id}:${p._2.id}"
+                })
+            ).toSet[String].asJava)),
+          ) ++ {
+            // Delete member (Profile) relations
+            groups.map(g =>
+              profileStore
+                .getProfiles(
+                  ProfileStore.GetProfilesFilters().copy(filters = List(
+                    ProfileStore.GetProfilesFilter().copy(id = g.members.map(_._2.id.toString))
+                  ))
+                ).transformWith({
+                case Success(profiles) => profileStore.bulkPersistProfiles(profiles.map(_.removeGroup(g)))
+                case Failure(cause) => Future.failed(cause)
+              })
+            )
+          } ++ {
+            // Delete organization relations
+            List(
+              Future.sequence(groups.foldLeft(List[Future[Organization]]())((acc, g) =>
+                (g.relatedOrganization match {
+                  case Some(organization) =>
+                    organizationStore
+                      .getOrganizations(
+                        OrganizationStore.GetOrganizationsFilters().copy(filters = List(
+                          OrganizationStore.GetOrganizationsFilter().copy(id = List(organization.id.toString))
+                        ))
+                      ).transformWith({
+                      case Success(organization) =>
+                        Future(organization.head.removeRelatedGroup(g))
+                      case Failure(cause) => Future.failed(cause)
+                    })
+                }) :: acc
+              )).transformWith({
+                case Success(organizations) => organizationStore.bulkPersistOrganizations(organizations)
+              })
+            )
+          }
+        ).transformWith({
+          case Success(_) =>
+            commitTransaction(transaction).transformWith({
+              case Success(_) => Future.unit
+              case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
+            })
+          case Failure(cause) =>
+            rollbackTransaction(transaction)
+            Future.failed(GroupNotPersistedException(cause))
+        })
+    }
+  }
 }
 
 object GroupStore {

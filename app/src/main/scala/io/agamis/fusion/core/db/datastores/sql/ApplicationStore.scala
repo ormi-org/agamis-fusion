@@ -146,7 +146,6 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
   /** A method that gets several existing applications from database based on provided filters
     *
     * @note used as a generic methods wich parse result in Object sets to process it; it is used in regular SELECT based methods
-    *
     * @param queryFilters the filters used to populate the query
     * @param ec           the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future [[List List]] of [[Application Application]]
