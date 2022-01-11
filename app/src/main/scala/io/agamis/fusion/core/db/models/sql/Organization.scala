@@ -46,26 +46,38 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
     }
 
     @transient
-    private var _relatedProfiles: List[Profile] = List()
-    def relatedProfiles: List[Profile] = _relatedProfiles
+    private var _relatedProfiles: List[(Boolean, Profile)] = List()
+    def relatedProfiles: List[(Boolean, Profile)] = _relatedProfiles
     def addRelatedProfile(profile: Profile): Organization = {
-        _relatedProfiles ::= profile
+        _relatedProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => _relatedProfiles ::= (true, profile)
+            case index => _relatedProfiles = _relatedProfiles.updated(index, _relatedProfiles(index).copy(_1 = true))
+        }
         this
     }
     def removeRelatedProfile(profile: Profile): Organization = {
-        _relatedProfiles = _relatedProfiles.filter(p => p.id != profile.id)
+        _relatedProfiles.indexWhere(_._2.id == profile.id) match {
+            case -1 => throw RelationNotFoundException()
+            case index => _relatedProfiles = _relatedProfiles.updated(index, _relatedProfiles(index).copy(_1 = false))
+        }
         this
     }
 
     @transient
-    private var _relatedGroups: List[Group] = List()
-    def relatedGroups: List[Group] = _relatedGroups
+    private var _relatedGroups: List[(Boolean, Group)] = List()
+    def relatedGroups: List[(Boolean, Group)] = _relatedGroups
     def addRelatedGroup(group: Group): Organization = {
-        _relatedGroups ::= group
+        _relatedGroups.indexWhere(_._2.id == group.id) match {
+            case -1 => _relatedGroups ::= (true, group)
+            case index => _relatedGroups = _relatedGroups.updated(index, _relatedGroups(index).copy(_1 = true))
+        }
         this
     }
     def removeRelatedGroup(group: Group): Organization = {
-        _relatedGroups = _relatedGroups.filter(g => g.id != group.id)
+        _relatedGroups.indexWhere(_._2.id == group.id) match {
+            case -1 => throw RelationNotFoundException()
+            case index => _relatedGroups = _relatedGroups.updated(index, _relatedGroups(index).copy(_1 = false))
+        }
         this
     }
 

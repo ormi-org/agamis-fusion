@@ -21,7 +21,7 @@ import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundE
 class Group(implicit @transient protected val store: GroupStore) extends Model {
 
     @QuerySqlField(name = "name", notNull = true)
-    private var _name: String = null
+    private var _name: String = _
 
     /** Group name property
       *
@@ -51,7 +51,7 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
     }
     def removeMember(profile: Profile): Group = {
         _members.indexWhere(_._2.id == profile.id) match {
-            case -1 => throw new RelationNotFoundException()
+            case -1 => throw RelationNotFoundException()
             case index => _members = _members.updated(index, _members(index).copy(_1 = false))
         }
         this
@@ -69,14 +69,14 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
     }
     def removePermission(permission: Permission): Group = {
         _permissions.indexWhere(_._2.id == permission.id) match {
-            case -1 => throw new RelationAlreadyExistsException()
+            case -1 => throw RelationAlreadyExistsException()
             case index => _permissions = _permissions.updated(index, _permissions(index).copy(_1 = false))
         }
         this
     }
 
     @QuerySqlField(name = "organization_id", notNull = true)
-    private var _organizationId: UUID = null
+    private var _organizationId: UUID = _
 
     @transient
     private var _relatedOrganization: Option[Organization] = None
@@ -91,7 +91,7 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
       * 
       * This method automatically set organizationId foreign key
       * 
-      * @param user a [[io.agamis.fusion.core.db.models.sql.Organization Organization]] to assign to this relation
+      * @param organization a [[io.agamis.fusion.core.db.models.sql.Organization Organization]] to assign to this relation
       * @return this object
       */
     def setRelatedOrganization(organization: Organization): Group = {

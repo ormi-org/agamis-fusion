@@ -357,9 +357,8 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
   }
 
   def persistPermission(permission: Permission)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val profileStore = new ProfileStore()
         val groupStore = new GroupStore()
         Future.sequence(
@@ -430,12 +429,12 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
           }
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(PermissionNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(PermissionNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(PermissionNotPersistedException(cause))
@@ -545,9 +544,8 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
   }
 
   def deletePermission(permission: Permission)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val profileStore = new ProfileStore()
         val groupStore = new GroupStore()
         Future.sequence(
@@ -612,11 +610,16 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             } else Nil
           }
         ).transformWith({
-          case Success(_) => Future.unit
-          case Failure(cause) => Future.failed(PermissionNotPersistedException(cause))
+          case Success(_) =>
+            commitTransaction(tx).transformWith({
+              case Success(_) => Future.unit
+              case Failure(cause) => Future.failed(cause)
+            })
+          case Failure(cause) =>
+            rollbackTransaction(tx)
+            Future.failed(PermissionNotPersistedException(cause))
         })
       case Failure(cause) =>
-        rollbackTransaction(transaction)
         Future.failed(PermissionNotPersistedException(cause))
     }
   }

@@ -412,9 +412,8 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     * @return a future confirmation of the state change
     */
   def persistApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val organizationStore = new OrganizationStore()
         Future.sequence(
           List(
@@ -436,6 +435,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
                     )
                   ).transformWith({
                   case Success(organizations) =>
+                    // add apps to be add to org
                     val orgs = organizations zip application.organizations.sortBy(_._2._2.id).map(_._2._1)
                     Future.successful(orgs.flatMap({ o =>
                       try {
@@ -456,6 +456,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
                     )
                   ).transformWith({
                   case Success(organizations) =>
+                    // remove apps to be removed from org
                     Future.successful(organizations.map({ o =>
                       o.removeApplication(application)
                     }))
@@ -464,18 +465,19 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
               )
             ).transformWith({
               case Success(organizations) =>
+                // persist organizations with new state
                 organizationStore.bulkPersistOrganizations(organizations.flatten)
               case Failure(cause) => Future.failed(cause)
             })
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(ApplicationNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
@@ -489,9 +491,8 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     * @return a future confirmation of the state change
     */
   def bulkPersistApplications(applications: List[Application])(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val organizationStore = new OrganizationStore()
         Future.sequence(
           List(
@@ -549,12 +550,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(ApplicationNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
@@ -568,9 +569,8 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     * @return a future confirmation of state change
     */
   def deleteApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val organizationStore = new OrganizationStore()
         Future.sequence(
           List(
@@ -591,12 +591,12 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(ApplicationNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))

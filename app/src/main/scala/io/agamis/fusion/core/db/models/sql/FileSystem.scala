@@ -66,7 +66,7 @@ class FileSystem(implicit @transient protected val store: FileSystemStore) exten
     private var _licensedApplications: List[Application] = List()
     def licensedApplications: List[Application] = _licensedApplications
     def addLicensedApplication(application: Application): FileSystem = {
-        _licensedApplications.indexWhere(_._id == application.id) match {
+        _licensedApplications.indexWhere(_.id == application.id) match {
             case -1 => _licensedApplications ::= application
             case index => _licensedApplications = _licensedApplications.updated(index, application)
         }

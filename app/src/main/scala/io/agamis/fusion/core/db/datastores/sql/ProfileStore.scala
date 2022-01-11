@@ -16,7 +16,6 @@ import io.agamis.fusion.core.db.models.sql.relations.{ProfileEmail, ProfileGroup
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.{CacheAtomicityMode, CacheMode, QueryEntity}
-import org.apache.ignite.transactions.Transaction
 
 import java.sql.Timestamp
 import java.util.UUID
@@ -438,9 +437,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
   def persistProfile(profile: Profile)(implicit ec: ExecutionContext): Future[Unit] = {
     (profile.relatedUser, profile.relatedOrganization) match {
       case (Some(_), Some(_)) =>
-        val transaction = makeTransaction
-        transaction match {
-          case Success(_) =>
+        makeTransaction match {
+          case Success(tx) =>
             val emailRelationCache: IgniteCache[String, ProfileEmail] =
               wrapper.getCache[String, ProfileEmail](cache)
             val groupRelationCache: IgniteCache[String, ProfileGroup] =
@@ -525,12 +523,12 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
               )
             ).transformWith({
               case Success(_) =>
-                commitTransaction(transaction).transformWith({
+                commitTransaction(tx).transformWith({
                   case Success(_) => Future.unit
                   case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
                 })
               case Failure(cause) =>
-                rollbackTransaction(transaction)
+                rollbackTransaction(tx)
                 Future.failed(ProfileNotPersistedException(cause))
             })
           case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
@@ -585,9 +583,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
     profile.relatedOrganization match {
       case Some(_) => Future.failed(StillAttachedOrganizationException())
       case None =>
-        val transaction: Try[Transaction] = makeTransaction
-        transaction match {
-          case Success(_) =>
+        makeTransaction match {
+          case Success(tx) =>
             val emailRelationCache: IgniteCache[String, ProfileEmail] = wrapper.getCache[String, ProfileEmail](cache)
             val groupRelationCache: IgniteCache[String, ProfileGroup] = wrapper.getCache[String, ProfileGroup](cache)
             val permissionRelationCache: IgniteCache[String, ProfilePermission] = wrapper.getCache[String, ProfilePermission](cache)
@@ -624,12 +621,12 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
             )
               .transformWith({
                 case Success(_) =>
-                  commitTransaction(transaction).transformWith({
+                  commitTransaction(tx).transformWith({
                     case Success(_) => Future.unit
                     case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
                   })
                 case Failure(cause) =>
-                  rollbackTransaction(transaction)
+                  rollbackTransaction(tx)
                   Future.failed(ProfileNotPersistedException(cause))
               })
           case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
@@ -646,9 +643,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
   case class BulkDeleteProfilesResult(inserts: Int, errors: List[String])
 
   def bulkDeleteProfiles(profiles: List[Profile])(implicit ec: ExecutionContext): Future[BulkDeleteProfilesResult] = {
-    val transaction: Try[Transaction] = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val emailRelationCache: IgniteCache[String, ProfileEmail] = wrapper.getCache[String, ProfileEmail](cache)
         val groupRelationCache: IgniteCache[String, ProfileGroup] = wrapper.getCache[String, ProfileGroup](cache)
         val permissionRelationCache: IgniteCache[String, ProfilePermission] = wrapper.getCache[String, ProfilePermission](cache)
@@ -688,7 +684,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.sequence(
                 profiles.map(profile => Utils.igniteToScalaFuture(igniteCache.containsKeyAsync(profile.id)))
               ).map(lookup => profiles zip lookup)
@@ -706,7 +702,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutable
               case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(ProfileNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(ProfileNotPersistedException(cause))

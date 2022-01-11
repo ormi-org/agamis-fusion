@@ -412,9 +412,8 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     * @return a future confirmation of the state change
     */
   def persistGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val relationCache: IgniteCache[String, GroupPermission] =
           wrapper.getCache[String, GroupPermission](cache)
         val profileStore: ProfileStore = new ProfileStore()
@@ -471,12 +470,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
@@ -490,9 +489,8 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     * @return a future confirmation of the state change
     */
   def bulkPersistGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val permissionRelationCache: IgniteCache[String, GroupPermission] =
           wrapper.getCache[String, GroupPermission](cache)
         val profileStore: ProfileStore = new ProfileStore()
@@ -551,12 +549,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
@@ -570,9 +568,8 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     * @return a future confirmation of state change
     */
   def deleteGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
-    val transaction = makeTransaction
-    transaction match {
-      case Success(_) =>
+    makeTransaction match {
+      case Success(tx) =>
         val relationCache: IgniteCache[String, GroupPermission] =
           wrapper.getCache[String, GroupPermission](cache)
         val profileStore = new ProfileStore()
@@ -614,12 +611,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
@@ -635,7 +632,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
   def bulkDeleteGroups(groups: List[Group])(implicit ec: ExecutionContext): Future[Unit] = {
     val transaction = makeTransaction
     transaction match {
-      case Success(_) =>
+      case Success(tx) =>
         val relationCache: IgniteCache[String, GroupPermission] =
           wrapper.getCache[String, GroupPermission](cache)
         val profileStore = new ProfileStore()
@@ -668,7 +665,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
             // Delete organization relations
             List(
               Future.sequence(groups.foldLeft(List[Future[Organization]]())((acc, g) =>
-                (g.relatedOrganization match {
+                g.relatedOrganization match {
                   case Some(organization) =>
                     organizationStore
                       .getOrganizations(
@@ -676,26 +673,29 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
                           OrganizationStore.GetOrganizationsFilter().copy(id = List(organization.id.toString))
                         ))
                       ).transformWith({
-                      case Success(organization) =>
-                        Future(organization.head.removeRelatedGroup(g))
+                      case Success(organizations) =>
+                        Future(organizations.head.removeRelatedGroup(g))
                       case Failure(cause) => Future.failed(cause)
-                    })
-                }) :: acc
+                    }) :: acc
+                  case None => acc
+                }
               )).transformWith({
                 case Success(organizations) => organizationStore.bulkPersistOrganizations(organizations)
+                case Failure(cause) => Future.failed(cause)
               })
             )
           }
         ).transformWith({
           case Success(_) =>
-            commitTransaction(transaction).transformWith({
+            commitTransaction(tx).transformWith({
               case Success(_) => Future.unit
               case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
             })
           case Failure(cause) =>
-            rollbackTransaction(transaction)
+            rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))
         })
+      case Failure(cause) => Future.failed(cause)
     }
   }
 }

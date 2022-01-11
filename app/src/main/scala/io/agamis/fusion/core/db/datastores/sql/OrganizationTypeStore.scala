@@ -233,9 +233,8 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
     }
 
     def persistOrganizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Unit] = {
-        val transaction = makeTransaction
-        transaction match {
-            case Success(_) =>
+        makeTransaction match {
+            case Success(tx) =>
                 Utils.igniteToScalaFuture(igniteCache.putAsync(
                     organizationType.id, organizationType
                 )).transformWith({
@@ -255,16 +254,16 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
                             }
                         )).transformWith({
                             case Success(_) =>
-                                commitTransaction(transaction).transformWith({
+                                commitTransaction(tx).transformWith({
                                     case Success(_) => Future.unit
                                     case Failure(cause) => Future.failed(OrganizationtypeNotPersistedException(cause))
                                 })
                             case Failure(cause) =>
-                                rollbackTransaction(transaction)
+                                rollbackTransaction(tx)
                                 Future.failed(OrganizationtypeNotPersistedException(cause))
                         })
                     case Failure(cause) =>
-                        rollbackTransaction(transaction)
+                        rollbackTransaction(tx)
                         Future.failed(OrganizationtypeNotPersistedException(cause))
                 })
             case Failure(cause) => Future.failed(OrganizationtypeNotPersistedException(cause))
@@ -273,9 +272,8 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
 
     def deleteOrgnizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Unit] = {
         if (organizationType.relatedOrganizations.nonEmpty) return Future.failed(OrganizationtypeNotPersistedException("organizationType is still typifying some organization"))
-        val transaction = makeTransaction
-        transaction match {
-            case Success(_) =>
+        makeTransaction match {
+            case Success(tx) =>
                 Utils.igniteToScalaFuture(igniteCache.removeAsync(organizationType.id))
                 .transformWith({
                     case Success(_) =>
@@ -284,12 +282,12 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
                             textStore.deleteText(s"${label._1._1}:${label._1._2}")
                         })).transformWith({
                             case Success(_) =>
-                                commitTransaction(transaction).transformWith({
+                                commitTransaction(tx).transformWith({
                                     case Success(_) => Future.unit
                                     case Failure(cause) => throw cause
                                 })
                             case Failure(cause) =>
-                                rollbackTransaction(transaction)
+                                rollbackTransaction(tx)
                                 throw cause
                         })
                     case Failure(cause) => Future.failed(OrganizationtypeNotPersistedException(cause))

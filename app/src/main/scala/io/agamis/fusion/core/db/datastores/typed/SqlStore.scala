@@ -29,11 +29,8 @@ abstract class SqlStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future result
       */
-    def commitTransaction(tx: Try[Transaction])(implicit ec: ExecutionContext): Future[Void] = {
-        tx match {
-            case Success(tx) => Utils.igniteToScalaFuture(tx.commitAsync())
-            case Failure(cause) => Future.failed(cause)
-        }
+    def commitTransaction(tx: Transaction)(implicit ec: ExecutionContext): Future[Void] = {
+        Utils.igniteToScalaFuture(tx.commitAsync())
     }
 
     /** A method for rolling back a transaction thus canceling all uncommited operations
@@ -42,10 +39,7 @@ abstract class SqlStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future result
       */
-    def rollbackTransaction(tx: Try[Transaction])(implicit ec: ExecutionContext): Future[Void] = {
-        tx match {
-            case Success(tx) => Utils.igniteToScalaFuture(tx.rollbackAsync())
-            case Failure(cause) => Future.failed(cause)
-        }
+    def rollbackTransaction(tx: Transaction)(implicit ec: ExecutionContext): Future[Void] = {
+        Utils.igniteToScalaFuture(tx.rollbackAsync())
     }
 }

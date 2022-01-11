@@ -361,9 +361,8 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     if (!fileSystem.organizations.exists(_._1 == true))
       Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
     else {
-      val transaction = makeTransaction
-      transaction match {
-        case Success(_) =>
+      makeTransaction match {
+        case Success(tx) =>
           val relationCache: IgniteCache[String, FilesystemOrganization] =
             wrapper.getCache[String, FilesystemOrganization](cache)
           Future.sequence(
@@ -396,12 +395,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             )
           ).transformWith({
             case Success(_) =>
-              commitTransaction(transaction).transformWith({
+              commitTransaction(tx).transformWith({
                 case Success(_) => Future.unit
                 case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
               })
             case Failure(cause) =>
-              rollbackTransaction(transaction)
+              rollbackTransaction(tx)
               Future.failed(FilesystemNotPersistedException(cause))
           })
         case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
@@ -419,9 +418,8 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     fileSystems.find({ fs => fs.organizations.nonEmpty }) match {
       case Some(_) => Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
       case None =>
-        val transaction = makeTransaction
-        transaction match {
-          case Success(_) =>
+        makeTransaction match {
+          case Success(tx) =>
             val relationCache: IgniteCache[String, FilesystemOrganization] =
               wrapper.getCache[String, FilesystemOrganization](cache)
             Future.sequence(
@@ -445,12 +443,12 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
               )
             ).transformWith({
               case Success(_) =>
-                commitTransaction(transaction).transformWith({
+                commitTransaction(tx).transformWith({
                   case Success(_) => Future.unit
                   case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
                 })
               case Failure(cause) =>
-                rollbackTransaction(transaction)
+                rollbackTransaction(tx)
                 Future.failed(FilesystemNotPersistedException(cause))
             })
           case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
