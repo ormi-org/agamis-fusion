@@ -4,7 +4,7 @@ import io.agamis.fusion.core.db.datastores.documents.aggregations.typed.Pipeline
 import io.agamis.fusion.core.db.datastores.documents.aggregations.typed.file.{GetFileChildrenFromId, GetFileFromId, GetFileFromPath, GetFilesFromId}
 import io.agamis.fusion.core.db.datastores.documents.exceptions.typed.file.{DuplicatedFileException, FileNotFoundException}
 import io.agamis.fusion.core.db.datastores.typed.DocumentStore
-import io.agamis.fusion.core.db.models.documents.File
+import io.agamis.fusion.core.db.models.documents.file.File
 import io.agamis.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 import reactivemongo.api.bson.BSONDocument
 import reactivemongo.api.commands.WriteResult

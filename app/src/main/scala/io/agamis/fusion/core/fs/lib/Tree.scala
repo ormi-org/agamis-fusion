@@ -5,7 +5,7 @@ import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.agamis.fusion.core.db.datastores.documents.FileStore
 import io.agamis.fusion.core.db.datastores.caches.CachedFileStore
 import io.agamis.fusion.core.db.datastores.documents.exceptions.typed.file.{FileAlreadyExistsException, FileNotFoundException}
-import io.agamis.fusion.core.db.models.documents.File
+import io.agamis.fusion.core.db.models.documents.file.File
 import io.agamis.fusion.core.fs.lib.exceptions.tree.{NotADirectoryException, PathParsingException, UnhandledException, UnknownException}
 
 import scala.util.Success
@@ -18,7 +18,7 @@ object Tree {
 
   /** A method for creating a new file in the '''File Tree'''
     *
-    * [[io.agamis.fusion.core.db.models.documents.File File]] is created and added to cache for further faster retrieval
+    * [[File File]] is created and added to cache for further faster retrieval
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]] which resolves a [[scala.Boolean Boolean]]
     * @example
@@ -72,7 +72,7 @@ object Tree {
 
   /** A method for getting an existing file in the '''File Tree''' by its '''id'''
     *
-    * [[io.agamis.fusion.core.db.models.documents.File File]] is retrieved from the provided id and stored to cache for further faster retrieval
+    * [[File File]] is retrieved from the provided id and stored to cache for further faster retrieval
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @note id '''must''' be a valid BSONObjectId String
@@ -117,7 +117,7 @@ object Tree {
 
   /** A method for getting an existing file in the '''File Tree''' by its '''path''' (e.g.: /root/directory/file.extension)
     *
-    * [[io.agamis.fusion.core.db.models.documents.File File]] is retrieved from the provided path
+    * [[File File]] is retrieved from the provided path
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
@@ -146,7 +146,7 @@ object Tree {
 
   /** A method for getting several existing files in the '''File Tree''' by their '''id'''
     *
-    * [[scala.List List]] of [[io.agamis.fusion.core.db.models.documents.File File]] is retrieved from the provided ids, then each file are stored into cache for further retrieval
+    * [[scala.List List]] of [[File File]] is retrieved from the provided ids, then each file are stored into cache for further retrieval
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @note ids '''must''' be valid BSONObjectId String
@@ -190,7 +190,7 @@ object Tree {
 
   /** A method for getting several existing children files in the '''File Tree''' by their '''parent''' aka "dir"
     *
-    * [[scala.List List]] of children [[io.agamis.fusion.core.db.models.documents.File File]] is retrieved from the provided parent
+    * [[scala.List List]] of children [[File File]] is retrieved from the provided parent
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
@@ -219,7 +219,7 @@ object Tree {
 
   /** A method for getting parent file in the '''File Tree''' by one of its '''child''' aka "file"
     *
-    * parent [[io.agamis.fusion.core.db.models.documents.File File]] is retrieved from the provided child
+    * parent [[File File]] is retrieved from the provided child
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
@@ -248,7 +248,7 @@ object Tree {
 
   /** A method for updating a file in the '''File Tree'''
     *
-    * [[io.agamis.fusion.core.db.models.documents.File File]] is updated using the internal Id, then file is stored/updated into cache for further retrieval
+    * [[File File]] is updated using the internal Id, then file is stored/updated into cache for further retrieval
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
@@ -287,7 +287,7 @@ object Tree {
 
   /** A method for deleting a file in the '''File Tree'''
     *
-    * [[io.agamis.fusion.core.db.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
+    * [[File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
     *
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
@@ -341,7 +341,7 @@ object Tree {
 
   /** A method for deleting many files in the '''File Tree'''
     *
-    * @note [[io.agamis.fusion.core.db.models.documents.File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
+    * @note [[File File]] is deleted using the internal Id, then file is deleted from cache to invalidate it
     * @note This method is Async and returns a [[scala.concurrent.Future Future]]
     * @example
     * {{{
