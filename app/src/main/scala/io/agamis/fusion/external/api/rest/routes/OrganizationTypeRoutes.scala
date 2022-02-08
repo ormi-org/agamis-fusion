@@ -16,16 +16,16 @@ import akka.util.Timeout
 
 import akka.actor.typed.{ActorSystem, ActorRef}
 
-import io.agamis.fusion.external.api.rest.dto.profile.{ProfileDto, ProfileJsonSupport}
-import io.agamis.fusion.external.api.rest.actors.ProfileRepository
+import io.agamis.fusion.external.api.rest.dto.organizationtype.{OrganizationTypeDto, OrganizationTypeJsonSupport}
+import io.agamis.fusion.external.api.rest.actors.OrganizationTypeRepository
 
 /**
-  * Class Profile Routes
+  * Class Organization Routes
   *
-  * @param buildProfileRepository
+  * @param buildOrganizationRepository
   * @param system
   */
-class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])(implicit system: ActorSystem[_]) extends ProfileJsonSupport {
+class OrganizationTypeRoutes(buildOrganizationTypeRepository: ActorRef[OrganizationTypeRepository.Command])(implicit system: ActorSystem[_]) extends OrganizationTypeJsonSupport {
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -34,22 +34,17 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
     // the ask is failed with a TimeoutException
     implicit val timeout = Timeout(3.seconds)
 
-    lazy val routes =
+    lazy val routes: Route =
     concat(
-        pathPrefix("profiles")(
+        pathPrefix("organizations")(
             concat(
-                // get all profiles
-                get {
-                    println(s"test profile route")
-                    complete(StatusCodes.OK)
-                },
-                // create profile
+                // create organization
                 post {
-                    entity(as[ProfileDto]) { profile =>
-                        onComplete(buildProfileRepository.ask(ProfileRepository.AddProfile(profile,_))) {
+                    entity(as[OrganizationTypeDto]) { organization =>
+                        onComplete(buildOrganizationTypeRepository.ask(OrganizationTypeRepository.AddOrganizationType(organization,_))) {
                             case Success(response) => response match {
-                                case ProfileRepository.OK  => complete(profile) 
-                                case ProfileRepository.KO(cause) => cause match {
+                                case OrganizationTypeRepository.OK  => complete("Organizations added") 
+                                case OrganizationTypeRepository.KO(cause) => cause match {
                                     case _ => complete(StatusCodes.NotImplemented -> new Error(""))
                                 }
                             }
@@ -59,31 +54,31 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                 },
             )
         ),
-        pathPrefix("profile")(
+        pathPrefix("organization")(
             concat(
-                pathPrefix(Segment) { profileUuid: String =>
+                pathPrefix(Segment) { organizationUuid: String =>
                     concat(
                         //get by id
                         get {
-                            println(s"get profile uuid $profileUuid")
-                            onComplete(buildProfileRepository.ask(ProfileRepository.GetProfileById(profileUuid,_))) {
+                            println(s"get organization uuid $organizationUuid")
+                            onComplete(buildOrganizationTypeRepository.ask(OrganizationTypeRepository.GetOrganizationTypeById(organizationUuid,_))) {
                                 case Success(response) => response match {
-                                    case ProfileRepository.OK => complete(s"GET profile uuid : $profileUuid")
-                                    case ProfileRepository.KO(cause) => cause match {
+                                    case OrganizationTypeRepository.OK => complete(s"GET organization uuid : $organizationUuid")
+                                    case OrganizationTypeRepository.KO(cause) => cause match {
                                         case _ => complete(StatusCodes.InternalServerError -> new Error(""))
                                     }
                                 }
                                 case Failure(reason) => complete(StatusCodes.NotImplemented -> reason)    
                             }
                         },
-                        // update profile
+                        // update organization
                         put {
-                            entity(as[ProfileDto]) { profile =>
-                                println(s"received update profile for $profileUuid : $profile")
-                                onComplete(buildProfileRepository.ask(ProfileRepository.UpdateProfile(profileUuid,_))) {
+                            entity(as[OrganizationTypeDto]) { organization =>
+                                println(s"received update organization for $organizationUuid : $organization")
+                                onComplete(buildOrganizationTypeRepository.ask(OrganizationTypeRepository.UpdateOrganizationType(organizationUuid,_))) {
                                     case Success(response) => response match {
-                                        case ProfileRepository.OK => complete(s"UPDATE profile uuid : $profileUuid")
-                                        case ProfileRepository.KO(cause) => cause match {
+                                        case OrganizationTypeRepository.OK => complete(s"UPDATE organization uuid : $organizationUuid")
+                                        case OrganizationTypeRepository.KO(cause) => cause match {
                                             case _ => complete(StatusCodes.InternalServerError -> new Error(""))
                                         }
                                     }
@@ -91,13 +86,13 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                                 }
                             }
                         },
-                        // delete profile
+                        // delete organization
                         delete {
-                            println(s"delete profile id $profileUuid")
-                            onComplete(buildProfileRepository.ask(ProfileRepository.DeleteProfile(profileUuid,_))) {
+                            println(s"delete organization id $organizationUuid")
+                            onComplete(buildOrganizationTypeRepository.ask(OrganizationTypeRepository.DeleteOrganizationType(organizationUuid,_))) {
                                 case Success(response) => response match {
-                                    case ProfileRepository.OK => complete(s"DELETE profile uuid : $profileUuid")
-                                    case ProfileRepository.KO(cause) => cause match {
+                                    case OrganizationTypeRepository.OK => complete(s"DELETE organization uuid : $organizationUuid")
+                                    case OrganizationTypeRepository.KO(cause) => cause match {
                                         case _ => complete(StatusCodes.InternalServerError -> new Error(""))
                                     }
                                 }

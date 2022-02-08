@@ -7,7 +7,7 @@ import spray.json._
 
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 
-final case class OrganizationDto(
+final case class OrganizationTypeDto(
     id: Option[UUID],
     label: String,
     queryable: String,
@@ -15,8 +15,8 @@ final case class OrganizationDto(
     updatedAt: String 
 )
 
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val organizationFormat: JsonFormat[OrganizationDto] = jsonFormat5(OrganizationDto)
+trait OrganizationTypeJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+    implicit val organizationFormat: RootJsonFormat[OrganizationTypeDto] = jsonFormat5(OrganizationTypeDto)
 }
 
-object OrganizationTypeJsonProtocol extends JsonSupport
+object OrganizationTypeJsonProtocol extends OrganizationTypeJsonSupport

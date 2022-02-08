@@ -4,11 +4,12 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{Behavior, ActorRef}
 
 object OrganizationRepository {
+    import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
+    
     sealed trait Status
     object Successful extends Status
     object Failed extends Status 
 
-    import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
     sealed trait Response 
     case object OK extends Response
     final case class KO(reason: String) extends Response

@@ -41,9 +41,9 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
     // the ask is failed with a TimeoutException
     implicit val timeout = Timeout(3.seconds)
 
-   lazy val routes: Route =
+    lazy val routes: Route =
     concat(
-        pathPrefix("authenticate")( 
+        pathPrefix("auth")( 
             concat( 
                 get {
                     parameter("token".as[String],"refreshToken".as[String]) { (token: String, refreshToken: String) => 
