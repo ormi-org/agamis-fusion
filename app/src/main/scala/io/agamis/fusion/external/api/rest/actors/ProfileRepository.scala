@@ -5,8 +5,7 @@ import java.util.UUID
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
 
-import io.agamis.fusion.external.api.rest.dto.Profile
-import io.agamis.fusion.external.api.rest.dto.User
+import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 
 
 object ProfileRepository {
@@ -19,7 +18,7 @@ object ProfileRepository {
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddProfile(profile: Profile, replyTo: ActorRef[Response]) extends Command
+    final case class AddProfile(profile: ProfileDto, replyTo: ActorRef[Response]) extends Command
     final case class GetProfileById(profileId: String, replyTo: ActorRef[Response]) extends Command
     final case class UpdateProfile(profileId: String, replyTo: ActorRef[Response]) extends Command
     final case class DeleteProfile(profileId: String, replyTo: ActorRef[Response]) extends Command

@@ -16,7 +16,7 @@ import akka.util.Timeout
 
 import akka.actor.typed.{ActorSystem, ActorRef}
 
-import io.agamis.fusion.external.api.rest.dto.{Profile, ProfileJsonProtocol}
+import io.agamis.fusion.external.api.rest.dto.profile.{ProfileDto, ProfileJsonSupport}
 import io.agamis.fusion.external.api.rest.actors.ProfileRepository
 
 /**
@@ -25,7 +25,7 @@ import io.agamis.fusion.external.api.rest.actors.ProfileRepository
   * @param buildProfileRepository
   * @param system
   */
-class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])(implicit system: ActorSystem[_]) extends ProfileJsonProtocol{
+class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])(implicit system: ActorSystem[_]) extends ProfileJsonSupport {
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -34,7 +34,7 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
     // the ask is failed with a TimeoutException
     implicit val timeout = Timeout(3.seconds)
 
-    lazy val routes: Route =
+    lazy val route =
     concat(
         pathPrefix("profiles")(
             concat(
@@ -45,10 +45,10 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                 },
                 // create profile
                 post {
-                    entity(as[Profile]) { profile =>
+                    entity(as[ProfileDto]) { profile =>
                         onComplete(buildProfileRepository.ask(ProfileRepository.AddProfile(profile,_))) {
                             case Success(response) => response match {
-                                case ProfileRepository.OK  => complete("Profile posted") 
+                                case ProfileRepository.OK  => complete(profile) 
                                 case ProfileRepository.KO(cause) => cause match {
                                     case _ => complete(StatusCodes.NotImplemented -> new Error(""))
                                 }
@@ -78,7 +78,7 @@ class ProfileRoutes(buildProfileRepository: ActorRef[ProfileRepository.Command])
                         },
                         // update profile
                         put {
-                            entity(as[Profile]) { profile =>
+                            entity(as[ProfileDto]) { profile =>
                                 println(s"received update profile for $profileUuid : $profile")
                                 onComplete(buildProfileRepository.ask(ProfileRepository.UpdateProfile(profileUuid,_))) {
                                     case Success(response) => response match {

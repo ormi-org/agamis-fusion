@@ -7,14 +7,18 @@ import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
 
 import scala.util.{Success, Failure}
 
-import io.agamis.fusion.external.api.rest.dto.User
+import io.agamis.fusion.external.api.rest.dto.user.UserDto
 
 import io.agamis.fusion.external.api.rest.authorization.JwtAuthorization
 
 import io.agamis.fusion.core.data.security.utils.HashPassword
+import java.time.Instant
+import io.agamis.fusion.core.db.datastores.sql.UserStore
+import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import akka.actor.typed.ActorSystem
+import scala.concurrent.ExecutionContext
 
 object UserRepository {
-
     sealed trait Status
     object Successful extends Status
     object Failed extends Status
@@ -24,35 +28,30 @@ object UserRepository {
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddUser(user: User, replyTo: ActorRef[Response]) extends Command
+    final case class AddUser(user: UserDto, replyTo: ActorRef[Response]) extends Command
     final case class GetUserById(id: String, token: String , replyTo: ActorRef[Response]) extends Command
-    final case class GetUserByName(name: String, token: String, replyTo: ActorRef[User]) extends Command
-    final case class UpdateUser(user: User, replyTo: ActorRef[Response]) extends Command
-    final case class DeleteUser(user: User, replyTo: ActorRef[Response]) extends Command
+    final case class GetUserByName(name: String, token: String, replyTo: ActorRef[UserDto]) extends Command
+    final case class UpdateUser(user: UserDto, replyTo: ActorRef[Response]) extends Command
+    final case class DeleteUser(user: UserDto, replyTo: ActorRef[Response]) extends Command
     final case class Authenfication(token: String, username: String, password: String, replyTo: ActorRef[Response]) extends Command
 
-    def apply(): Behavior[Command] = Behaviors.receiveMessage {
+    def apply()(implicit system: ActorSystem[_]): Behavior[Command] = Behaviors.receiveMessage {
         case AddUser(user, replyTo) =>
             //hashPassword(user.password)
             //insert user in database
             replyTo ! OK
             Behaviors.same
-        case GetUserById(id, token, replyTo) =>
-            replyTo ! OK
-            Behaviors.same
-            
-            // UserStore.getUserbyID(id).transformWith({
-            //     case Success(user) => 
-            //         if (user.isTokenValid(token)) {
-            //             if (user.isTokenExpired(token)) { throw new Exception("Token expired") } 
-            //             else { throw new Exception("User authorized") }
-            //         } else { throw new Exception("Token invalid") }
-            //     case Failure(cause) => throw new Exception(cause)
-            // })
+        // case GetUserById(id, token, replyTo) =>
+        //     implicit val ec: ExecutionContext = system.executionContext
+        //     implicit val igniteWrapper: IgniteClientNodeWrapper = IgniteClientNodeWrapper(system)
+        //     replyTo ! new UserStore().getUserById(id).transformWith({
+        //         case Success(user) => Future.successful(user)
+        //         case Failure(cause) => throw new Exception(cause)
+        //     })
 
             Behaviors.same
         case GetUserByName(name, token, replyTo) => 
-            replyTo ! User(UUID.randomUUID(),"","")
+            replyTo ! UserDto(Some(UUID.randomUUID()),"","",List(),Some(Instant.now()),Some(Instant.now()))
             Behaviors.same
         case UpdateUser(user, replyTo) =>
             replyTo ! OK

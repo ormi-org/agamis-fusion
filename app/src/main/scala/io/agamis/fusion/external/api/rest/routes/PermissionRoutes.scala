@@ -15,11 +15,8 @@ import akka.util.Timeout
 
 import io.agamis.fusion.external.api.rest.actors.PermissionRepository
 
-import io.agamis.fusion.external.api.rest.dto.{Permission, PermissionJsonProtocol}
-
 import akka.actor.typed.{ActorSystem, ActorRef}
 import scala.concurrent.Future
-import io.agamis.fusion.external.api.rest.dto.Organization
 
 /**
   * Class Permissions Routes 
@@ -27,7 +24,7 @@ import io.agamis.fusion.external.api.rest.dto.Organization
   * @param buildPermissionRepository
   * @param system
   */
-class PermissionRoutes(buildPermissionRepository: ActorRef[PermissionRepository.Command])(implicit system: ActorSystem[_]) extends PermissionJsonProtocol {
+class PermissionRoutes(buildPermissionRepository: ActorRef[PermissionRepository.Command])(implicit system: ActorSystem[_]) {
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable

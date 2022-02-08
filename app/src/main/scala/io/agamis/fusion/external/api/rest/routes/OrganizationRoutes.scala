@@ -16,9 +16,8 @@ import akka.util.Timeout
 
 import akka.actor.typed.{ActorSystem, ActorRef}
 
-import io.agamis.fusion.external.api.rest.dto.{Organization, OrganizationJsonProtocol}
+import io.agamis.fusion.external.api.rest.dto.organization.{OrganizationDto, OrganizationJsonSupport}
 import io.agamis.fusion.external.api.rest.actors.OrganizationRepository
-
 
 /**
   * Class Organization Routes
@@ -26,7 +25,7 @@ import io.agamis.fusion.external.api.rest.actors.OrganizationRepository
   * @param buildOrganizationRepository
   * @param system
   */
-class OrganizationRoutes(buildOrganizationRepository: ActorRef[OrganizationRepository.Command])(implicit system: ActorSystem[_]) extends OrganizationJsonProtocol{
+class OrganizationRoutes(buildOrganizationRepository: ActorRef[OrganizationRepository.Command])(implicit system: ActorSystem[_]) extends OrganizationJsonSupport {
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -41,7 +40,7 @@ class OrganizationRoutes(buildOrganizationRepository: ActorRef[OrganizationRepos
             concat(
                 // create organization
                 post {
-                    entity(as[Organization]) { organization =>
+                    entity(as[OrganizationDto]) { organization =>
                         onComplete(buildOrganizationRepository.ask(OrganizationRepository.AddOrganization(organization,_))) {
                             case Success(response) => response match {
                                 case OrganizationRepository.OK  => complete("Organizations added") 
@@ -74,7 +73,7 @@ class OrganizationRoutes(buildOrganizationRepository: ActorRef[OrganizationRepos
                         },
                         // update organization
                         put {
-                            entity(as[Organization]) { organization =>
+                            entity(as[OrganizationDto]) { organization =>
                                 println(s"received update organization for $organizationUuid : $organization")
                                 onComplete(buildOrganizationRepository.ask(OrganizationRepository.UpdateOrganization(organizationUuid,_))) {
                                     case Success(response) => response match {

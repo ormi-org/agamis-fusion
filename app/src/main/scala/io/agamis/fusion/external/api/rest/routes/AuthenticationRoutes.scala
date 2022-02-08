@@ -16,7 +16,7 @@ import akka.util.Timeout
 import akka.actor.typed.{ActorSystem, ActorRef}
 import scala.concurrent.Future
 
-import io.agamis.fusion.external.api.rest.dto.{User, UserJsonProtocol}
+import io.agamis.fusion.external.api.rest.dto.user.UserDto
 import io.agamis.fusion.external.api.rest.actors.AuthenticationRepository
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.RawHeader
@@ -28,7 +28,7 @@ import io.agamis.fusion.external.api.rest.actors.UserRepository
   * @param buildUserRepository
   * @param system
   */
-class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[AuthenticationRepository.Command])(implicit system: ActorSystem[_]) extends UserJsonProtocol {
+class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[AuthenticationRepository.Command])(implicit system: ActorSystem[_]) {
 
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable

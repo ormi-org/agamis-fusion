@@ -11,7 +11,14 @@ import akka.actor.typed.scaladsl.Behaviors
 import scala.concurrent.Future
 
 import io.agamis.fusion.external.api.rest.routes.{
-    FileRoutes, UserRoutes, GroupRoutes, ProfileRoutes, FileSystemRoutes, PermissionRoutes, OrganizationRoutes, AuthenticationRoutes
+    FileRoutes,
+    UserRoutes,
+    GroupRoutes,
+    ProfileRoutes,
+    FileSystemRoutes,
+    PermissionRoutes,
+    OrganizationRoutes,
+    AuthenticationRoutes
 }
 
 import akka.http.scaladsl.server.Directives._
@@ -39,14 +46,14 @@ object Server {
     val buildUserRepository = ctx.spawn(UserRepository(), "UserRepository")
     val userRoutes = new UserRoutes(buildUserRepository)
 
-    val buildGroupRepository = ctx.spawn(GroupRepository(), "GroupRepository")
-    val groupRoutes = new GroupRoutes(buildGroupRepository)
+    // val buildGroupRepository = ctx.spawn(GroupRepository(), "GroupRepository")
+    // val groupRoutes = new GroupRoutes(buildGroupRepository)
 
     val buildOrganizationRepository = ctx.spawn(OrganizationRepository(), "OrganizationRepository")
     val organizationRoutes = new OrganizationRoutes(buildOrganizationRepository)
 
-    val buildProfileRepository = ctx.spawn(ProfileRepository(), "ProfileRepository")
-    val profileRoutes = new ProfileRoutes(buildProfileRepository)
+    // val buildProfileRepository = ctx.spawn(ProfileRepository(), "ProfileRepository")
+    // val profileRoutes = new ProfileRoutes(buildProfileRepository)
 
     val buildPermissionRepository = ctx.spawn(PermissionRepository(), "PermissionRepository")
     val permissionRoutes = new PermissionRoutes(buildPermissionRepository)
@@ -77,8 +84,8 @@ object Server {
                             pathPrefix("settings")(
                                 concat(
                                     permissionRoutes.routes,
-                                    profileRoutes.routes,
-                                    groupRoutes.routes,
+                                    // profileRoutes.routes,
+                                    // groupRoutes.routes,
                                     organizationRoutes.routes
                                 )
                             ), 

@@ -8,7 +8,7 @@ target/
 .bsp
 *.iml
 
-.metals
+/.metals
 .bloop
 
 /ignite

@@ -7,7 +7,7 @@ import akka.actor.typed.{Behavior, Signal, PostStop, ActorRef}
 
 import scala.util.{Success, Failure}
 
-import io.agamis.fusion.external.api.rest.dto.Permission
+import io.agamis.fusion.external.api.rest.dto.permission.PermissionDto
 
 import io.agamis.fusion.external.api.rest.authorization.JwtAuthorization
 
@@ -24,11 +24,11 @@ object PermissionRepository {
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddPermission(permission: Permission, token: String, replyTo: ActorRef[Response]) extends Command
+    final case class AddPermission(permission: PermissionDto, token: String, replyTo: ActorRef[Response]) extends Command
     final case class GetPermissionById(id: String, token: String , replyTo: ActorRef[Response]) extends Command
-    final case class GetPermissionByName(name: String, token: String, replyTo: ActorRef[Permission]) extends Command
-    final case class UpdatePermission(permission: Permission, replyTo: ActorRef[Response]) extends Command
-    final case class DeletePermission(permission: Permission, replyTo: ActorRef[Response]) extends Command
+    final case class GetPermissionByName(name: String, token: String, replyTo: ActorRef[PermissionDto]) extends Command
+    final case class UpdatePermission(permission: PermissionDto, replyTo: ActorRef[Response]) extends Command
+    final case class DeletePermission(permission: PermissionDto, replyTo: ActorRef[Response]) extends Command
 
     def apply(): Behavior[Command] = Behaviors.receiveMessage {
         case AddPermission(permission, token, replyTo) =>

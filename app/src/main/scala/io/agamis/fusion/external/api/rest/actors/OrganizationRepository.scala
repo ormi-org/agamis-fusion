@@ -8,13 +8,13 @@ object OrganizationRepository {
     object Successful extends Status
     object Failed extends Status 
 
-    import io.agamis.fusion.external.api.rest.dto.Organization
+    import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
     sealed trait Response 
     case object OK extends Response
     final case class KO(reason: String) extends Response
 
     sealed trait Command
-    final case class AddOrganization(organization: Organization, replyTo: ActorRef[Response]) extends Command
+    final case class AddOrganization(organization: OrganizationDto, replyTo: ActorRef[Response]) extends Command
     final case class GetOrganizationById(id: String, replyTo: ActorRef[Response]) extends Command
     final case class UpdateOrganization(id: String, replyTo: ActorRef[Response]) extends Command
     final case class DeleteOrganization(id: String, replyTo: ActorRef[Response]) extends Command

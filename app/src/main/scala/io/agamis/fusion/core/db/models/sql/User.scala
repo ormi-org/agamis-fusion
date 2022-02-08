@@ -13,6 +13,7 @@ import java.beans.Transient
 
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import io.agamis.fusion.core.db.common
 
 class User(implicit @transient protected val store: UserStore) extends Model {
 
@@ -67,15 +68,14 @@ class User(implicit @transient protected val store: UserStore) extends Model {
     }
 
     object Security {
+        import common.Security.SecurePasswordHashing
 
         def hash(plainPassword: String): String = {
-            // Implement password hashing
-            "passwordHash"
+            SecurePasswordHashing.hashPassword(plainPassword)
         }
 
         def validate(plainPassword: String, currentPasswordHash: String): Boolean = {
-            // Implement password validation
-            true
+            SecurePasswordHashing.validatePassword(plainPassword, currentPasswordHash)
         }
     }
 }
