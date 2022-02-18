@@ -20,13 +20,20 @@ import io.agamis.fusion.external.api.rest.dto.user.{UserDto, UserJsonSupport}
 import io.agamis.fusion.external.api.rest.actors.UserRepository
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.RawHeader
+import io.agamis.fusion.external.api.rest.actors.UserRepository.{
+  OK,
+  KO,
+  CreateUserResponse
+}
+import akka.http.scaladsl.model.ResponseEntity
+import akka.http.scaladsl.model.StatusCode
 
 /** Class User Routes
   *
-  * @param buildUserRepository
+  * @param userRepository
   * @param system
   */
-class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
+class UserRoutes(userRepository: ActorRef[UserRepository.Command])(implicit
     system: ActorSystem[_]
 ) extends UserJsonSupport {
 
@@ -44,21 +51,25 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
       pathPrefix("users")(
         concat(
           // get all users
-          // get {
-          //     println(s"test group route")
-          //     complete(StatusCodes.OK)
-          // },
+          get {
+              println(s"test group route")
+              complete(StatusCodes.OK)
+          },
           // create user
           post {
             entity(as[UserDto]) { user =>
               onComplete(
-                buildUserRepository.ask(UserRepository.AddUser(user, _))
+                userRepository.ask(UserRepository.CreateUser(user, _))
               ) {
-                case Success(value) =>
-                  respondWithHeaders(
-                    RawHeader("Access-Token", createToken()),
-                    RawHeader("Refresh-Token", refreshToken())
-                  ) { complete(StatusCodes.OK) }
+                case Success(response) =>
+                  response match {
+                    case CreateUserResponse(user) => {
+                      complete(
+                        StatusCodes.OK,
+                        user
+                      )
+                    }
+                  }
                 case Failure(reason) =>
                   complete(
                     HttpResponse(
@@ -96,8 +107,8 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
                         )
                       } else {
                         onComplete(
-                          buildUserRepository.ask(
-                            UserRepository.GetUserById(userUuid, token, _)
+                          userRepository.ask(
+                            UserRepository.GetUserById(userUuid, _)
                           )
                         ) {
                           case Success(user) => complete(StatusCodes.OK)
@@ -138,11 +149,11 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
               entity(as[UserDto]) { user =>
                 println(s"received update user for $userUuid : $user")
                 onComplete(
-                  buildUserRepository.ask(UserRepository.UpdateUser(user, _))
+                  userRepository.ask(UserRepository.UpdateUser(user, _))
                 ) {
                   case Success(response) =>
                     response match {
-                      case UserRepository.OK => complete("User updated")
+                      case UserRepository.OK() => complete("User updated")
                       case UserRepository.KO(cause) =>
                         cause match {
                           case _ =>
@@ -163,11 +174,11 @@ class UserRoutes(buildUserRepository: ActorRef[UserRepository.Command])(implicit
               println(s"delete user id $userUuid")
               entity(as[UserDto]) { user =>
                 onComplete(
-                  buildUserRepository.ask(UserRepository.DeleteUser(user, _))
+                  userRepository.ask(UserRepository.DeleteUser(user, _))
                 ) {
                   case Success(response) =>
                     response match {
-                      case UserRepository.OK => complete("User deleted")
+                      case UserRepository.OK() => complete("User deleted")
                       case UserRepository.KO(cause) =>
                         cause match {
                           case _ =>

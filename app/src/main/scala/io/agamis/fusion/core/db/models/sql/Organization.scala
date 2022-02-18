@@ -10,6 +10,10 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
+import scala.util.Failure
+import java.sql.Timestamp
+import java.time.Instant
 
 class Organization(implicit @transient protected val store: OrganizationStore) extends Model {
 
@@ -141,11 +145,18 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
         this
     }
 
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        store.persistOrganization(this)
+    def persist(implicit ec: ExecutionContext): Future[Organization] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        store.persistOrganization(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteOrganization(this)
+    def remove(implicit ec: ExecutionContext): Future[Organization] = {
+        store.deleteOrganization(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

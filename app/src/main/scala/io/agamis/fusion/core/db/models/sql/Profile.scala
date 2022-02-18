@@ -13,6 +13,8 @@ import io.agamis.fusion.core.db.models.sql.generics.Email
 
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import scala.util.Success
+import scala.util.Failure
 
 /** A class that reflects the state of the profile entity in the database
   * 
@@ -221,13 +223,19 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     }
 
     /** @inheritdoc */
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
+    def persist(implicit ec: ExecutionContext): Future[Profile] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
-        store.persistProfile(this)
+        store.persistProfile(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
     /** @inheritdoc */
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteProfile(this)
+    def remove(implicit ec: ExecutionContext): Future[Profile] = {
+        store.deleteProfile(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

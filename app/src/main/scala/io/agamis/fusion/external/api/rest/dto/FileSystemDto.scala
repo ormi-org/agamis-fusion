@@ -1,64 +1,62 @@
 package io.agamis.fusion.external.api.rest.dto.filesystem
 
 import java.util.UUID
+import io.agamis.fusion.core.db.models.sql.FileSystem
+
 import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
 import io.agamis.fusion.external.api.rest.dto.application.ApplicationDto
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
-import spray.json.DefaultJsonProtocol
-import spray.json.JsonFormat
-import spray.json.JsObject
-import spray.json.JsArray
-import spray.json.DeserializationException
-import spray.json.JsValue
-import spray.json.JsBoolean
+import spray.json._
 
 final case class FileSystemDto(
+  id: Option[UUID],
+  rootdirId: String,
+  label: String,
+  shared: Boolean,
+  organizations: Option[List[(Boolean, OrganizationDto)]],
+  licensedApplications: Option[List[ApplicationDto]]
+)
+
+object FileSystemDto {
+  def from(f: FileSystem): FileSystemDto = {
+    apply(
+      Some(f.id),
+      f.rootdirId,
+      f.label,
+      f.shared,
+      Some(f.organizations.filter(_._1 == true).map(r => (r._2._1, OrganizationDto.from(r._2._2)))),
+      Some(f.licensedApplications.map(r => ApplicationDto.from(r)))
+    )
+  }
+
+  def apply(
     id: Option[UUID],
     rootdirId: String,
     label: String,
     shared: Boolean,
-    organizations: List[(Boolean, OrganizationDto)],
-    licensedApplications: List[ApplicationDto]
-)
+    organizations: Option[List[(Boolean, OrganizationDto)]],
+    licensedApplications: Option[List[ApplicationDto]]
+  ): FileSystemDto = {
+    FileSystemDto(
+      id,
+      rootdirId,
+      label,
+      shared,
+      organizations,
+      licensedApplications
+    )
+  }
+}
 
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+trait FileSystemJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   import io.agamis.fusion.external.api.rest.dto.application.ApplicationJsonProtocol._
   import io.agamis.fusion.external.api.rest.dto.organization.OrganizationJsonProtocol._
 
-  implicit object OranizationWithFileSystemRelationFormat
-      extends JsonFormat[(Boolean, OrganizationDto)] {
-    def write(relation: (Boolean, OrganizationDto)): JsArray = {
-      JsArray(
-        Vector(
-          JsBoolean(relation._1),
-          relation._2.asInstanceOf[JsObject]
-        )
-      )
-    }
-
-    def read(value: JsValue): (Boolean, OrganizationDto) = {
-      value match {
-        case JsArray(elements) => {
-          (
-            elements(0).convertTo[Boolean],
-            elements(1) match {
-              case org: JsObject =>
-                org.convertTo[OrganizationDto]
-              case _ =>
-                throw new DeserializationException(
-                  "Expected organization"
-                )
-            }
-          )
-        }
-        case _ => throw DeserializationException("Expected tuple")
-      }
-    }
-  }
-
-  implicit val filesystemFormat: JsonFormat[FileSystemDto] = jsonFormat6(FileSystemDto)
+  implicit val filesystemFormat: RootJsonFormat[FileSystemDto] = jsonFormat6(
+    FileSystemDto.apply
+  )
 }
 
-object FileSystemJsonProtocol extends JsonSupport
+object FileSystemJsonProtocol extends FileSystemJsonSupport

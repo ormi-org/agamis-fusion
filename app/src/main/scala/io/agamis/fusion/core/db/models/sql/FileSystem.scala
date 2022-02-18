@@ -7,6 +7,10 @@ import io.agamis.fusion.core.db.models.sql.typed.Model
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 
 import scala.concurrent.{ExecutionContext, Future}
+import java.sql.Timestamp
+import java.time.Instant
+import scala.util.Success
+import scala.util.Failure
 
 class FileSystem(implicit @transient protected val store: FileSystemStore) extends Model {
 
@@ -73,11 +77,18 @@ class FileSystem(implicit @transient protected val store: FileSystemStore) exten
         this
     }
 
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        store.persistFileSystem(this)
+    def persist(implicit ec: ExecutionContext): Future[FileSystem] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        store.persistFileSystem(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteFileSystem(this)
+    def remove(implicit ec: ExecutionContext): Future[FileSystem] = {
+        store.deleteFileSystem(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

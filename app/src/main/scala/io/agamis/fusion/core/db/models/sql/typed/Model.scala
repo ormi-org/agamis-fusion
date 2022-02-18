@@ -8,6 +8,7 @@ import scala.util.Failure
 import io.agamis.fusion.core.db.datastores.typed.SqlStore
 import java.sql.Timestamp
 import org.apache.ignite.cache.query.annotations.QuerySqlField
+import java.time.Instant
 
 trait Model {
 
@@ -33,7 +34,7 @@ trait Model {
     }
 
     @QuerySqlField(name = "created_at", notNull = true)
-    protected var _createdAt: Timestamp = null
+    protected var _createdAt: Timestamp = Timestamp.from(Instant.now)
 
     /** Entity property that reflects creation datetime of this entity
       *
@@ -52,7 +53,7 @@ trait Model {
     }
 
     @QuerySqlField(name = "updated_at", notNull = true)
-    protected var _updatedAt: Timestamp = null
+    protected var _updatedAt: Timestamp = Timestamp.from(Instant.now)
 
     /** Entity property that reflects last update datetime of this entity
       *
@@ -75,12 +76,12 @@ trait Model {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future success or failure
       */
-    protected def persist(implicit ec: ExecutionContext): Future[Unit]
+    protected def persist(implicit ec: ExecutionContext): Future[Model]
 
     /** A method for triggering a delete operation of this entity in database
       *
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future success or failure
       */
-    protected def remove(implicit ec: ExecutionContext): Future[Unit]
+    protected def remove(implicit ec: ExecutionContext): Future[Model]
 }

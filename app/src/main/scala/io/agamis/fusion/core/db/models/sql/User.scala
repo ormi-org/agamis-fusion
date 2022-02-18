@@ -14,6 +14,9 @@ import java.beans.Transient
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 import io.agamis.fusion.core.db.common
+import scala.util.Success
+import scala.util.Failure
+import java.time.Instant
 
 class User(implicit @transient protected val store: UserStore) extends Model {
 
@@ -55,12 +58,19 @@ class User(implicit @transient protected val store: UserStore) extends Model {
         this
     }
 
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        store.persistUser(this)
+    def persist(implicit ec: ExecutionContext): Future[User] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        store.persistUser(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteUser(this)
+    def remove(implicit ec: ExecutionContext): Future[User] = {
+        store.deleteUser(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
     def authenticate(plainPassword: String): Boolean = {

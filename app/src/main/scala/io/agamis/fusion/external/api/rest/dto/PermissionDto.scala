@@ -1,5 +1,6 @@
 package io.agamis.fusion.external.api.rest.dto.permission
 
+import io.agamis.fusion.core.db.models.sql.Permission
 import io.agamis.fusion.external.api.rest.dto.application.ApplicationDto
 import java.util.UUID
 import java.time.Instant
@@ -21,6 +22,31 @@ import spray.json._
   * @param updateAt
   */
 final case class PermissionDto (
+  id: Option[UUID],
+  key: String,
+  labels: Map[(UUID, UUID), (String, String)],
+  descriptions: Map[(UUID, UUID), (String, String)],
+  relatedApplication: Option[ApplicationDto],
+  editable: Boolean,
+  createdAt: Option[Instant],
+  updateAt: Option[Instant]
+)
+
+object PermissionDto {
+  def from(p: Permission): PermissionDto = {
+    apply(
+      Some(p.id),
+      p.key,
+      p.labels,
+      p.descriptions,
+      Some(ApplicationDto.from(p.relatedApplication.orNull)),
+      p.editable,
+      Some(p.createdAt.toInstant),
+      Some(p.updatedAt.toInstant)
+    )
+  }
+
+  def apply(
     id: Option[UUID],
     key: String,
     labels: Map[(UUID, UUID), (String, String)],
@@ -28,13 +54,25 @@ final case class PermissionDto (
     relatedApplication: Option[ApplicationDto],
     editable: Boolean,
     createdAt: Option[Instant],
-    updateAt: Option[Instant]
-)
-
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-    import io.agamis.fusion.external.api.rest.dto.application.ApplicationJsonProtocol._
-
-    implicit val permissionFormat: JsonFormat[PermissionDto] = jsonFormat8(PermissionDto)
+    updatedAt: Option[Instant]
+  ): PermissionDto = {
+    PermissionDto(
+      id,
+      key,
+      labels,
+      descriptions,
+      relatedApplication,
+      editable,
+      createdAt,
+      updatedAt
+    )
+  }
 }
 
-object PermissionJsonProtocol extends JsonSupport
+trait PermissionJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+    import io.agamis.fusion.external.api.rest.dto.application.ApplicationJsonProtocol._
+
+    implicit val permissionFormat: RootJsonFormat[PermissionDto] = jsonFormat8(PermissionDto.apply)
+}
+
+object PermissionJsonProtocol extends PermissionJsonSupport

@@ -13,6 +13,8 @@ import io.agamis.fusion.core.db.models.sql.generics.Email
 
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import scala.util.Success
+import scala.util.Failure
 
 /** A class that reflects the state of the group entity in the database
   * 
@@ -101,13 +103,19 @@ class Group(implicit @transient protected val store: GroupStore) extends Model {
     }
 
     /** @inheritdoc */
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
+    def persist(implicit ec: ExecutionContext): Future[Group] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
-        store.persistGroup(this)
+        store.persistGroup(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
     /** @inheritdoc */
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteGroup(this)
+    def remove(implicit ec: ExecutionContext): Future[Group] = {
+        store.deleteGroup(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

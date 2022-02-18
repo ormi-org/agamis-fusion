@@ -8,6 +8,10 @@ import java.util.UUID
 import io.agamis.fusion.core.db.models.sql.generics.Language
 
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import scala.util.Success
+import scala.util.Failure
+import java.time.Instant
+import java.sql.Timestamp
 
 class Permission(implicit @transient protected val store: PermissionStore) extends Model {
 
@@ -152,12 +156,19 @@ class Permission(implicit @transient protected val store: PermissionStore) exten
     }
 
     /** @inheritdoc */
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.unit
+    def persist(implicit ec: ExecutionContext): Future[Permission] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        this.store.persistPermission(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
     /** @inheritdoc */
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        Future.unit
+    def remove(implicit ec: ExecutionContext): Future[Permission] = {
+        this.store.deletePermission(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

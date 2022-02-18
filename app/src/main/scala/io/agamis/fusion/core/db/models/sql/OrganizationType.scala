@@ -8,6 +8,10 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import io.agamis.fusion.core.db.models.sql.generics.Language
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import scala.util.Success
+import scala.util.Failure
+import java.sql.Timestamp
+import java.time.Instant
 
 class OrganizationType(implicit @transient protected val store: OrganizationTypeStore) extends Model {
 
@@ -61,11 +65,18 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
         this
     }
 
-    override protected def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        store.persistOrganizationType(this)
+    override protected def persist(implicit ec: ExecutionContext): Future[OrganizationType] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        store.persistOrganizationType(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
-    override protected def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteOrgnizationType(this)
+    override protected def remove(implicit ec: ExecutionContext): Future[OrganizationType] = {
+        store.deleteOrgnizationType(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }

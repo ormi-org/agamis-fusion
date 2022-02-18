@@ -21,6 +21,7 @@ import io.agamis.fusion.core.db.models.sql.exceptions.applications.InvalidApplic
 
 import scala.util.Try
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import java.time.Instant
 
 class Application(implicit @transient protected val store: ApplicationStore) extends Model {
 
@@ -119,12 +120,19 @@ class Application(implicit @transient protected val store: ApplicationStore) ext
         this
     }
 
-    def persist(implicit ec: ExecutionContext): Future[Unit] = {
-        store.persistApplication(this)
+    def persist(implicit ec: ExecutionContext): Future[Application] = {
+        this.setUpdatedAt(Timestamp.from(Instant.now()))
+        store.persistApplication(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 
-    def remove(implicit ec: ExecutionContext): Future[Unit] = {
-        store.deleteApplication(this)
+    def remove(implicit ec: ExecutionContext): Future[Application] = {
+        store.deleteApplication(this).transformWith({
+            case Success(_) => Future.successful(this)
+            case Failure(e) => Future.failed(e)
+        })
     }
 }
 
