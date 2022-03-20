@@ -1,4 +1,4 @@
-package io.agamis.fusion.external.api.rest.authorization
+package io.agamis.fusion.external.api.rest.common
 
 import pdi.jwt.algorithms.JwtHmacAlgorithm
 
@@ -9,7 +9,7 @@ import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtSprayJson}
 import scala.util.{Failure, Success}
 
 
-object JwtAuthorization {
+object Jwt {
 
     val privateKey = "secret_key" // TODO à changer
     val algorithm: JwtHmacAlgorithm = JwtAlgorithm.HS256

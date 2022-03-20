@@ -12,10 +12,10 @@ import reactivemongo.api.commands.WriteResult
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class FileStore(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[File] {
+class FileStore(collectionSuffix: String)(implicit wrapper: ReactiveMongoWrapper) extends DocumentStore[File] {
 
     override val database: String = "fusiondb"
-    override val collection: String = "files"
+    override val collection: String = "files_" + collectionSuffix
 
     /** A method for inserting a new file in database
       *

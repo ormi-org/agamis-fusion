@@ -38,40 +38,23 @@ object Server {
     ctx =>
       implicit val system = ctx.system
 
-      val fileSystemRepository =
-        ctx.spawn(FileSystemRepository(), "FileSystemRepository")
-      val fileSystemRoutes = new FileSystemRoutes(fileSystemRepository)
+      val fileSystemRoutes = new FileSystemRoutes()
 
-      val fileRepository = ctx.spawn(FileRepository(), "FileRepository")
-      val fileRoutes = new FileRoutes(fileRepository)
+      val fileRoutes = new FileRoutes()
 
-      val userRepository = ctx.spawn(UserRepository(), "UserRepository")
-      val userRoutes = new UserRoutes(userRepository)
+      val userRoutes = new UserRoutes()
 
-      val groupRepository = ctx.spawn(GroupRepository(), "GroupRepository")
-      val groupRoutes = new GroupRoutes(groupRepository)
+      val groupRoutes = new GroupRoutes()
 
-      val organizationRepository =
-        ctx.spawn(OrganizationRepository(), "OrganizationRepository")
-      val organizationRoutes = new OrganizationRoutes(organizationRepository)
+      val organizationRoutes = new OrganizationRoutes()
 
-      val organizationTypeRepository =
-        ctx.spawn(OrganizationTypeRepository(), "OrganizationTypeRepository")
-      val organizationTypeRoutes =
-        new OrganizationTypeRoutes(organizationTypeRepository)
+      val organizationTypeRoutes = new OrganizationTypeRoutes()
 
-      val profileRepository =
-        ctx.spawn(ProfileRepository(), "ProfileRepository")
-      val profileRoutes = new ProfileRoutes(profileRepository)
+      val profileRoutes = new ProfileRoutes()
 
-      val permissionRepository =
-        ctx.spawn(PermissionRepository(), "PermissionRepository")
-      val permissionRoutes = new PermissionRoutes(permissionRepository)
+      val permissionRoutes = new PermissionRoutes()
 
-      val authenticationRepository =
-        ctx.spawn(AuthenticationRepository(), "AuthenticationRepository")
-      val authenticationRoutes =
-        new AuthenticationRoutes(authenticationRepository)
+      val authenticationRoutes = new AuthenticationRoutes()
 
       val topLevel: Route =
         concat(

@@ -13,30 +13,63 @@ import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
 
 import akka.util.Timeout
 
-import io.agamis.fusion.external.api.rest.actors.PermissionRepository
-
 import akka.actor.typed.{ActorSystem, ActorRef}
 import scala.concurrent.Future
+import io.agamis.fusion.external.api.rest.dto.permission.{
+  PermissionDto,
+  PermissionJsonSupport
+}
 
-/**
-  * Class Permissions Routes 
+/** Class Permissions Routes
   *
-  * @param buildPermissionRepository
   * @param system
   */
-class PermissionRoutes(buildPermissionRepository: ActorRef[PermissionRepository.Command])(implicit system: ActorSystem[_]) {
+class PermissionRoutes(implicit system: ActorRef[_]) extends PermissionJsonSupport {
 
-    import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-    import akka.actor.typed.scaladsl.AskPattern.Askable
+  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
+  import akka.actor.typed.scaladsl.AskPattern.Askable
 
-    implicit val timeout = Timeout(3.seconds)
+  implicit val timeout = Timeout(3.seconds)
 
-    lazy val routes: Route =
+  lazy val routes: Route =
     concat(
-        pathPrefix("permissions")(
-            concat(
-            )
+      pathPrefix("permissions")(
+        concat(
+          // get all permissions
+          get {
+            complete(StatusCodes.NotImplemented)
+          },
+          // create permission
+          post {
+            entity(as[PermissionDto]) { permission =>
+              complete(StatusCodes.NotImplemented)
+            }
+          }
         )
+      ),
+      pathPrefix("permission")(
+        concat(
+          // get by id
+          get {
+            path(Segment) { id: String =>
+              complete(StatusCodes.NotImplemented)
+            }
+          },
+          // update permission
+          put {
+            path(Segment) { id: String =>
+              entity(as[PermissionDto]) { permission =>
+                complete(StatusCodes.NotImplemented)
+              }
+            }
+          },
+          // delete permission
+          delete {
+            path(Segment) { id: String =>
+              complete(StatusCodes.NotImplemented)
+            }
+          }
+        )
+      )
     )
-
 }

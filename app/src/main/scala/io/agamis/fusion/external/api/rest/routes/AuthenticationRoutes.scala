@@ -33,7 +33,7 @@ class AuthenticationRoutes(buildAuthenticationRepository: ActorRef[Authenticatio
     import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
     import akka.actor.typed.scaladsl.AskPattern.Askable
     
-    import io.agamis.fusion.external.api.rest.authorization.JwtAuthorization._
+    import io.agamis.fusion.external.api.rest.common.Jwt._
 
     import io.agamis.fusion.core.data.security.utils.HashPassword._
 

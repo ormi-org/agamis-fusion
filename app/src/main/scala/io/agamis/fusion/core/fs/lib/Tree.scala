@@ -12,9 +12,22 @@ import scala.util.Success
 import scala.util.Failure
 import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
+import io.agamis.fusion.core.db.models.sql.FileSystem
 
-/** Utilities for File Tree manipulation */
 object Tree {
+  /**
+    * Instanciate a new Tree based on a specific [[FileSystem FileSystem]]
+    *
+    * @param fs the fileSystem no which the tree is based
+    * @return   a file tree
+    */
+  def of(fs: FileSystem): Tree = {
+    return new Tree(fs)
+  }
+}
+
+/** Utilities for [[File File]] Tree manipulation */
+class Tree private (fs: FileSystem) {
 
   /** A method for creating a new file in the '''File Tree'''
     *
@@ -52,7 +65,7 @@ object Tree {
                   case Success(dir) =>
                     if (!dir.isDirectory) Future.failed(NotADirectoryException())
                     val fileToInsert: File = file.copy(parent = Some(dir.id))
-                    new FileStore()
+                    new FileStore(fs.id.toString)
                       .insert(fileToInsert).transformWith({
                       case Success(_) =>
                         new CachedFileStore()
@@ -102,7 +115,7 @@ object Tree {
             // log "retrieved from cache"
             Future.successful(f)
           case null =>
-            new FileStore()
+            new FileStore(fs.id.toString)
               .findByID(id).transformWith({
               case Success(file) =>
                 new CachedFileStore()
@@ -137,7 +150,7 @@ object Tree {
     * @return a future file that reflects actual file state in the datastore
     */
   def getFileFromPath(path: String)(implicit ec: ExecutionContext, wrapper: ReactiveMongoWrapper): Future[File] = {
-    new FileStore()
+    new FileStore(fs.id.toString)
       .findByPath(path).transformWith({
       case Success(file) => Future.successful(file)
       case Failure(cause) => Future.failed(cause)
@@ -176,7 +189,7 @@ object Tree {
         // Return if all files are retrieved from the cache (no need to query datastore)
         if (cacheRetrievedFiles.length == ids.length) return Future.successful(cacheRetrievedFiles)
 
-        new FileStore()
+        new FileStore(fs.id.toString)
           .findMany(ids.toList diff files.asScala.keys.toList).transformWith({
           case Success(files) =>
             new CachedFileStore()
@@ -210,7 +223,7 @@ object Tree {
     * @return a future list of files that reflects actual files state in the datastore
     */
   def getChildrenOf(dir: File)(implicit ec: ExecutionContext, wrapper: ReactiveMongoWrapper): Future[List[File]] = {
-    new FileStore()
+    new FileStore(fs.id.toString)
       .getFileChildren(dir).transformWith({
       case Success(files) => Future.successful(files)
       case Failure(cause) => Future.failed(cause)
@@ -269,7 +282,7 @@ object Tree {
     * @return a future file which reflects new file state in the datastore
     */
   def updateFile(file: File)(implicit ec: ExecutionContext, wrapper: ReactiveMongoWrapper, igniteWrapper: IgniteClientNodeWrapper): Future[File] = {
-    new FileStore()
+    new FileStore(fs.id.toString)
       .update(file).transformWith({
       case Success(file) =>
         file match {
@@ -318,7 +331,7 @@ object Tree {
           .delete(file)
 
         // Delete from datastore
-        new FileStore()
+        new FileStore(fs.id.toString)
           .delete(file).transformWith({
           case Success(deletedFile) =>
             deletedFile match {
@@ -377,7 +390,7 @@ object Tree {
           .deleteMany(validDelete)
 
         // Delete from datastore
-        new FileStore()
+        new FileStore(fs.id.toString)
           .deleteMany(validDelete).transformWith({
           case Success(deletedFilesCount) =>
             Future.successful(DeleteManyFilesResult(deletedFilesCount, childLookupError))

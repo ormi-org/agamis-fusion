@@ -1,4 +1,4 @@
-package io.agamis.fusion.core.fs
+package io.agamis.fusion
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{Behavior, PostStop, Signal}
@@ -7,23 +7,23 @@ import io.agamis.fusion.core.db.datastores.sql.generics.{EmailStore, LanguageSto
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.agamis.fusion.core.db.wrappers.mongo.ReactiveMongoWrapper
 
-object FileSystem {
+object Core {
 
     sealed trait Command
     case object GracefulShutdown extends Command
     case object InitDb extends Command
 
-    def apply(): Behavior[FileSystem.Command] = {
-        Behaviors.setup[FileSystem.Command](context => new FileSystem(context))
+    def apply(): Behavior[Core.Command] = {
+        Behaviors.setup[Core.Command](context => new Core(context))
     }
 }
 
-class FileSystem(context: ActorContext[FileSystem.Command]) extends AbstractBehavior[FileSystem.Command](context) {
-    import FileSystem._
+class Core(context: ActorContext[Core.Command]) extends AbstractBehavior[Core.Command](context) {
+    import Core._
 
     context.setLoggerName("io.agamis.fusion.fs")
 
-    context.log.info("FileSystem Module started")
+    context.log.info("Core Module started")
 
     override def onMessage(msg: Command): Behavior[Command] = {
         msg match {
@@ -53,9 +53,9 @@ class FileSystem(context: ActorContext[FileSystem.Command]) extends AbstractBeha
         }
     }
 
-    override def onSignal: PartialFunction[Signal,Behavior[FileSystem.Command]] = {
+    override def onSignal: PartialFunction[Signal,Behavior[Core.Command]] = {
         case PostStop =>
-            context.log.info("FileSystem Module stopped")
+            context.log.info("Core Module stopped")
             context.system.terminate()
             this
     }

@@ -1,7 +1,7 @@
 package io.agamis.fusion
 
 import akka.actor.typed.{ActorRef, ActorSystem}
-import io.agamis.fusion.core.fs.FileSystem
+import io.agamis.fusion.Core
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -9,14 +9,13 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    //implicit val system = ActorSystem(Server("localhost", 8080), "FusionSystem")
-    val system = ActorSystem[FileSystem.Command](FileSystem(), "fusion-system")
+    val system = ActorSystem[Core.Command](Core(), "fusion-system")
 
-    val fusionFs: ActorRef[FileSystem.Command] = system
+    val core: ActorRef[Core.Command] = system
 
-    if (args.contains("--init")) {
+    if (args.contains("--init-db")) {
       // init db
-      fusionFs ! FileSystem.InitDb
+      core ! Core.InitDb
     }
 
     implicit val executionContext: ExecutionContextExecutor = system.executionContext
