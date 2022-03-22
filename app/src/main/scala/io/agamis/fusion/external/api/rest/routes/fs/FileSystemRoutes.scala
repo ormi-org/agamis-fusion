@@ -28,7 +28,7 @@ class FileSystemRoutes(implicit system: ActorSystem[_]) extends FileSystemJsonSu
 
     lazy val routes: Route =
       concat(
-        pathPrefix("fileSystems")(
+        pathPrefix("file-systems")(
           concat(
             // get all fileSystems
             get {
@@ -42,7 +42,7 @@ class FileSystemRoutes(implicit system: ActorSystem[_]) extends FileSystemJsonSu
             },
           )
         ),
-        pathPrefix("fileSystem")(
+        pathPrefix("file-system")(
           concat(
             //get by id
             get {

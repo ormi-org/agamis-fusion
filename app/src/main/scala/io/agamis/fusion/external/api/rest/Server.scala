@@ -38,24 +38,6 @@ object Server {
     ctx =>
       implicit val system = ctx.system
 
-      val fileSystemRoutes = new FileSystemRoutes()
-
-      val fileRoutes = new FileRoutes()
-
-      val userRoutes = new UserRoutes()
-
-      val groupRoutes = new GroupRoutes()
-
-      val organizationRoutes = new OrganizationRoutes()
-
-      val organizationTypeRoutes = new OrganizationTypeRoutes()
-
-      val profileRoutes = new ProfileRoutes()
-
-      val permissionRoutes = new PermissionRoutes()
-
-      val authenticationRoutes = new AuthenticationRoutes()
-
       val topLevel: Route =
         concat(
           pathPrefix("api")(
@@ -63,16 +45,16 @@ object Server {
               pathPrefix("v1")(
                 concat(
                   pathPrefix("auth")(
-                    authenticationRoutes.routes
+                    new AuthenticationRoutes().routes
                   ),
-                  fileSystemRoutes.routes,
-                  fileRoutes.routes,
-                  groupRoutes.routes,
-                  organizationRoutes.routes,
-                  organizationTypeRoutes.routes,
-                  permissionRoutes.routes,
-                  profileRoutes.routes,
-                  userRoutes.routes
+                  new FileSystemRoutes().routes,
+                  new FileRoutes().routes,
+                  new GroupRoutes().routes,
+                  new OrganizationRoutes().routes,
+                  new OrganizationTypeRoutes().routes,
+                  new PermissionRoutes().routes,
+                  new ProfileRoutes().routes,
+                  new UserRoutes().routes
                 )
               )
             )

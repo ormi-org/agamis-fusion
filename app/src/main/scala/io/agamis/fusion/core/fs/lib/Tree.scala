@@ -246,7 +246,7 @@ class Tree private (fs: FileSystem) {
     *         case Failure(cause) => // An exception occurred
     *     })
     * }}}
-    * @param ec            the '''implicit''' ExecutionContext used to parallelize computing
+    * @param ec      the '''implicit''' ExecutionContext used to parallelize computing
     * @param file    a file which act as child of the wanted file
     * @param wrapper the '''implicit''' MongoDB wrapper used to read data
     * @return a future file that reflects actual file state in the datastore

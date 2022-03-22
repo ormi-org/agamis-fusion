@@ -4,7 +4,7 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "FusionInstance",
+            "name": "Fusion",
             "mainClass": "io.agamis.fusion.Main",
             "args": [],
             "jvmOptions": [
@@ -22,7 +22,7 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "FusionInstanceWithInitDB",
+            "name": "FusionWithInitDB",
             "mainClass": "io.agamis.fusion.Main",
             "args": ["--init"],
             "jvmOptions": [

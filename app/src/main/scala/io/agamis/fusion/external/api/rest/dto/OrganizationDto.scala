@@ -32,7 +32,7 @@ import spray.json._
 final case class OrganizationDto(
     id: Option[UUID],
     label: String,
-    `type`: Option[OrganizationTypeDto],
+    `type`: OrganizationTypeDto,
     queryable: Boolean,
     profiles: Option[List[ProfileDto]],
     groups: Option[List[GroupDto]],
@@ -50,7 +50,7 @@ object OrganizationDto {
     apply(
       Some(o.id),
       o.label,
-      Some(OrganizationTypeDto.from(o.`type`.orNull)),
+      OrganizationTypeDto.from(o.`type`.orNull),
       o.queryable,
       Some(
         o.relatedProfiles.filter(_._1 == true).map(r => ProfileDto.from(r._2))
@@ -76,7 +76,7 @@ object OrganizationDto {
   def apply(
       id: Option[UUID],
       label: String,
-      `type`: Option[OrganizationTypeDto],
+      `type`: OrganizationTypeDto,
       queryable: Boolean,
       profiles: Option[List[ProfileDto]],
       groups: Option[List[GroupDto]],
