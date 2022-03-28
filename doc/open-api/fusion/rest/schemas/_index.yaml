@@ -1,0 +1,52 @@
+# Generics
+ID:
+  $ref: "./generics/id.yaml"
+
+Timed:
+  $ref: "./generics/timed.yaml"
+
+Locale:
+  $ref: "./generics/locale.yaml"
+
+DateFilter:
+  $ref: "./generics/date-filter.yaml"
+
+# Types
+OrganizationType:
+  $ref: "./types/organization-type.yaml"
+
+OrganizationTypeWithRelations:
+  $ref: "./types/organization-type-with-relations.yaml"
+
+Organization:
+  $ref: "./types/organization.yaml"
+
+OrganizationWithRelations:
+  $ref: "./types/organization-with-relations.yaml"
+
+Application:
+  $ref: "./types/application.yaml"
+
+ApplicationWithRelations:
+  $ref: "./types/application-with-relations.yaml"
+
+Permission:
+  $ref: "./types/permission.yaml"
+
+PermissionWithRelations:
+  $ref: "./types/permission-with-relations.yaml"
+
+Profile:
+  $ref: "./types/profile.yaml"
+
+ProfileWithRelations:
+  $ref: "./types/profile-with-relations.yaml"
+
+UserDto:
+  $ref: "./types/user-dto.yaml"
+
+User:
+  $ref: "./types/user.yaml"
+
+UserWithRelations:
+  $ref: "./types/user-with-relations.yaml"

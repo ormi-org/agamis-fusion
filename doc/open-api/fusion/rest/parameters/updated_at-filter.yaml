@@ -1,0 +1,5 @@
+name: updated_at
+in: query
+schema:
+  $ref: '../schemas/generics/date-filter.yaml'
+description: A date range on which the result must be filtered

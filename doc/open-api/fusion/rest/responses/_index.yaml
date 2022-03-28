@@ -1,0 +1,6 @@
+AuthenticationRequired:
+  $ref: "./authentication-required.yaml"
+Forbidden:
+  $ref: "./forbidden.yaml"
+InternalServerError:
+  $ref: "./internal-server-error.yaml"
