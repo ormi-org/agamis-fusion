@@ -7,93 +7,48 @@ info:
 servers:
   - url: https://fusion.cloud0.agamis.io/api/v1
     description: Cloud 0 (EU) main production server
-  - url: https://fusion.iat.cloud.openrichmedia.org/api/v1
+  - url: https://fusion.iat.cloud0.openrichmedia.org/api/v1
     description: Internal staging (Internal Acceptance Test) for ORMI testing
 
 tags:
   - name: User
   - name: Profile
+  - name: Organization
+  - name: OrganizationType
 
 paths:
   /users:
     $ref: "./routes/user/repo.yaml"
   /user/{id}:
     $ref: "./routes/user/entity.yaml"
-  
+  /user/{id}/profiles:
+    $ref: "./routes/user/profile/repo.yaml"
+
   /profiles:
-    get:
-      tags:
-        - Profile
-      summary: Returns list of profiles
-      parameters:
-        - $ref: '#/components/parameters/Authorization'
-        - $ref: '#/components/parameters/PaginationOffset'
-        - $ref: '#/components/parameters/PaginationSize'
-        - $ref: '#/components/parameters/CreatedAtFilter'
-        - $ref: '#/components/parameters/UpdatedAtFilter'
-        - in: query
-          name: lastname
-          example: Von Stonk
-          schema:
-            type: string
-          description: Partial or full lastname on which the result must be filtered
-        - in: query
-          name: firstname
-          example: Chauncey
-          schema:
-            type: string
-          description: Partial or full firstname on which the result must be filtered
-        - in: query
-          name: email
-          schema:
-            type: string
-            example: chauncey.vonstonks@example.com
-          description: Partial or full email on which the result must be filtered
-        - in: query
-          name: last_login
-          schema:
-            $ref: '#/components/schemas/DateFilter'
-          description: A date range on which the result must be filtered
-      responses:
-        200:
-          description: A JSON array of profiles
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProfileWithRelations'
-        400:
-          description: Bad request for profiles fetching
-          content:
-            text:
-              schema:
-                type: array
-                items:
-                  oneOf:
-                    - type: string
-                      example: main_email is not in the good format
-                    - type: string
-                      example: an email is not in the good format
-                    - type: string
-                      example: 
-                    - type: string
-                      example: limit and offset parameters are codependent and must be both or none provided
-        401:
-          $ref: '#/components/responses/AuthenticationRequired'
-        403:
-          $ref: '#/components/responses/Forbidden'
-        404:
-          description: User(s) not found
-          content:
-            text:
-              schema:
-                type: string
-                example: A user with specified filters could not be found
-        500:
-          $ref: '#/components/responses/InternalServerError'
-  # /profile/{id}:
-  #   get:
+    $ref: "./routes/profile/repo.yaml"
+  /profile/{id}:
+    $ref: "./routes/profile/entity.yaml"
+  /profile/{id}/user:
+    $ref: "./routes/profile/user/entity.yaml"
+
+  /organizations:
+    $ref: "./routes/organization/repo.yaml"
+  /organization/types:
+    $ref: "./routes/organization/type/repo.yaml"
+  /organization/type/{id}:
+    $ref: "./routes/organization/type/entity.yaml"
+  /organization/{id}:
+    $ref: "./routes/organization/entity.yaml"
+
+  # /groups:
+  #   $ref: "./routes/group/repo.yaml"
+  # /group/{id}:
+  #   $ref: "./routes/group/entity.yaml"
+
+  # /applications:
+  #   $ref: "./routes/application/repo.yaml"
+  # /application/{id}:
+  #   $ref: "./routes/application/entity.yaml"
 
 components:
   schemas:

@@ -4,9 +4,10 @@ version := "1.0"
 
 scalaVersion := "2.13.5"
 
-lazy val akkaVersion = "2.6.13"
-val akkaHttpVersion = "10.2.4"
+lazy val akkaVersion = "2.6.14"
+lazy val akkaHttpVersion = "10.2.9"
 lazy val igniteVersion = "2.10.0"
+lazy val akkaManagementVersion = "1.1.3"
 
 autoAPIMappings := true
 
@@ -21,7 +22,12 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-typed" % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster-sharding" % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster-sharding-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion,
+  "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion,
   "org.apache.ignite" % "ignite-core" % igniteVersion,
   "org.apache.ignite" % "ignite-spring" % igniteVersion,
   "org.reactivemongo" %% "reactivemongo" % "1.0.3",

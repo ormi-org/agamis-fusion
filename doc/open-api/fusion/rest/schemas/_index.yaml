@@ -12,41 +12,56 @@ DateFilter:
   $ref: "./generics/date-filter.yaml"
 
 # Types
-OrganizationType:
-  $ref: "./types/organization-type.yaml"
-
-OrganizationTypeWithRelations:
-  $ref: "./types/organization-type-with-relations.yaml"
-
-Organization:
-  $ref: "./types/organization.yaml"
-
-OrganizationWithRelations:
-  $ref: "./types/organization-with-relations.yaml"
-
-Application:
-  $ref: "./types/application.yaml"
-
-ApplicationWithRelations:
-  $ref: "./types/application-with-relations.yaml"
-
-Permission:
-  $ref: "./types/permission.yaml"
-
-PermissionWithRelations:
-  $ref: "./types/permission-with-relations.yaml"
-
-Profile:
-  $ref: "./types/profile.yaml"
-
-ProfileWithRelations:
-  $ref: "./types/profile-with-relations.yaml"
-
 UserDto:
-  $ref: "./types/user-dto.yaml"
+  $ref: "./types/0.user-dto.yaml"
 
 User:
-  $ref: "./types/user.yaml"
+  $ref: "./types/0.user.yaml"
 
 UserWithRelations:
-  $ref: "./types/user-with-relations.yaml"
+  $ref: "./types/0.user-with-relations.yaml"
+
+ProfileDto:
+  $ref: "./types/1.profile-dto.yaml"
+
+Profile:
+  $ref: "./types/1.profile.yaml"
+
+ProfileWithRelations:
+  $ref: "./types/1.profile-with-relations.yaml"
+  
+OrganizationDto:
+  $ref: "./types/2.organization-dto.yaml"
+
+Organization:
+  $ref: "./types/2.organization.yaml"
+
+OrganizationWithRelations:
+  $ref: "./types/2.organization-with-relations.yaml"
+
+OrganizationTypeDto:
+  $ref: "./types/3.organization-type-dto.yaml"
+
+OrganizationType:
+  $ref: "./types/3.organization-type.yaml"
+
+OrganizationTypeWithRelations:
+  $ref: "./types/3.organization-type-with-relations.yaml"
+
+PermissionDto:
+  $ref: "./types/4.permission-dto.yaml"
+
+Permission:
+  $ref: "./types/4.permission.yaml"
+
+PermissionWithRelations:
+  $ref: "./types/4.permission-with-relations.yaml"
+
+ApplicationDto:
+  $ref: "./types/5.application-dto.yaml"
+
+Application:
+  $ref: "./types/5.application.yaml"
+
+ApplicationWithRelations:
+  $ref: "./types/5.application-with-relations.yaml"

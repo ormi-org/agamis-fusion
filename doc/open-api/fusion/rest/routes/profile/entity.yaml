@@ -1,70 +1,70 @@
 get:
   tags:
-    - User
-  summary: Gets a single user
+    - Profile
+  summary: Gets a single profile
   parameters:
     - $ref: '../../parameters/authorization.yaml'
     - in: path
       name: id
-      description: id of the user to get
+      description: id of the profile to get
       required: true
       schema:
         $ref: "../../schemas/generics/id.yaml"
   responses:
     200:
-      description: JSON of fetched user
+      description: JSON of fetched profile
       content:
         application/json:
           schema:
-            $ref: "../../schemas/types/0.user-with-relations.yaml"
+            $ref: "../../schemas/types/1.profile-with-relations.yaml"
     404:
-      description: User not found
+      description: Profile not found
 put:
   tags:
-    - User
-  summary: Updates a single user
+    - Profile
+  summary: Updates a single profile
   parameters:
     - $ref: '../../parameters/authorization.yaml'
     - in: path
       name: id
-      description: id of the user to update
+      description: id of the profile to update
       required: true
       schema:
         $ref: "../../schemas/generics/id.yaml"
   requestBody:
-    description: A JSON representation of input user data
+    description: A JSON representation of input profile data
     required: true
     content:
       application/json:
         schema:
-          $ref: '../../schemas/types/0.user-dto.yaml'
+          $ref: '../../schemas/types/1.profile-dto.yaml'
   responses:
     200:
-      description: JSON of updated user
+      description: JSON of updated profile
       content:
         application/json:
           schema:
-            $ref: "../../schemas/types/0.user.yaml"
+            $ref: "../../schemas/types/1.profile.yaml"
     404:
-      description: User not found
+      description: Profile not found
 delete:
   tags:
-    - User
-  summary: Deletes a single user
+    - Profile
+  summary: Deletes a single profile
   parameters:
     - $ref: '../../parameters/authorization.yaml'
     - in: path
       name: id
-      description: id of the user to delete
+      description: id of the profile to delete
       required: true
       schema:
         $ref: "../../schemas/generics/id.yaml"
   responses:
     200:
-      description: JSON of deleted user
+      description: JSON of deleted profile
       content:
         application/json:
           schema:
-            $ref: "../../schemas/types/0.user.yaml"
+            $ref: "../../schemas/types/1.profile.yaml"
     404:
-      description: User not found
+      description: Profile not found

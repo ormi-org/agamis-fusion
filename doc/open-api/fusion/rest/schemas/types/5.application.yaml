@@ -29,7 +29,7 @@ allOf:
           type: object
           properties:
             organization:
-              $ref: "../types/organization.yaml"
+              $ref: "./2.organization.yaml"
             status:
               type: string
               enum:

@@ -11,4 +11,3 @@ allOf:
       queryable:
         type: boolean
         example: true
-  - $ref: "../generics/timed.yaml"

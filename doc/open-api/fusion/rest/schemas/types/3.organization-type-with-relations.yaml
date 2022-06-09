@@ -1,8 +1,8 @@
 allOf:
-  - $ref: "./organization-type.yaml"
+  - $ref: "./3.organization-type.yaml"
   - type: object
     properties:
       related_organizations:
         type: array
         items:
-          $ref: "./organization.yaml"
+          $ref: "./2.organization.yaml"
