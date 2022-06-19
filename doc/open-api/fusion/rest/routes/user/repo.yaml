@@ -12,7 +12,9 @@ get:
       name: username
       example: cvs
       schema:
-        type: string
+        type: array
+        items:
+          type: string
       description: Partial or full username on which the result must be filtered
   responses:
     200:

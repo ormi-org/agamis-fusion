@@ -11,10 +11,10 @@ import scala.concurrent.Future
 import java.time.Instant
 import io.agamis.fusion.core.db.models.sql.generics.Email
 
-import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
 import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 import scala.util.Success
 import scala.util.Failure
+import org.apache.ignite.transactions.Transaction
 
 /** A class that reflects the state of the profile entity in the database
   * 
@@ -223,18 +223,18 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     }
 
     /** @inheritdoc */
-    def persist(implicit ec: ExecutionContext): Future[Profile] = {
+    def persist(implicit ec: ExecutionContext): Future[(Transaction, Profile)] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
         store.persistProfile(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }
 
     /** @inheritdoc */
-    def remove(implicit ec: ExecutionContext): Future[Profile] = {
+    def remove(implicit ec: ExecutionContext): Future[(Transaction, Profile)] = {
         store.deleteProfile(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }

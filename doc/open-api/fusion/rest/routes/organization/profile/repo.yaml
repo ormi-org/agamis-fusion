@@ -1,12 +1,12 @@
 post:
   tags:
-    - User
-  summary: Creates a new profile linked to this User
+    - Organization
+  summary: Creates a new profile in an organization
   parameters:
     - $ref: '../../../parameters/authorization.yaml'
     - in: path
       name: id
-      description: id of the parent user
+      description: id of the organization
       required: true
       schema:
         $ref: "../../../schemas/generics/id.yaml"

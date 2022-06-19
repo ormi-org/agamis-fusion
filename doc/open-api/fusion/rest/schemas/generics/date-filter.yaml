@@ -1,8 +1,12 @@
-type: object
-properties:
-  start_date:
-    type: string
-    format: date-time
-  end_date:
-    type: string
-    format: date-time
+type: array
+prefixItems:
+  - oneOf:
+    - "eq"
+    - "lt"
+    - "gt"
+    - "ne"
+  - type: string
+    format: date
+minItems: 2
+maxItems: 2
+example: ["eq", "2022-06-19T18:20:06+00:00"]

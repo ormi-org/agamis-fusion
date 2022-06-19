@@ -9,6 +9,7 @@ import io.agamis.fusion.core.db.datastores.typed.SqlStore
 import java.sql.Timestamp
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 import java.time.Instant
+import org.apache.ignite.transactions.Transaction
 
 trait Model {
 
@@ -76,12 +77,12 @@ trait Model {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future success or failure
       */
-    protected def persist(implicit ec: ExecutionContext): Future[Model]
+    protected def persist(implicit ec: ExecutionContext): Future[(Transaction, Model)]
 
     /** A method for triggering a delete operation of this entity in database
       *
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future success or failure
       */
-    protected def remove(implicit ec: ExecutionContext): Future[Model]
+    protected def remove(implicit ec: ExecutionContext): Future[(Transaction, Model)]
 }

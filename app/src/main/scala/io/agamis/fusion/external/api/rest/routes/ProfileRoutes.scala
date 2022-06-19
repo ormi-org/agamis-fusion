@@ -1,25 +1,14 @@
 package io.agamis.fusion.external.api.rest.routes
 
-import scala.util.Success
-import scala.util.Failure
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
-import java.util.UUID
-
-import akka.http.scaladsl.server.Route
+import akka.actor.typed.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
-
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
+import io.agamis.fusion.external.api.rest.dto.profile.ProfileJsonSupport
 
-import akka.actor.typed.{ActorSystem, ActorRef}
-
-import io.agamis.fusion.external.api.rest.dto.profile.{
-  ProfileDto,
-  ProfileJsonSupport
-}
+import scala.concurrent.duration._
 
 /** Class Profile Routes
   *
@@ -27,8 +16,6 @@ import io.agamis.fusion.external.api.rest.dto.profile.{
   */
 class ProfileRoutes(implicit system: ActorSystem[_]) extends ProfileJsonSupport {
 
-  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-  import akka.actor.typed.scaladsl.AskPattern.Askable
 
   // asking someone requires a timeout and a scheduler, if the timeout hits without response
   // the ask is failed with a TimeoutException

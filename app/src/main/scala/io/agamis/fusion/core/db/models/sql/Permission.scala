@@ -12,6 +12,7 @@ import scala.util.Success
 import scala.util.Failure
 import java.time.Instant
 import java.sql.Timestamp
+import org.apache.ignite.transactions.Transaction
 
 class Permission(implicit @transient protected val store: PermissionStore) extends Model {
 
@@ -156,18 +157,18 @@ class Permission(implicit @transient protected val store: PermissionStore) exten
     }
 
     /** @inheritdoc */
-    def persist(implicit ec: ExecutionContext): Future[Permission] = {
+    def persist(implicit ec: ExecutionContext): Future[(Transaction, Permission)] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
         this.store.persistPermission(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }
 
     /** @inheritdoc */
-    def remove(implicit ec: ExecutionContext): Future[Permission] = {
+    def remove(implicit ec: ExecutionContext): Future[(Transaction, Permission)] = {
         this.store.deletePermission(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }

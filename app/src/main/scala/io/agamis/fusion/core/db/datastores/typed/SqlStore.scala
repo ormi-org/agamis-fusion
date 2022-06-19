@@ -29,7 +29,7 @@ abstract class SqlStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future result
       */
-    def commitTransaction(tx: Transaction)(implicit ec: ExecutionContext): Future[Void] = {
+    def commitTransaction(tx: Transaction): Future[Void] = {
         Utils.igniteToScalaFuture(tx.commitAsync())
     }
 
@@ -39,7 +39,7 @@ abstract class SqlStore[K, M](implicit wrapper: IgniteClientNodeWrapper) {
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future result
       */
-    def rollbackTransaction(tx: Transaction)(implicit ec: ExecutionContext): Future[Void] = {
+    def rollbackTransaction(tx: Transaction): Future[Void] = {
         Utils.igniteToScalaFuture(tx.rollbackAsync())
     }
 }

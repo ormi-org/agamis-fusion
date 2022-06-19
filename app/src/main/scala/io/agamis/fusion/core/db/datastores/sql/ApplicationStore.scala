@@ -21,6 +21,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
+import org.apache.ignite.transactions.Transaction
 
 /** A class to manage and reflects [[Application Application]] life-cycle in the SQL database
   *
@@ -411,7 +412,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of the state change
     */
-  def persistApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
+  def persistApplication(application: Application)(implicit ec: ExecutionContext): Future[Transaction] = {
     makeTransaction match {
       case Success(tx) =>
         val organizationStore = new OrganizationStore()
@@ -472,10 +473,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(tx).transformWith({
-              case Success(_) => Future.unit
-              case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
-            })
+            Future.successful(tx)
           case Failure(cause) =>
             rollbackTransaction(tx)
             Future.failed(ApplicationNotPersistedException(cause))
@@ -568,7 +566,7 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
     * @param ec          the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of state change
     */
-  def deleteApplication(application: Application)(implicit ec: ExecutionContext): Future[Unit] = {
+  def deleteApplication(application: Application)(implicit ec: ExecutionContext): Future[Transaction] = {
     makeTransaction match {
       case Success(tx) =>
         val organizationStore = new OrganizationStore()
@@ -591,17 +589,13 @@ class ApplicationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMut
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(tx).transformWith({
-              case Success(_) => Future.unit
-              case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
-            })
+            Future.successful(tx)
           case Failure(cause) =>
             rollbackTransaction(tx)
             Future.failed(ApplicationNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(ApplicationNotPersistedException(cause))
     }
-    Future.unit
   }
 
 }

@@ -1,33 +1,37 @@
 package io.agamis.fusion.core.db.datastores.sql
 
-import io.agamis.fusion.core.db.models.sql.{Organization, Profile}
+import io.agamis.fusion.core.db.common.Utils
+import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.DuplicateOrganizationException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotFoundException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotPersistedException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.DuplicateOrganizationtypeException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.OrganizationtypeNotFoundException
+import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.GetEntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
+import io.agamis.fusion.core.db.models.sql.Organization
+import io.agamis.fusion.core.db.models.sql.generics.Email
+import io.agamis.fusion.core.db.models.sql.generics.Language
+import io.agamis.fusion.core.db.models.sql.relations.FilesystemOrganization
+import io.agamis.fusion.core.db.models.sql.relations.OrganizationApplication
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
+import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.QueryEntity
 
-import scala.util.Success
-import scala.util.Failure
-import scala.concurrent.Future
 import java.sql.Timestamp
 import java.util.UUID
-import scala.jdk.CollectionConverters._
-import io.agamis.fusion.core.db.common.Utils
-import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.CacheAtomicityMode
-import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
-
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
-import io.agamis.fusion.core.db.models.sql.generics.Language
-import io.agamis.fusion.core.db.models.sql.relations.{FilesystemOrganization, OrganizationApplication}
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{DuplicateOrganizationException, OrganizationNotFoundException, OrganizationNotPersistedException}
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.{DuplicateOrganizationtypeException, OrganizationtypeNotFoundException}
-import org.apache.ignite.cache.QueryEntity
-import io.agamis.fusion.core.db.models.sql.generics.Email
-import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
-import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
+import org.apache.ignite.transactions.Transaction
 
 class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Organization] {
 
@@ -356,7 +360,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
   }
 
   // Save organization object's modification to database
-  def persistOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
+  def persistOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Transaction] = {
     makeTransaction match {
       case Success(tx) =>
         val fileSystemStore = new FileSystemStore()
@@ -374,10 +378,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(tx).transformWith({
-              case Success(_) => Future.unit
-              case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
-            })
+            Future.successful(tx)
           case Failure(cause) =>
             rollbackTransaction(tx)
             Future.failed(OrganizationNotPersistedException(cause))
@@ -397,14 +398,18 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMu
   }
 
   // Delete organization from database
-  def deleteOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Unit] = {
+  def deleteOrganization(organization: Organization)(implicit ec: ExecutionContext): Future[Transaction] = {
     if (organization.relatedProfiles.nonEmpty) return Future.failed(OrganizationNotPersistedException("Organization still contains profiles and can't be deleted"))
     if (organization.relatedGroups.nonEmpty) return Future.failed(OrganizationNotPersistedException("Organization still contains groups and can't be deleted"))
-    Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
-      .transformWith({
-        case Success(_) => Future.unit
-        case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
-      })
+    makeTransaction match {
+      case Success(tx) =>
+        Utils.igniteToScalaFuture(igniteCache.removeAsync(organization.id))
+        .transformWith({
+          case Success(_) => Future.successful(tx)
+          case Failure(cause) => Future.failed(OrganizationNotPersistedException(cause))
+        })
+      case Failure(cause) => Future.failed(cause)
+    }
   }
 
   /** A method that deletes several organizations

@@ -1,10 +1,7 @@
 package io.agamis.fusion
 
-import akka.actor.typed.{ActorRef, ActorSystem}
-import io.agamis.fusion.Core
-
-import scala.concurrent.ExecutionContextExecutor
 import com.typesafe.config.ConfigFactory
+import io.agamis.fusion.Core
 
 object Main {
   

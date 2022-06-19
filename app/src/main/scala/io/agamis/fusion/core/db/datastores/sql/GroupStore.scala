@@ -20,6 +20,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
+import org.apache.ignite.transactions.Transaction
 
 class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, Group] {
 
@@ -411,7 +412,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     * @param ec    the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of the state change
     */
-  def persistGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
+  def persistGroup(group: Group)(implicit ec: ExecutionContext): Future[Transaction] = {
     makeTransaction match {
       case Success(tx) =>
         val relationCache: IgniteCache[String, GroupPermission] =
@@ -470,10 +471,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(tx).transformWith({
-              case Success(_) => Future.unit
-              case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
-            })
+            Future.successful(tx)
           case Failure(cause) =>
             rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))
@@ -567,7 +565,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
     * @param ec    the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of state change
     */
-  def deleteGroup(group: Group)(implicit ec: ExecutionContext): Future[Unit] = {
+  def deleteGroup(group: Group)(implicit ec: ExecutionContext): Future[Transaction] = {
     makeTransaction match {
       case Success(tx) =>
         val relationCache: IgniteCache[String, GroupPermission] =
@@ -611,10 +609,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSt
           )
         ).transformWith({
           case Success(_) =>
-            commitTransaction(tx).transformWith({
-              case Success(_) => Future.unit
-              case Failure(cause) => Future.failed(GroupNotPersistedException(cause))
-            })
+            Future.successful(tx)
           case Failure(cause) =>
             rollbackTransaction(tx)
             Future.failed(GroupNotPersistedException(cause))

@@ -11,7 +11,7 @@ lazy val akkaManagementVersion = "1.1.3"
 
 autoAPIMappings := true
 
-scalacOptions ++= Seq("-feature", "-deprecation")
+scalacOptions ++= Seq("-feature", "-deprecation", "-Ywarn-unused")
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2",

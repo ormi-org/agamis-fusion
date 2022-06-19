@@ -19,6 +19,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
+import org.apache.ignite.transactions.Transaction
 
 /** A class to manage and reflects [[FileSystem FileSystem]] life-cycle in the SQL database
   *
@@ -357,7 +358,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     * @param ec         the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of the state change
     */
-  def persistFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
+  def persistFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Transaction] = {
     if (!fileSystem.organizations.exists(_._1 == true))
       Future.failed(FilesystemNotPersistedException("FileSystem must be mounted on at least one organization before being persisted"))
     else {
@@ -395,10 +396,7 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
             )
           ).transformWith({
             case Success(_) =>
-              commitTransaction(tx).transformWith({
-                case Success(_) => Future.unit
-                case Failure(cause) => Future.failed(FilesystemNotPersistedException(cause))
-              })
+              Future.successful(tx)
             case Failure(cause) =>
               rollbackTransaction(tx)
               Future.failed(FilesystemNotPersistedException(cause))
@@ -462,16 +460,23 @@ class FileSystemStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMuta
     * @param ec         the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
     * @return a future confirmation of state change
     */
-  def deleteFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Unit] = {
+  def deleteFileSystem(fileSystem: FileSystem)(implicit ec: ExecutionContext): Future[Transaction] = {
     if (fileSystem.organizations.nonEmpty) Future.failed(FilesystemNotPersistedException("fileSystem is still attached to some organization and can't be deleted"))
     else {
-      Utils.igniteToScalaFuture(igniteCache.removeAsync(fileSystem.id))
-        .transformWith({
-          case Success(done) =>
-            if (done) Future.unit
-            else Future.failed(FilesystemNotPersistedException())
-          case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause))
-        })
+      makeTransaction match {
+        case Success(tx) =>
+          Utils.igniteToScalaFuture(igniteCache.removeAsync(fileSystem.id))
+          .transformWith({
+            case Success(done) =>
+              if (done) Future.successful(tx)
+              else 
+                rollbackTransaction(tx)
+                Future.failed(FilesystemNotPersistedException())
+            case Failure(cause) => Future.failed(FilesystemNotPersistedException("Failed to remove fileSystem", cause))
+          })
+        case Failure(cause) =>
+          Future.failed(cause)
+      }
     }
   }
 

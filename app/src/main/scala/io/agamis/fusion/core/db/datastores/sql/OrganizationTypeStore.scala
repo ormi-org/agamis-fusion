@@ -26,6 +26,7 @@ import scala.util.Try
 import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.DuplicateOrganizationtypeException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.OrganizationtypeNotFoundException
+import org.apache.ignite.transactions.Transaction
 
 class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, OrganizationType] {
 
@@ -232,7 +233,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
         })
     }
 
-    def persistOrganizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Unit] = {
+    def persistOrganizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Transaction] = {
         makeTransaction match {
             case Success(tx) =>
                 Utils.igniteToScalaFuture(igniteCache.putAsync(
@@ -254,10 +255,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
                             }
                         )).transformWith({
                             case Success(_) =>
-                                commitTransaction(tx).transformWith({
-                                    case Success(_) => Future.unit
-                                    case Failure(cause) => Future.failed(OrganizationtypeNotPersistedException(cause))
-                                })
+                                Future.successful(tx)
                             case Failure(cause) =>
                                 rollbackTransaction(tx)
                                 Future.failed(OrganizationtypeNotPersistedException(cause))
@@ -270,7 +268,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
         }
     }
 
-    def deleteOrgnizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Unit] = {
+    def deleteOrgnizationType(organizationType: OrganizationType)(implicit ec: ExecutionContext): Future[Transaction] = {
         if (organizationType.relatedOrganizations.nonEmpty) return Future.failed(OrganizationtypeNotPersistedException("organizationType is still typifying some organization"))
         makeTransaction match {
             case Success(tx) =>
@@ -282,10 +280,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
                             textStore.deleteText(s"${label._1._1}:${label._1._2}")
                         })).transformWith({
                             case Success(_) =>
-                                commitTransaction(tx).transformWith({
-                                    case Success(_) => Future.unit
-                                    case Failure(cause) => throw cause
-                                })
+                                Future.successful(tx)
                             case Failure(cause) =>
                                 rollbackTransaction(tx)
                                 throw cause

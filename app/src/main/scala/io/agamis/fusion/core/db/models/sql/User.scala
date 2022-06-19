@@ -1,22 +1,18 @@
 package io.agamis.fusion.core.db.models.sql
 
-import io.agamis.fusion.core.db.datastores.sql.UserStore
-import io.agamis.fusion.core.db.models.sql.typed.Model
-
-import org.apache.ignite.cache.query.annotations.QuerySqlField
-
-import java.util.UUID
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
-import java.sql.Timestamp
-import java.beans.Transient
-
-import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationAlreadyExistsException
-import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
 import io.agamis.fusion.core.db.common
-import scala.util.Success
-import scala.util.Failure
+import io.agamis.fusion.core.db.datastores.sql.UserStore
+import io.agamis.fusion.core.db.models.sql.generics.exceptions.RelationNotFoundException
+import io.agamis.fusion.core.db.models.sql.typed.Model
+import org.apache.ignite.cache.query.annotations.QuerySqlField
+import org.apache.ignite.transactions.Transaction
+
+import java.sql.Timestamp
 import java.time.Instant
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
 
 class User(implicit @transient protected val store: UserStore) extends Model {
 
@@ -58,17 +54,17 @@ class User(implicit @transient protected val store: UserStore) extends Model {
         this
     }
 
-    def persist(implicit ec: ExecutionContext): Future[User] = {
+    def persist(implicit ec: ExecutionContext): Future[(Transaction, User)] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
         store.persistUser(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful(tx)
             case Failure(e) => Future.failed(e)
         })
     }
 
-    def remove(implicit ec: ExecutionContext): Future[User] = {
+    def remove(implicit ec: ExecutionContext): Future[(Transaction, User)] = {
         store.deleteUser(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful(tx)
             case Failure(e) => Future.failed(e)
         })
     }

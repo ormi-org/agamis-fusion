@@ -35,6 +35,7 @@ import scala.collection.mutable.ListBuffer
 import io.agamis.fusion.core.db.models.sql.User
 import scala.util.Try
 import io.agamis.fusion.core.db.models.sql.generics.Email
+import org.apache.ignite.transactions.Transaction
 
 class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableStore[UUID, User] {
 
@@ -77,8 +78,8 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         queryArgs ++= filter.username
       }
       // manage metadate search
-      filter.createdAt match {
-        case Some((test, time)) =>
+      filter.createdAt.map { _ match {
+        case (test, time) =>
           innerWhereStatement += s"user_created_at ${
             test match {
               case "eq" => "="
@@ -88,10 +89,9 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
             }
           } ?"
           queryArgs += time.toString
-        case None => ()
-      }
-      filter.updatedAt match {
-        case Some((test, time)) =>
+      }}
+      filter.updatedAt.map { _ match {
+        case (test, time) =>
           innerWhereStatement += s"user_updated_at ${
             test match {
               case "eq" => "="
@@ -101,8 +101,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
             }
           } ?"
           queryArgs += time.toString
-        case None => ()
-      }
+      }}
       whereStatements += innerWhereStatement.mkString(" AND ")
     })
     // compile whereStatements
@@ -229,6 +228,12 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
     })
   }
 
+  /** Method used to get a single User entity from database based on its id attribute
+    * 
+    * @param id the id selector
+    * @param ec the '''implicit''' [[ExecutionContext ExecutionContext]] used to parallelize computing
+    * @return a future [[User User]] which reflects user state fetched from database
+    */
   def getUserById(id: String)(implicit ec: ExecutionContext): Future[User] = {
     getUsers(
       UserStore.GetUsersFilters().copy(
@@ -270,14 +275,17 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
   }
 
   // Save user object's modification to database
-  def persistUser(user: User)(implicit ec: ExecutionContext): Future[Unit] = {
+  def persistUser(user: User)(implicit ec: ExecutionContext): Future[(Transaction, User)] = {
     makeTransaction match {
       case Success(tx) =>
         Utils.igniteToScalaFuture(igniteCache.putAsync(
           user.id, user
         )).transformWith({
-          case Success(_) => Future.unit
-          case Failure(cause) => Future.failed(UserNotPersistedException(cause))
+          case Success(_) =>
+            Future.successful(tx, user)
+          case Failure(cause) =>
+            tx.rollbackAsync()
+            Future.failed(UserNotPersistedException(cause))
         })
       case Failure(cause) => Future.failed(cause)
     }
@@ -311,12 +319,19 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
   }
 
   // Delete user from database
-  def deleteUser(user: User)(implicit ec: ExecutionContext): Future[Unit] = {
-    Utils.igniteToScalaFuture(igniteCache.removeAsync(user.id))
-      .transformWith({
-        case Success(_) => Future.unit
-        case Failure(cause) => Future.failed(UserNotPersistedException(cause))
-      })
+  def deleteUser(user: User)(implicit ec: ExecutionContext): Future[(Transaction, User)] = {
+    makeTransaction match {
+      case Success(tx) =>
+        Utils.igniteToScalaFuture(igniteCache.removeAsync(user.id))
+        .transformWith({
+          case Success(_) =>
+            Future.successful(tx, user)
+          case Failure(cause) =>
+            tx.rollbackAsync()
+            Future.failed(UserNotPersistedException(cause))
+        })
+      case Failure(cause) => Future.failed(cause)
+    }
   }
 
   /** A result of bulkDeleteUsers method
@@ -350,8 +365,8 @@ object UserStore {
   case class GetUsersFilter(
                              id: List[String] = List(),
                              username: List[String] = List(),
-                             createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
-                             updatedAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
+                             createdAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
+                             updatedAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
                            )
   case class GetUsersFilters(
                               filters: List[GetUsersFilter] = List(),

@@ -20,6 +20,11 @@ import akka.actor
 import akka.management.scaladsl.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import org.slf4j.Logger
+import scala.util.Success
+import scala.util.Failure
+import io.agamis.fusion.core.actors.data.DataActor
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
+import akka.cluster.sharding.typed.ClusterShardingSettings
 
 object Core {
 
@@ -43,10 +48,13 @@ object Core {
                         AkkaManagement(classicSystem).start()
                         // Auto join k8s based cluster
                         ClusterBootstrap(classicSystem).start()
-                    } else
+                    }
                     if (cluster.selfMember.hasRole("fusion-node-data")) {
                         // TODO
                         // Node type for handling datastore operations, resolving and caching queries results
+                        val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
+                        ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.entityId))
+                            .withSettings(ClusterShardingSettings(context.system).withRole("fusion-node-data")))
                     } else
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {
                         // TODO
@@ -76,24 +84,27 @@ object Core {
                 }
         }
 
-        private case object FusionData {
-            sealed trait Repo
-            sealed trait Broker
-        }
-
         private case object RestEndpoint {
             sealed trait V1
             def apply[V1](interface: String, port: Int)(implicit system: ActorSystem[_], log: Logger) = {
                 implicit val ec: ExecutionContextExecutor = system.executionContext
-                // Datastore Sharded actors refs HERE
 
                 val binding = Server.V1(interface, port, system)
 
-                binding.foreach { binding =>
-                    log.info(s"HTTP REST Server online at ip ${binding.localAddress} port $port")
+                binding.onComplete {
+                    case Success(binding) => log.info(s"HTTP REST Server online at ip ${binding.localAddress} port $port")
+                    case Failure(exception) => {
+                        log.error(s"HTTP REST Server failed to start due to : $exception")
+                        system.terminate()
+                    }
                 }
             }
-            
+        }
+
+        private case object DataNode {
+            def apply()(implicit system: ActorSystem[_], log: Logger) = {
+                // implicit 
+            }
         }
     }
 

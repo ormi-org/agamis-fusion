@@ -12,6 +12,7 @@ import scala.util.Success
 import scala.util.Failure
 import java.sql.Timestamp
 import java.time.Instant
+import org.apache.ignite.transactions.Transaction
 
 class OrganizationType(implicit @transient protected val store: OrganizationTypeStore) extends Model {
 
@@ -65,17 +66,17 @@ class OrganizationType(implicit @transient protected val store: OrganizationType
         this
     }
 
-    override protected def persist(implicit ec: ExecutionContext): Future[OrganizationType] = {
+    override protected def persist(implicit ec: ExecutionContext): Future[(Transaction, OrganizationType)] = {
         this.setUpdatedAt(Timestamp.from(Instant.now()))
         store.persistOrganizationType(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }
 
-    override protected def remove(implicit ec: ExecutionContext): Future[OrganizationType] = {
+    override protected def remove(implicit ec: ExecutionContext): Future[(Transaction, OrganizationType)] = {
         store.deleteOrgnizationType(this).transformWith({
-            case Success(_) => Future.successful(this)
+            case Success(tx) => Future.successful((tx, this))
             case Failure(e) => Future.failed(e)
         })
     }
