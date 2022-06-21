@@ -1,17 +1,15 @@
 package io.agamis.fusion.external.api.rest.dto.group
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.core.db.models.sql.Group
-import io.agamis.fusion.core.db.datastores.sql.GroupStore
-import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
+import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
 import io.agamis.fusion.external.api.rest.dto.permission.PermissionDto
-import java.util.UUID
-import java.time.Instant
-
-import scala.language.implicitConversions
-import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 import spray.json._
+
+import java.time.Instant
+import java.util.UUID
 
 final case class GroupDto(
   id: Option[UUID],

@@ -97,7 +97,13 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
 
   def updateUser(id: UUID, uMut: UserDataBehavior.UserMutation): Future[UserApiResponse] = {
     handleDataResponse(data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.UpdateUser(ref, uMut))
+      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.UpdateUser(ref, id, uMut))
+    })
+  }
+
+  def deleteUser(id: UUID): Future[UserApiResponse] = {
+    handleDataResponse(data.ask { ref: ActorRef[UserDataBehavior.Response] =>
+      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.DeleteUser(ref, id))
     })
   }
 
@@ -113,7 +119,8 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
               "offset".as[Long],
               "limit".as[Long],
               "created_at".as[List[(String, String)]],
-              "updated_at".as[List[(String, String)]]
+              "updated_at".as[List[(String, String)]],
+              "order_by".as[List[(String, Int)]]
             ).as(UserQuery.apply _) { queryString =>
               val query: UserDataBehavior.Query = UserDataBehavior.Query(
                 queryString.id.map(UUID.fromString(_)),
@@ -121,7 +128,8 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
                 queryString.offset,
                 queryString.limit,
                 queryString.createdAt,
-                queryString.updatedAt
+                queryString.updatedAt,
+                queryString.orderBy
               )
               onComplete(queryUsers(query)) {
                 case Success(resp: UserApiResponse) =>
@@ -151,8 +159,8 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
       ),
       pathPrefix("user")(
         concat(
-          //get by id
           get {
+            //get by id
             path(Segment) { id: String =>
               onComplete(getUserById(UUID.fromString(id))) {
                 case Success(resp: UserApiResponse) => 
@@ -163,9 +171,10 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
                 case Failure(cause) => complete(StatusCodes.InternalServerError, cause)
               }
             };
+            //get by username
             parameters("username".as[String]) { (username) =>
               onComplete(getUserByUsername(username)) {
-                case Success(resp: SingleUserResponse) =>
+                case Success(resp: UserApiResponse) =>
                   resp match {
                     case SingleUserResponse(result, status) => complete(status.code, result)
                     case _ => complete(StatusCodes.InternalServerError, "Bad response format from internal actor")
@@ -175,22 +184,32 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
             }
           },
           // update user
-          // put {
-          //   path(Segment) { id: String =>
-          //     entity(as[UserDto]) { user =>
-          //       onComplete(updateUser(id, 
-          //         UserDataBehavior.UserMutation(
-          //           user.
-          //         )
-          //       ))
-          //       complete(StatusCodes.NotImplemented)
-          //     }
-          //   }
-          // },
-          // delete user
-          delete {
-            path(Segment) { id: String =>
-              complete(StatusCodes.NotImplemented)
+          path(Segment) { id: String =>
+            put {
+              entity(as[UserMutation]) { umut =>
+                onComplete(updateUser(
+                  UUID.fromString(id),
+                  UserDataBehavior.UserMutation(umut.username, umut.password)
+                )) {
+                  case Success(resp: UserApiResponse) =>
+                    resp match {
+                      case SingleUserResponse(result, status) => complete(status.code, result)
+                      case _ => complete(StatusCodes.InternalServerError, "Bad response format from internal actor")
+                    }
+                  case Failure(cause) => complete(StatusCodes.InternalServerError, cause)
+                }
+              }
+            }
+            // delete user
+            delete {
+              onComplete(deleteUser(UUID.fromString(id))) {
+                case Success(resp: UserApiResponse) => 
+                  resp match {
+                    case SingleUserResponse(result, status) => complete(status.code, result)
+                    case _ => complete(StatusCodes.InternalServerError, "Bad response format from internal actor")
+                  }
+                case Failure(cause) => complete(StatusCodes.InternalServerError, cause)
+              }
             }
           }
         )

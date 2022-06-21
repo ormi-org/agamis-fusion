@@ -61,7 +61,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
     new User
   }
 
-  def makeUsersQuery(queryFilters: UserStore.GetUsersFilters): SqlStoreQuery = {
+  def makeUsersQuery(queryFilters: UserStore.GetUsersFilters, limit: Long, offset: Long): SqlStoreQuery = {
     var baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
     val whereStatements: ListBuffer[String] = ListBuffer()
@@ -117,13 +117,16 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlMutableSto
         }}"
       ).mkString(", ")}"
     }
+    // manage limit and offset
+    baseQueryString += s"LIMIT $limit OFFSET $offset"
+    // make SQL query
     makeQuery(baseQueryString)
       .setParams(queryArgs.toList)
   }
 
   // Get existing users from database
-  def getUsers(queryFilters: UserStore.GetUsersFilters)(implicit ec: ExecutionContext): Future[List[User]] = {
-    executeQuery(makeUsersQuery(queryFilters)).transformWith({
+  def getUsers(queryFilters: UserStore.GetUsersFilters, limit: Long = 25, offset: Long = 0)(implicit ec: ExecutionContext): Future[List[User]] = {
+    executeQuery(makeUsersQuery(queryFilters, limit, offset)).transformWith({
       case Success(rows) =>
         // map each user from queryResult by grouping results by USER.id and mapping to user objects creation
         val entityReflections = rows.groupBy(_.head)

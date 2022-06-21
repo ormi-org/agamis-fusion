@@ -5,14 +5,14 @@ import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonFormat
 
 final case class UserMutation (
-  username: String,
-  password: String
+  username: Option[String],
+  password: Option[String]
 )
 
 object UserMutation {
   def apply(
-    username: String,
-    password: String
+    username: Option[String],
+    password: Option[String]
   ): UserMutation = {
     UserMutation(username, password)
   }

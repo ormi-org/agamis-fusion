@@ -1,8 +1,8 @@
 package io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users
 
 final case class UserQueryExecutionException(
-    private val cause: Throwable = None.orNull,
-    private val message: String = "An error occurred while executing user SQL query"
+    private val message: String = "An error occurred while executing user SQL query",
+    private val cause: Throwable = None.orNull
 ) extends Exception(message, cause)
 
 object UserQueryExecutionException {
@@ -11,12 +11,12 @@ object UserQueryExecutionException {
         message: String,
         cause: Throwable
     ): UserQueryExecutionException = {
-        new UserQueryExecutionException(cause, message)
+        new UserQueryExecutionException(message, cause)
     }
 
     def apply(
         cause: Throwable
     ): UserQueryExecutionException = {
-        new UserQueryExecutionException(cause)
+        new UserQueryExecutionException("An error occured while executing user SQL query", cause)
     }
 }

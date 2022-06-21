@@ -17,6 +17,9 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFou
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.DuplicateUserException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotPersistedException
 import java.time.Instant
+import scala.concurrent.Future
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserQueryExecutionException
+import java.sql.Timestamp
 
 class UserDataBehavior(
   final val store: UserStore
@@ -34,13 +37,14 @@ object UserDataBehavior {
     limit: Long,
     offset: Long,
     createdAt: List[(String, Instant)],
-    updatedAt: List[(String, Instant)]
+    updatedAt: List[(String, Instant)],
+    orderBy: List[(String, Int)]
   )
 
   // mutations
   final case class UserMutation(
-    username: String,
-    password: String
+    username: Option[String],
+    password: Option[String]
   )
 
   // commands
@@ -66,7 +70,13 @@ object UserDataBehavior {
 
   final case class UpdateUser(
     replyTo: ActorRef[Response],
-    dto: UserMutation
+    id: UUID,
+    userMutation: UserMutation
+  ) extends Command
+
+  final case class DeleteUser(
+    replyTo: ActorRef[Response],
+    id: UUID
   ) extends Command
 
   final case class AddProfile(
@@ -99,11 +109,52 @@ object UserDataBehavior {
         case (ctx: ActorContext[Command], wstate: WrappedState) => {
           // Send resulting state to original sender
           wstate.replyTo ! wstate.state
-          ctx.log.debug(s"Providing result using cache on entity{${wstate.state.entityId}}")
           // Update internal state for caching result
+          ctx.log.debug(s"Caching result of entity{${state.entityId}}")
           Behaviors.receivePartial(apply(wstate.state))
         }
         case (ctx: ActorContext[Command], eqy: ExecuteQuery) => {
+          if (
+            state match {
+              case _: DataActor.EmptyState => true
+              case s: State => {
+                s.status match {
+                  case _: Ok => false
+                  case _ => true
+                }
+              }
+            }
+          ) {
+            val query = eqy.query
+            // Caching
+            val filters = UserStore.GetUsersFilters().copy(
+              filters = List(UserStore.GetUsersFilter().copy(
+                id = if(query.id.nonEmpty) query.id.map { _.toString } else List(),
+                username = if(query.username.nonEmpty) query.username else List(),
+                createdAt = if(query.createdAt.nonEmpty) query.createdAt.map { c => (c._1, Timestamp.from(c._2)) } else List(),
+                updatedAt = if(query.updatedAt.nonEmpty) query.updatedAt.map { c => (c._1, Timestamp.from(c._2)) } else List(),
+              )),
+              orderBy = if(query.orderBy.nonEmpty) query.orderBy else List(("id", 1))
+            )
+            ctx.pipeToSelf(store.getUsers(filters, query.limit, query.offset)) {
+              case Success(userList) =>
+                val newState = MultiUserState(state.entityId, userList, Ok())
+                WrappedState(newState, eqy.replyTo)
+              case Failure(exception) => 
+                exception match {
+                  case UserQueryExecutionException(msg, cause@_) =>
+                    val newState = MultiUserState(state.entityId, List(), InternalException(msg))
+                    ctx.log.error(msg, cause)
+                    WrappedState(newState, eqy.replyTo)
+                  case default: Throwable =>
+                    val newState = MultiUserState(state.entityId, List(), InternalException(default.getMessage()))
+                    WrappedState(newState, eqy.replyTo)
+                }
+            }
+          } else {
+            ctx.log.debug(s"Providing result using cache on entity{${state.entityId}}")
+            eqy.replyTo ! state.asInstanceOf[State]
+          }
           Behaviors.same
         }
         case (ctx: ActorContext[Command], qry: GetUserById) => {
@@ -118,9 +169,10 @@ object UserDataBehavior {
               }
             }
           ) {
+            // Caching
             ctx.pipeToSelf(store.getUserById(qry.id.toString())) {
               case Success(u) => 
-                val newState = SingleUserState(state.entityId, Some(u), Ok()) 
+                val newState = SingleUserState(state.entityId, Some(u), Ok())
                 WrappedState(newState, qry.replyTo)
               case Failure(exception) => {
                 exception match {
@@ -137,59 +189,122 @@ object UserDataBehavior {
                 }
               }
             }
-            Behaviors.same
           } else {
+            ctx.log.debug(s"Providing result using cache on entity{${state.entityId}}")
             qry.replyTo ! state.asInstanceOf[State]
-            Behaviors.same
           }
+          Behaviors.same
         }
         case (ctx: ActorContext[Command], qry: GetUserByUsername) => {
-          store.getUserByUsername(qry.username.toString()).onComplete({
-            case Success(u) => 
-              qry.replyTo ! SingleUserState(state.entityId, Some(u), Ok())
-            case Failure(exception) => {
-              exception match {
-                case UserNotFoundException(msg, cause@_) =>
-                  qry.replyTo ! SingleUserState(state.entityId, None, NotFound(msg))
-                case DuplicateUserException(msg, cause) =>
-                  qry.replyTo ! SingleUserState(state.entityId, None, InternalException(msg))
-                  ctx.log.error(s"$msg; due to: $cause")
-                case default: Throwable => 
-                  qry.replyTo ! SingleUserState(state.entityId, None, InternalException(default.getMessage))
+          if (
+            state match {
+              case _: DataActor.EmptyState => true
+              case s: State => {
+                s.status match {
+                  case _: Ok => false
+                  case _ => true
+                }
               }
             }
-          })
+          ) {
+            // Caching
+            ctx.pipeToSelf(store.getUserByUsername(qry.username.toString())) {
+              case Success(u) => 
+                val newState = SingleUserState(state.entityId, Some(u), Ok())
+                WrappedState(newState, qry.replyTo)
+              case Failure(exception) => {
+                exception match {
+                  case UserNotFoundException(msg, cause@_) =>
+                    val newState = SingleUserState(state.entityId, None, NotFound(msg))
+                    WrappedState(newState, qry.replyTo)
+                  case DuplicateUserException(msg, cause) =>
+                    val newState = SingleUserState(state.entityId, None, InternalException(msg))
+                    ctx.log.error(s"$msg; due to: $cause")
+                    WrappedState(newState, qry.replyTo)
+                  case default: Throwable => 
+                    val newState = SingleUserState(state.entityId, None, InternalException(default.getMessage))
+                    WrappedState(newState, qry.replyTo)
+                }
+              }
+            }
+          } else {
+            ctx.log.debug(s"Providing result using cache on entity{${state.entityId}}")
+            qry.replyTo ! state.asInstanceOf[State]
+          }
           Behaviors.same
         }
         case (ctx: ActorContext[Command], crt: CreateUser) => {
           // Create new user with mutation
-          val newUser = store.makeUser
-          .setUsername(crt.userMutation.username)
-          .setPassword(crt.userMutation.password)
-          // Persist it
-          newUser.persist
-          .onComplete({
-            case Success(statement) => 
-              store.commitTransaction(statement._1)
-              crt.replyTo ! SingleUserState(state.entityId, Some(statement._2), Ok())
-            case Failure(exception) => {
-              exception match {
-                case UserNotPersistedException(msg, cause) =>
-                  crt.replyTo ! SingleUserState(state.entityId, None, InternalException(msg))
-                  ctx.log.error(s"$msg; due to: $cause")
-                case default: Throwable =>
-                  crt.replyTo ! SingleUserState(state.entityId, None, InternalException(default.getMessage))
+          if (crt.userMutation.username.isEmpty || crt.userMutation.password.isEmpty) {
+            crt.replyTo ! SingleUserState(state.entityId, None, InternalException("Missing field among: username, password"))
+          } else {
+            val newUser = store.makeUser
+            // Safe retrieval
+            .setUsername(crt.userMutation.username.get)
+            .setPassword(crt.userMutation.password.get)
+            // Persist it
+            newUser.persist
+            .onComplete({
+              case Success((tx, user)) => 
+                store.commitTransaction(tx)
+                crt.replyTo ! SingleUserState(state.entityId, Some(user), Ok())
+              case Failure(exception) => {
+                exception match {
+                  case UserNotPersistedException(msg, cause) =>
+                    crt.replyTo ! SingleUserState(state.entityId, None, InternalException(msg))
+                    ctx.log.error(s"$msg; due to: $cause")
+                  case default: Throwable =>
+                    crt.replyTo ! SingleUserState(state.entityId, None, InternalException(default.getMessage))
+                }
               }
-            }
-          })
-          Behaviors.same
-        }
-        case (ctx: ActorContext[Command], addpf: AddProfile) => {
-          
+            })
+          }
           Behaviors.same
         }
         case (ctx: ActorContext[Command], upd: UpdateUser) => {
-          
+          for {
+            newUserState <- store.getUserById(upd.id.toString())
+                    .transformWith {
+                      case Success(user) => 
+                        upd.userMutation.username match {
+                          case Some(value) => user.setUsername(value)
+                          case None =>
+                        }
+                        upd.userMutation.password match {
+                          case Some(value) => user.setPassword(value)
+                          case None =>
+                        }
+                        Future.successful(user)
+                      case Failure(exception) => {
+                        exception match {
+                          case UserNotFoundException(msg, cause) =>
+                            upd.replyTo ! SingleUserState(state.entityId, None, NotFound(msg))
+                            Future.failed(cause)
+                          case DuplicateUserException(msg, cause) =>
+                            upd.replyTo ! SingleUserState(state.entityId, None, InternalException(msg))
+                            ctx.log.error(s"$msg; due to: $cause")
+                            Future.failed(cause)
+                          case default: Throwable => 
+                            upd.replyTo ! SingleUserState(state.entityId, None, InternalException(default.getMessage))
+                            Future.failed(default)
+                        }
+                      }
+                    }
+            mutation <- newUserState.persist
+                        .andThen {
+                          case Success((tx, user)) =>
+                            store.commitTransaction(tx)
+                            upd.replyTo ! SingleUserState(state.entityId, Some(user), Ok())
+                          case Failure(exception) =>
+                            exception match {
+                              case UserNotPersistedException(msg, cause) =>
+                                upd.replyTo ! SingleUserState(state.entityId, None, InternalException(msg))
+                                ctx.log.error(s"$msg; due to: $cause")
+                              case default: Throwable =>
+                                upd.replyTo ! SingleUserState(state.entityId, None, InternalException(default.getMessage))
+                            }
+                        }
+          } yield mutation
           Behaviors.same
         }
     }
