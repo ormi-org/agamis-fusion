@@ -1,0 +1,10 @@
+type: object
+properties:
+  language_id:
+    type: string
+    format: uuid
+  language_code:
+    type: string
+    example: en
+  text:
+    type: string

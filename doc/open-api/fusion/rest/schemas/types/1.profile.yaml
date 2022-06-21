@@ -1,0 +1,25 @@
+allOf:
+  - type: object
+    properties:
+      id:
+        $ref: "../generics/id.yaml"
+      lastname:
+        type: string
+        example: Von Stonks
+      firstname:
+        type: string
+        example: Chauncey
+      main_email:
+        type: string
+        example: chauncey.vonstonks@example.com
+      emails:
+        type: array
+        items:
+          type: string
+        example: ["myothermail@example.com", "chaunceyIsHappy@example.com"]
+      last_login:
+        type: string
+        format: date-time
+      user_id:
+        $ref: "../generics/id.yaml"
+  - $ref: "../generics/timed.yaml"

@@ -4,8 +4,8 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "FusionInstance",
-            "mainClass": "io.ogdt.fusion.FusionApp",
+            "name": "fusion-node-rest-v1",
+            "mainClass": "io.agamis.fusion.Main",
             "args": [],
             "jvmOptions": [
                 "--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED",
@@ -15,8 +15,7 @@
                 "--add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
                 "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
                 "--illegal-access=permit",
-                // "-Dakka.remote.netty.tcp.hostname=127.0.0.1",
-                // "-Dakka.cluster.seed-nodes.0=akka://ClusterSystem@host1:2551",
+                "-Dconfig.resource=application-fusion-node-rest-v1.dev.conf"
             ],
             "env": {
             }
@@ -24,9 +23,8 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "FusionInstanceWithInitDB",
-            "mainClass": "io.ogdt.fusion.FusionApp",
-            "args": ["--init"],
+            "name": "fusion-node-db-initiator",
+            "mainClass": "io.agamis.fusion.Main",
             "jvmOptions": [
                 "--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED",
                 "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
@@ -35,8 +33,24 @@
                 "--add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
                 "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
                 "--illegal-access=permit",
-                // "-Dakka.remote.netty.tcp.hostname=127.0.0.1",
-                // "-Dakka.cluster.seed-nodes.0=akka://ClusterSystem@host1:2551",
+                "-Dconfig.resource=application-fusion-node-db-initiator.dev.conf"
+            ],
+            "env": {
+            }
+        },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "fusion-node-db-seeder",
+            "mainClass": "io.agamis.fusion.Main",
+            "jvmOptions": [
+                "--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED",
+                "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+                "--add-exports=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED",
+                "--add-exports=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED",
+                "--add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
+                "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+                "--illegal-access=permit"
             ],
             "env": {
             }

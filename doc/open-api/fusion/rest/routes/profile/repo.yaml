@@ -1,0 +1,71 @@
+get:
+  tags:
+    - Profile
+  summary: Returns list of profiles
+  parameters:
+    - $ref: '../../parameters/authorization.yaml'
+    - $ref: '../../parameters/pagination-offset.yaml'
+    - $ref: '../../parameters/pagination-size.yaml'
+    - $ref: '../../parameters/created_at-filter.yaml'
+    - $ref: '../../parameters/updated_at-filter.yaml'
+    - in: query
+      name: lastname
+      example: Von Stonks
+      schema:
+        type: string
+      description: Partial or full lastname on which the result must be filtered
+    - in: query
+      name: firstname
+      example: Chauncey
+      schema:
+        type: string
+      description: Partial or full firstname on which the result must be filtered
+    - in: query
+      name: email
+      schema:
+        type: string
+        example: chauncey.vonstonks@example.com
+      description: Partial or full email on which the result must be filtered
+    - in: query
+      name: last_login
+      schema:
+        $ref: '../../schemas/generics/date-filter.yaml'
+      description: A date range on which the result must be filtered
+  responses:
+    200:
+      description: A JSON array of profiles
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../schemas/types/1.profile-with-relations.yaml'
+    400:
+      description: Bad request for profiles fetching
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: main_email is not in the good format
+                - type: string
+                  example: an email is not in the good format
+                - type: string
+                  example: last_login is not in the good format
+                - type: string
+                  example: limit and offset parameters are codependent and must be both or none provided
+    401:
+      $ref: '../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../responses/forbidden.yaml'
+    404:
+      description: Profile(s) not found
+      content:
+        text:
+          schema:
+            type: string
+            example: A profile could not be found with specified filters
+    500:
+      $ref: '../../responses/internal-server-error.yaml'

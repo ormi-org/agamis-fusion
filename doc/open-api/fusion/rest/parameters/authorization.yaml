@@ -1,0 +1,6 @@
+name: AuthorizationToken
+in: cookie
+required: true
+schema:
+  type: string
+  format: jwt 

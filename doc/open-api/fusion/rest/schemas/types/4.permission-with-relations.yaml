@@ -1,0 +1,6 @@
+allOf:
+  - $ref: "./4.permission.yaml"
+  - type: object
+    properties:
+      related_application:
+        $ref: "./5.application.yaml"

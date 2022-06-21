@@ -1,0 +1,2 @@
+allOf:
+  - $ref: "./5.application.yaml"

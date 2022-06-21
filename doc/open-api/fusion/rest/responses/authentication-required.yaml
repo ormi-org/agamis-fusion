@@ -1,0 +1,6 @@
+description: Authentication required
+content:
+  text:
+    schema:
+      type: string
+      example: You must be authenticated to access this resource

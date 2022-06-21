@@ -1,0 +1,25 @@
+allOf:
+  - type: object
+    properties:
+      id:
+        $ref: "../generics/id.yaml"
+      app_universal_id:
+        type: string
+        example: 90074caffac3c107fa594376b90cdcfb53c3923771b0dacca4845b5e7f975c19
+      label:
+        type: string
+        example: Agamis Fusion
+      version:
+        type: string
+        example: 1.0.0
+      status:
+        type: string
+        enum:
+          - INSTALLED
+          - NOT_INSTALLED
+      manifest_url:
+        type: string
+        format: uri
+      store_url:
+        type: string
+        format: uri

@@ -1,0 +1,8 @@
+allOf:
+  - type: object
+    properties:
+      id:
+        $ref: "../generics/id.yaml"
+      label:
+        $ref: "../generics/locale.yaml"
+  - $ref: "../generics/timed.yaml"

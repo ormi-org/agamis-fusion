@@ -1,0 +1,70 @@
+get:
+  tags:
+    - OrganizationType
+  summary: Gets a single organization type
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+    - in: path
+      name: id
+      description: id of the organization type to get
+      required: true
+      schema:
+        $ref: "../../../schemas/generics/id.yaml"
+  responses:
+    200:
+      description: JSON of fetched organization type
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/types/3.organization-type-with-relations.yaml"
+    404:
+      description: Organization type not found
+put:
+  tags:
+    - OrganizationType
+  summary: Updates a single organization type
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+    - in: path
+      name: id
+      description: id of the organization type to update
+      required: true
+      schema:
+        $ref: "../../../schemas/generics/id.yaml"
+  requestBody:
+    description: A JSON representation of input organization type data
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../schemas/types/3.organization-type-dto.yaml'
+  responses:
+    200:
+      description: JSON of updated organization type
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/types/3.organization-type.yaml"
+    404:
+      description: Organization type not found
+delete:
+  tags:
+    - OrganizationType
+  summary: Deletes a single organization type
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+    - in: path
+      name: id
+      description: id of the organization type to delete
+      required: true
+      schema:
+        $ref: "../../../schemas/generics/id.yaml"
+  responses:
+    200:
+      description: JSON of deleted organization type
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/types/3.organization-type.yaml"
+    404:
+      description: Organization type not found

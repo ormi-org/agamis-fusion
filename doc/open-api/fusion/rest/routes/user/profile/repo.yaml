@@ -1,0 +1,42 @@
+post:
+  tags:
+    - User
+  summary: Creates a new profile linked to this user
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+    - in: path
+      name: id
+      description: id of the parent user
+      required: true
+      schema:
+        $ref: "../../../schemas/generics/id.yaml"
+  requestBody:
+    description: A JSON representation of input profile data
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../schemas/types/1.profile-dto.yaml'
+  responses:
+    200:
+      description: JSON of created profile
+      content:
+        application/json:
+          schema:
+            $ref: '../../../schemas/types/1.profile.yaml'
+    400:
+      description: Bad request for profile creation
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: 'Creating a profile requires providing : lastname, firstname, main_email, emails'
+    401:
+      $ref: '../../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../../responses/forbidden.yaml'
+    500:
+      $ref: '../../../responses/internal-server-error.yaml'
