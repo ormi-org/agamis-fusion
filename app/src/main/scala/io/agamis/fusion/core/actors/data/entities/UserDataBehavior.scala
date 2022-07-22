@@ -1,29 +1,29 @@
 package io.agamis.fusion.core.actors.data.entities
 
-import io.agamis.fusion.core.db.models.sql.User
-import java.util.UUID
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.Behaviors
-import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 import akka.actor.typed.ActorRef
-import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
-import io.agamis.fusion.core.db.datastores.sql.UserStore
-import scala.concurrent.ExecutionContext
-import io.agamis.fusion.core.actors.data.DataActor
+import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.ActorContext
-import scala.util.Success
-import scala.util.Failure
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFoundException
+import akka.actor.typed.scaladsl.Behaviors
+import io.agamis.fusion.core.actors.data.DataActor
+import io.agamis.fusion.core.actors.data.entities.common.Identifiable
+import io.agamis.fusion.core.actors.data.entities.common.Pageable
+import io.agamis.fusion.core.actors.data.entities.common.Timetracked
+import io.agamis.fusion.core.db.datastores.sql.UserStore
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.DuplicateUserException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotPersistedException
-import java.time.Instant
-import scala.concurrent.Future
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserQueryExecutionException
-import java.sql.Timestamp
+import io.agamis.fusion.core.db.models.sql.User
+import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+// import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 
-class UserDataBehavior(
-  final val store: UserStore
-)
+import java.sql.Timestamp
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
 
 object UserDataBehavior {
 
@@ -39,7 +39,7 @@ object UserDataBehavior {
     createdAt: List[(String, Instant)],
     updatedAt: List[(String, Instant)],
     orderBy: List[(String, Int)]
-  )
+  ) extends Identifiable with Timetracked with Pageable
 
   // mutations
   final case class UserMutation(
@@ -79,11 +79,11 @@ object UserDataBehavior {
     id: UUID
   ) extends Command
 
-  final case class AddProfile(
-    replyTo: ActorRef[Response],
-    id: UUID,
-    profile: ProfileDto
-  ) extends Command
+  // final case class AddProfile(
+  //   replyTo: ActorRef[Response],
+  //   id: UUID,
+  //   profile: ProfileDto
+  // ) extends Command
 
   // responses
   sealed trait Status {
