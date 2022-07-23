@@ -175,8 +175,9 @@ object LanguageStore {
         label: List[String]
     )
     case class GetLanguagesFilters(
-        filters: List[GetLanguagesFilter],
-        orderBy: List[(String, Int)] // (column, direction)
+        filters: List[GetLanguagesFilter] = List(),
+        orderBy: List[(GetEntityFilters.Column, Int)] = List(), // (column, direction)
+        pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
     ) extends GetEntityFilters
 
     object GetLanguagesFilters {
@@ -186,5 +187,9 @@ object LanguageStore {
                 List()
             )
         }
+    }
+
+    object Column {
+        case class ID(val order: Int = 0, val name: String = "p.ID") extends GetEntityFilters.Column
     }
 }

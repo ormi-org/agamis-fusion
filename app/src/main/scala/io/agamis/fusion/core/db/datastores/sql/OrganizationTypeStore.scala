@@ -199,7 +199,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
     def getAllOrganizationTypes(implicit ec: ExecutionContext): Future[List[OrganizationType]] ={
         getOrganizationTypes(OrganizationTypeStore.GetOrganizationTypesFilters().copy(
             orderBy = List(
-                ("id", 1)
+                (OrganizationTypeStore.Column.ID(), 1)
             )
         )).transformWith({
             case Success(organizationTypes) => 
@@ -306,6 +306,11 @@ object OrganizationTypeStore {
     )
     case class GetOrganizationTypesFilters(
         filters: List[GetOrganizationTypesFilter] = List(),
-        orderBy: List[(String, Int)] = List() // (column, direction)
+        orderBy: List[(GetEntityFilters.Column, Int)] = List(), // (column, direction)
+        pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
     ) extends GetEntityFilters
+
+    object Column {
+        case class ID(val order: Int = 0, val name: String = "ot.ID") extends GetEntityFilters.Column
+    }
 }

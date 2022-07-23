@@ -41,7 +41,7 @@ VALUES
 ('863e31c5-dbd7-4542-ad1f-dab5c587e75b:ee33cf08-a17c-4588-89f5-b5e1278ba6a2','863e31c5-dbd7-4542-ad1f-dab5c587e75b','ee33cf08-a17c-4588-89f5-b5e1278ba6a2','Unmount file system'),
 ('863e31c5-dbd7-4542-ad1f-dab5c587e75b:73e073de-4144-4054-8d9b-f6c65f1ca2ef','863e31c5-dbd7-4542-ad1f-dab5c587e75b','73e073de-4144-4054-8d9b-f6c65f1ca2ef','Démonter système de fichier'),
 ('bbbdf526-fb16-4dde-8447-ca3507b7221c:ee33cf08-a17c-4588-89f5-b5e1278ba6a2','bbbdf526-fb16-4dde-8447-ca3507b7221c','ee33cf08-a17c-4588-89f5-b5e1278ba6a2','Allow unmounting file system on any organization'),
-('bbbdf526-fb16-4dde-8447-ca3507b7221c:73e073de-4144-4054-8d9b-f6c65f1ca2ef','bbbdf526-fb16-4dde-8447-ca3507b7221c','73e073de-4144-4054-8d9b-f6c65f1ca2ef','Autorise lee démontage d''un système de fichier de n''importe quelle organization'),
+('bbbdf526-fb16-4dde-8447-ca3507b7221c:73e073de-4144-4054-8d9b-f6c65f1ca2ef','bbbdf526-fb16-4dde-8447-ca3507b7221c','73e073de-4144-4054-8d9b-f6c65f1ca2ef','Autorise le démontage d''un système de fichier de n''importe quelle organization'),
 ('f2c3aee4-2745-4597-948a-16ff997edb07:ee33cf08-a17c-4588-89f5-b5e1278ba6a2','f2c3aee4-2745-4597-948a-16ff997edb07','ee33cf08-a17c-4588-89f5-b5e1278ba6a2','Set default file system'),
 ('f2c3aee4-2745-4597-948a-16ff997edb07:73e073de-4144-4054-8d9b-f6c65f1ca2ef','f2c3aee4-2745-4597-948a-16ff997edb07','73e073de-4144-4054-8d9b-f6c65f1ca2ef','Établir système de fichier par défaut'),
 ('9a67d96c-07e1-45d5-af9d-a3b172d042be:ee33cf08-a17c-4588-89f5-b5e1278ba6a2','9a67d96c-07e1-45d5-af9d-a3b172d042be','ee33cf08-a17c-4588-89f5-b5e1278ba6a2','Allow setting the default file system of any organization'),
@@ -208,7 +208,7 @@ INSERT INTO "FUSION"."APPLICATION" (_key, ID, APP_UNIVERSAL_ID, VERSION, STATUS,
 VALUES
 ('7c3e3fe5-ec7f-46da-b3bf-4bc4ed36eced', '7c3e3fe5-ec7f-46da-b3bf-4bc4ed36eced', 'c9189963-c698-3c8e-b1d8-f93f7b42b262', '1.0.0', 1, 'https://repo.ogdt.io/applications/fusion/1.0.0/manifest.xml', 'https://launch.ogdt.io/store/apps/details?id=io.ogdt.apps.fusion&version=1.0.0', '2021-05-06 17:47:52', '2021-05-06 17:47:52'),
 ('f4ba4e3c-a343-4adb-a088-93cc42db2434', 'f4ba4e3c-a343-4adb-a088-93cc42db2434', 'b3fe1e38-00b5-39d3-82f2-53693de1e388', '1.0.0', 1, 'https://repo.ogdt.io/applications/workspace/1.0.0/manifest.xml', 'https://launch.ogdt.io/store/apps/details?id=io.ogdt.apps.workspace&version=1.0.0', '2021-05-06 17:47:52', '2021-05-06 17:47:52');
-INSERT INTO "FUSION"."PERMISSION" (_key, ID, "KEY", LABEL_TEXT_ID, DESCRIPTION_TEXT_ID, EDITABLE, APP_ID, CREATED_AT, UPDATED_AT)
+INSERT INTO "FUSION"."PERMISSION" (_key, ID, "KEY", LABEL_TEXT_ID, DESCRIPTION_TEXT_ID, EDITABLE, APPLICATION_ID, CREATED_AT, UPDATED_AT)
 VALUES
 ('9af8b5bb-65b9-4fd3-8b4d-b3dcf09a0590','9af8b5bb-65b9-4fd3-8b4d-b3dcf09a0590','io.ogdt.fusion.organization.*.fs.mount','10f664ff-2424-43b8-b7d8-379bf1e1aac6','2de896d2-54b7-4bab-b5fc-e72bc33ebba1',0,'7c3e3fe5-ec7f-46da-b3bf-4bc4ed36eced','2021-05-06 17:47:52','2021-05-06 17:47:52'),
 ('43addfd2-c2c9-4bf1-ab6b-cd52e07cb166','43addfd2-c2c9-4bf1-ab6b-cd52e07cb166','io.ogdt.fusion.organization.*.fs.unmount','863e31c5-dbd7-4542-ad1f-dab5c587e75b','bbbdf526-fb16-4dde-8447-ca3507b7221c',1,'7c3e3fe5-ec7f-46da-b3bf-4bc4ed36eced','2021-05-06 17:47:52','2021-05-06 17:47:52'),

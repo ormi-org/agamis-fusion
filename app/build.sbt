@@ -1,8 +1,8 @@
-name := "fusion"
+name := "io.agamis.fusion"
 
-version := "1.0"
+version := "0.1"
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.8"
 
 lazy val akkaVersion = "2.6.14"
 lazy val akkaHttpVersion = "10.2.9"

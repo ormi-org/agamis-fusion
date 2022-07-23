@@ -1,15 +1,18 @@
-SELECT user_id, user_username, user_password, user_created_at, user_updated_at, info_data, type_data
-FROM
-(
-	SELECT USER.id AS user_id, USER.username AS user_username, USER.password AS user_password, USER.created_at AS user_created_at, USER.updated_at AS user_updated_at,
-	CONCAT_WS('||', USER.id, USER.username, USER.password, USER.created_at, USER.updated_at) AS info_data, 'USER' AS type_data
-	FROM $schema.USER AS USER
-	UNION ALL
-	SELECT USER.id AS user_id, USER.username AS user_username, USER.password AS user_password, USER.created_at AS user_created_at, USER.updated_at AS user_updated_at,
-	CONCAT_WS('||', PROFILE.id, PROFILE.lastname, PROFILE.firstname, CONCAT_WS(';', EMAIL.id, EMAIL.address), PROFILE.last_login, PROFILE.is_active, PROFILE.user_id, PROFILE.organization_id, PROFILE.created_at, PROFILE.updated_at) AS info_data, 'PROFILE' AS type_data
-	FROM $schema.USER AS USER
-	INNER JOIN $schema.PROFILE AS PROFILE ON PROFILE.user_id = USER.id
-	INNER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id
-	INNER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id
-	WHERE PROFILE_EMAIL.is_main = TRUE
-)
+SELECT u.ID, u.USERNAME, u.PASSWORD, u.CREATED_AT, u.UPDATED_AT,
+NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('||', p.ID, p.LASTNAME, p.FIRSTNAME, p.LAST_LOGIN, p.IS_ACTIVE, p.EMAILS, p.CREATED_AT, p.UPDATED_AT),'') SEPARATOR '|^|'),'') as PROFILES
+FROM (
+	SELECT ID, USERNAME, PASSWORD, CREATED_AT, UPDATED_AT
+	FROM $SCHEMA.USER
+	$PAGINATION
+) AS u
+INNER JOIN (
+	SELECT p2.ID, p2.LASTNAME, p2.FIRSTNAME, p2.LAST_LOGIN, p2.IS_ACTIVE, p2.USER_ID, p2.CREATED_AT, p2.UPDATED_AT,
+	NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('|;|', e.ID, e.ADDRESS, pe.IS_MAIN),'') SEPARATOR '|^|'),'') as EMAILS
+	FROM $SCHEMA.`PROFILE` p2
+	INNER JOIN $SCHEMA.PROFILE_EMAIL pe ON pe.PROFILE_ID = p2.ID
+	INNER JOIN $SCHEMA.EMAIL e ON e.ID = pe.EMAIL_ID
+	GROUP BY p2.ID, p2.LASTNAME, p2.FIRSTNAME, p2.LAST_LOGIN, p2.IS_ACTIVE, p2.USER_ID, p2.CREATED_AT, p2.UPDATED_AT
+) as p ON p.USER_ID = u.ID
+$WHERE_STATEMENT
+GROUP BY u.ID, u.USERNAME, u.PASSWORD, u.CREATED_AT, u.UPDATED_AT
+$ORDER_BY_STATEMENT;
