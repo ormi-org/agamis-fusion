@@ -14,6 +14,7 @@ import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
+import java.sql.Timestamp
 
 object ProfileDataBehavior {
   
@@ -26,7 +27,7 @@ object ProfileDataBehavior {
     lastname: List[String],
     firstname: List[String],
     lastLogin: List[(String, Instant)],
-    isActive: Boolean,
+    isActive: Option[Boolean],
     createdAt: List[(String, Instant)],
     updatedAt: List[(String, Instant)],
     limit: Long,
@@ -97,6 +98,30 @@ object ProfileDataBehavior {
         ctx.log.debug(s"Caching result of entity{${state.entityId}}")
         Behaviors.receivePartial(apply(wstate.state))
       }
+      // case (ctx: ActorContext[Command], eqy: ExecuteQuery) => {
+      //   if (
+      //     state match {
+      //       case _: DataActor.EmptyState => true
+      //       case s: State => {
+      //         s.status match {
+      //           case _: Ok => false
+      //           case _ => true
+      //         }
+      //       }
+      //     }
+      //   ) {
+      //     val query = eqy.query
+      //     val filters = ProfileStore.GetProfilesFilters().copy(
+      //       filters = List(ProfileStore.GetProfilesFilter().copy(
+      //         id = if (query.id.nonEmpty) query.id.map { _.toString } else List(),
+      //         lastname = if (query.lastname.nonEmpty) query.lastname else List(),
+      //         firstname = if (query.firstname.nonEmpty) query.firstname else List(),
+      //         lastLogin = if (query.lastLogin.nonEmpty) query.lastLogin.map { l => (l._1, Timestamp.from(l._2)) } else List(),
+      //         // isActive = if (query.isActive.)
+      //       ))
+      //     )
+      //   }
+      // }
     }
   }
 }

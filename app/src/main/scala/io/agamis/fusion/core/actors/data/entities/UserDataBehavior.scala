@@ -126,16 +126,16 @@ object UserDataBehavior {
             }
           ) {
             val query = eqy.query
-            // Caching
             val filters = UserStore.GetUsersFilters().copy(
               filters = List(UserStore.GetUsersFilter().copy(
                 id = if(query.id.nonEmpty) query.id.map { _.toString } else List(),
                 username = if(query.username.nonEmpty) query.username else List(),
                 createdAt = if(query.createdAt.nonEmpty) query.createdAt.map { c => (c._1, Timestamp.from(c._2)) } else List(),
-                updatedAt = if(query.updatedAt.nonEmpty) query.updatedAt.map { c => (c._1, Timestamp.from(c._2)) } else List(),
+                updatedAt = if(query.updatedAt.nonEmpty) query.updatedAt.map { u => (u._1, Timestamp.from(u._2)) } else List(),
               )),
               orderBy = if(query.orderBy.nonEmpty) query.orderBy else List(("id", 1))
             )
+            // Caching
             ctx.pipeToSelf(store.getUsers(filters, query.limit, query.offset)) {
               case Success(userList) =>
                 val newState = MultiUserState(state.entityId, userList, Ok())

@@ -104,8 +104,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
         queryArgs ++= filter.firstname
       }
       // manage lastLogin date search
-      filter.lastLogin match {
-        case Some((test, time)) =>
+      filter.lastLogin.map { _ match {
+        case (test, time) =>
           innerWhereStatement += s"profile_last_login ${test match {
             case "eq"  => "="
             case "gt"  => ">"
@@ -113,8 +113,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case "neq" => "<>"
           }} ?"
           queryArgs += time.toString
-        case None => ()
-      }
+      }}
       // manage shared state search
       filter.isActive match {
         case Some(value) =>
@@ -123,8 +122,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
         case None => ()
       }
       // manage metadate search
-      filter.createdAt match {
-        case Some((test, time)) =>
+      filter.createdAt.map { _ match {
+        case (test, time) =>
           innerWhereStatement += s"profile_created_at ${test match {
             case "eq"  => "="
             case "gt"  => ">"
@@ -132,10 +131,9 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case "neq" => "<>"
           }} ?"
           queryArgs += time.toString
-        case None => ()
-      }
-      filter.updatedAt match {
-        case Some((test, time)) =>
+      }}
+      filter.updatedAt.map { _ match {
+        case (test, time) =>
           innerWhereStatement += s"profile_updated_at ${test match {
             case "eq"  => "="
             case "gt"  => ">"
@@ -143,8 +141,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case "neq" => "<>"
           }} ?"
           queryArgs += time.toString
-        case None => ()
-      }
+      }}
       whereStatements += innerWhereStatement.mkString(" AND ")
     })
     // compile whereStatements
@@ -1005,10 +1002,10 @@ object ProfileStore {
       id: List[String] = List(),
       lastname: List[String] = List(),
       firstname: List[String] = List(),
-      lastLogin: Option[(String, Timestamp)] = None,
+      lastLogin: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       isActive: Option[Boolean] = None,
-      createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
-      updatedAt: Option[(String, Timestamp)] = None // (date, (eq, lt, gt, ne))
+      createdAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
+      updatedAt: List[(String, Timestamp)] = List() // (date, (eq, lt, gt, ne))
   )
 
   case class GetProfilesFilters(
