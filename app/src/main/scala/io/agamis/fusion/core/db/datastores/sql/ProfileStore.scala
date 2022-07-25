@@ -255,7 +255,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                 }
             } flatMap {
               profile =>
-                // map user
+                // parse user
                 for (
                   userReflection <- Right(row(ProfileStore.Column.USER().order).split("||"));
                   user <- Right(
@@ -279,10 +279,10 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                 ) yield profile.setRelatedUser(user)
             } flatMap {
               profile =>
-                // map emails
-                row(ProfileStore.Column.EMAILS().order).split("|^|").foreach({ emailString =>
+                // parse emails
+                row(ProfileStore.Column.EMAILS().order).split("||").foreach({ emailString =>
                   for (
-                    emailReflection <- Right(emailString.split("||"));
+                    emailReflection <- Right(emailString.split("|>|"));
                     email <- Right(
                       new EmailStore().makeEmail
                         .setId(emailReflection(ProfileStore.Column.EMAIL.ID().order))
@@ -298,7 +298,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                 Right(profile)
             } flatMap {
               profile =>
-                // map organizations
+                // parse organizations
                 for (
                   organizationReflection <- Right(row(ProfileStore.Column.ORGANIZATION().order).split("||"));
                   organization <- Right(
@@ -319,6 +319,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                       )
                   ) flatMap {
                     org =>
+                      // parse queryable field
                       Try(organizationReflection(ProfileStore.Column.ORGANIZATION.QUERYABLE().order).toBoolean) match {
                         case Success(isQueryable) =>
                           if (isQueryable) Right(org.setQueryable())
@@ -327,8 +328,9 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                       }
                   } flatMap {
                     org =>
+                      // parse orgType
                       for (
-                        orgTypeReflection <- Right(organizationReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE().order).split("|;|"));
+                        orgTypeReflection <- Right(organizationReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE().order).split("|>|"));
                         orgType <- Right(
                           new OrganizationTypeStore().makeOrganizationType
                             .setId(orgTypeReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE.ID().order))
@@ -347,8 +349,9 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                             )
                         ) flatMap {
                           orgType =>
-                            organizationReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL().order).split("|^|")
-                              .map(_.split("|;|"))
+                            // parse orgType Lang variants
+                            organizationReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL().order).split("|>|")
+                              .map(_.split("|>>|"))
                               .foreach({
                                 orgTypeLabelReflection =>
                                   orgType.setLabel(
@@ -365,364 +368,93 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
                       Right(org)
                   }
                 ) yield profile.setRelatedOrganization(organization)
+            } flatMap {
+              profile => 
+                // map groups
+                row(ProfileStore.Column.GROUPS().order).split("||").map(_.split("|>|")).foreach({ group =>
+                  profile.addGroup(new GroupStore().makeGroup
+                    .setId(group(ProfileStore.Column.GROUP.ID().order))
+                    .setName(group(ProfileStore.Column.GROUP.NAME().order))
+                    .setCreatedAt(
+                      Utils.timestampFromString(group(ProfileStore.Column.GROUP.CREATED_AT().order)) match {
+                        case ts: Timestamp => ts
+                        case _             => null
+                      }
+                    )
+                    .setUpdatedAt(
+                      Utils.timestampFromString(group(ProfileStore.Column.GROUP.UPDATED_AT().order)) match {
+                        case ts: Timestamp => ts
+                        case _             => null
+                      }
+                    )
+                  )
+                })
+                Right(profile)
+            } flatMap {
+              profile =>
+                // parse permissions
+                row(ProfileStore.Column.PERMISSIONS().order).split("||").map(_.split("|>|")).foreach({ permissionReflection =>
+                  for (
+                    permission <- Right(
+                      new PermissionStore().makePermission
+                        .setId(permissionReflection(ProfileStore.Column.PERMISSION.ID().order))
+                        .setKey(permissionReflection(ProfileStore.Column.PERMISSION.KEY().order))
+                        .setCreatedAt(
+                      Utils.timestampFromString(permissionReflection(ProfileStore.Column.PERMISSION.CREATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
+                        }
+                      )
+                      .setUpdatedAt(
+                        Utils.timestampFromString(permissionReflection(ProfileStore.Column.PERMISSION.UPDATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
+                        }
+                      )
+                    ) flatMap {
+                      // parse editable field
+                      permission =>
+                        Try(permissionReflection(ProfileStore.Column.PERMISSION.EDITABLE().order).toBoolean) match {
+                          case Success(isEditable) =>
+                            if (isEditable) Right(permission.setEditable)
+                            else Right(permission.setReadonly)
+                          case Failure(_) => Right(permission)
+                        }
+                    } flatMap {
+                      // parse label and description variants
+                      permission =>
+                        permissionReflection(ProfileStore.Column.PERMISSION.LABEL().order).split("|>>|")
+                          .map(_.split("|>>>|"))
+                          .foreach({
+                            labelReflection =>
+                              permission.setLabel(
+                                Language.apply
+                                  .setId(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_ID().order))
+                                  .setCode(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_CODE().order))
+                                  .setLabel(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_LABEL().order)),
+                                labelReflection(ProfileStore.Column.PERMISSION.LABEL.CONTENT().order)
+                              )
+                          })
+                        permissionReflection(ProfileStore.Column.PERMISSION.DESCRIPTION().order).split("|>>|")
+                          .map(_.split("|>>>|"))
+                          .foreach({
+                            descReflection =>
+                              permission.setLabel(
+                                Language.apply
+                                  .setId(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_ID().order))
+                                  .setCode(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_CODE().order))
+                                  .setLabel(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_LABEL().order)),
+                                descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.CONTENT().order)
+                              )
+                          })
+                        Right(permission)
+                    }
+                  ) yield profile.addPermission(permission)
+                })
+                Right(profile)
             }
           ) yield profile).getOrElse(null)
         })
-
-        // val profiles = rows
-        //   .map(_.head)
-        //   .distinct
-        //   .map(entityReflections(_))
-        //   .map(entityReflection => {
-        //     val groupedRows =
-        //       getRelationsGroupedRowsFrom(entityReflection, 7, 8)
-        //     groupedRows.get("PROFILE") match {
-        //       case Some(profileReflections) =>
-        //         val profileDef = profileReflections.head.head._2
-        //         (for (
-        //           //PROFILE.id, lastname, firstname, last_login, is_active, user_id, PROFILE.organization_id , PROFILE.created_at , PROFILE.updated_at
-        //           profile <- Right(
-        //             makeProfile
-        //               .setId(profileDef(0))
-        //               .setLastname(profileDef(1))
-        //               .setFirstname(profileDef(2))
-        //               .setLastLogin(
-        //                 Utils.timestampFromString(profileDef(3)) match {
-        //                   case lastlogin: Timestamp => lastlogin
-        //                   case _                    => null
-        //                 }
-        //               )
-        //               .setCreatedAt(
-        //                 Utils.timestampFromString(profileDef(7)) match {
-        //                   case createdAt: Timestamp => createdAt
-        //                   case _                    => null
-        //                 }
-        //               )
-        //               .setUpdatedAt(
-        //                 Utils.timestampFromString(profileDef(8)) match {
-        //                   case updatedAt: Timestamp => updatedAt
-        //                   case _                    => null
-        //                 }
-        //               )
-        //           ) flatMap { profile =>
-        //             Try(profileDef(4).toBoolean) match {
-        //               case Success(active) =>
-        //                 if (active) Right(profile.setActive())
-        //                 else Right(profile.setInactive())
-        //               case Failure(_) => Right(profile)
-        //             }
-        //           } flatMap { profile =>
-        //             groupedRows.get("USER") match {
-        //               case Some(userReflections) =>
-        //                 userReflections.foreach({ userReflection =>
-        //                   val userDef = userReflection.head._2
-        //                   for (
-        //                     user <- Right(
-        //                       new UserStore().makeUser
-        //                         .setId(userDef(0))
-        //                         .setUsername(userDef(1))
-        //                         .setPasswordHash(userDef(2))
-        //                         .setCreatedAt(
-        //                           Utils.timestampFromString(userDef(3)) match {
-        //                             case createdAt: Timestamp => createdAt
-        //                             case _                    => null
-        //                           }
-        //                         )
-        //                         .setUpdatedAt(
-        //                           Utils.timestampFromString(userDef(4)) match {
-        //                             case updatedAt: Timestamp => updatedAt
-        //                             case _                    => null
-        //                           }
-        //                         )
-        //                     )
-        //                   ) yield profile.setRelatedUser(user)
-        //                 })
-        //               case None =>
-        //                 Future.failed(
-        //                   UserNotFoundException(
-        //                     s"Profile ${profile.id}:${profile.firstname}.${profile.lastname}"
-        //                   )
-        //                 )
-        //             }
-
-        //             groupedRows.get("EMAIL") match {
-        //               case Some(emailReflections) =>
-        //                 if (emailReflections.isEmpty) {
-        //                   Future.failed(
-        //                     EmailNotFoundException(
-        //                       s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might have no email address"
-        //                     )
-        //                   )
-        //                 } else {
-        //                   emailReflections.foreach({ emailReflection =>
-        //                     val emailDef = emailReflection.head._2
-        //                     for (
-        //                       email <- Right(
-        //                         Email.apply
-        //                           .setId(emailDef(0))
-        //                           .setAddress(emailDef(1))
-        //                       )
-        //                     ) yield {
-        //                       Try(emailDef(2).toBoolean) match {
-        //                         case Success(isMain) =>
-        //                           if (isMain) profile.setMainEmail(email)
-        //                           else profile.addEmail(email)
-        //                         case Failure(_) =>
-        //                       }
-        //                     }
-        //                   })
-        //                 }
-        //               case None =>
-        //             }
-
-        //             groupedRows.get("ORGANIZATION") match {
-        //               case Some(organizationReflections) =>
-        //                 organizationReflections.size match {
-        //                   case 0 =>
-        //                     Future.failed(
-        //                       OrganizationNotFoundException(
-        //                         s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"
-        //                       )
-        //                     )
-        //                   case 1 =>
-        //                     val organizationReflection =
-        //                       organizationReflections.head
-        //                     organizationReflection
-        //                       .partition(_._1 == "ORGANIZATION") match {
-        //                       case result =>
-        //                         result._1.length match {
-        //                           case 0 =>
-        //                             Future.failed(
-        //                               OrganizationNotFoundException(
-        //                                 s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"
-        //                               )
-        //                             )
-        //                           case 1 =>
-        //                             val orgDef = result._1(0)._2
-        //                             for (
-        //                               organization <- Right(
-        //                                 new OrganizationStore().makeOrganization
-        //                                   .setId(orgDef(0))
-        //                                   .setLabel(orgDef(1))
-        //                                   .setCreatedAt(
-        //                                     Utils.timestampFromString(
-        //                                       orgDef(3)
-        //                                     ) match {
-        //                                       case createdAt: Timestamp =>
-        //                                         createdAt
-        //                                       case _ => null
-        //                                     }
-        //                                   )
-        //                                   .setUpdatedAt(
-        //                                     Utils.timestampFromString(
-        //                                       orgDef(4)
-        //                                     ) match {
-        //                                       case updatedAt: Timestamp =>
-        //                                         updatedAt
-        //                                       case _ => null
-        //                                     }
-        //                                   )
-        //                               ) flatMap { organization =>
-        //                                 Try(orgDef(2).toBoolean) match {
-        //                                   case Success(queryable) =>
-        //                                     if (queryable)
-        //                                       Right(organization.setQueryable())
-        //                                     else
-        //                                       Right(
-        //                                         organization.setUnqueryable()
-        //                                       )
-        //                                   case Failure(_) => Right(organization)
-        //                                 }
-        //                               } flatMap { organization =>
-        //                                 result._2
-        //                                   .partition(_._1 == "ORGTYPE") match {
-        //                                   case result =>
-        //                                     result._1.length match {
-        //                                       case 0 =>
-        //                                       case 1 =>
-        //                                         val orgTypeDef = result._1(0)._2
-        //                                         val orgType =
-        //                                           new OrganizationTypeStore().makeOrganizationType
-        //                                             .setId(orgTypeDef(1))
-        //                                             .setLabelTextId(
-        //                                               orgTypeDef(2)
-        //                                             )
-        //                                             .setCreatedAt(
-        //                                               Utils.timestampFromString(
-        //                                                 orgTypeDef(3)
-        //                                               ) match {
-        //                                                 case createdAt: Timestamp =>
-        //                                                   createdAt
-        //                                                 case _ => null
-        //                                               }
-        //                                             )
-        //                                             .setUpdatedAt(
-        //                                               Utils.timestampFromString(
-        //                                                 orgTypeDef(4)
-        //                                               ) match {
-        //                                                 case updatedAt: Timestamp =>
-        //                                                   updatedAt
-        //                                                 case _ => null
-        //                                               }
-        //                                             )
-        //                                         result._2.foreach({ result =>
-        //                                           val orgTypeLangVariantDef =
-        //                                             result._2
-        //                                           orgType.setLabel(
-        //                                             Language.apply
-        //                                               .setId(
-        //                                                 orgTypeLangVariantDef(4)
-        //                                               )
-        //                                               .setCode(
-        //                                                 orgTypeLangVariantDef(3)
-        //                                               )
-        //                                               .setLabel(
-        //                                                 orgTypeLangVariantDef(5)
-        //                                               ),
-        //                                             orgTypeLangVariantDef(2)
-        //                                           )
-        //                                         })
-        //                                         organization.setType(orgType)
-        //                                       case _ =>
-        //                                     }
-        //                                 }
-        //                                 Right(organization)
-        //                               }
-        //                             )
-        //                               yield profile
-        //                                 .setRelatedOrganization(organization)
-        //                           case _ =>
-        //                             Future.failed(
-        //                               DuplicateOrganizationException(
-        //                                 s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"
-        //                               )
-        //                             )
-        //                         }
-        //                     }
-        //                   case _ =>
-        //                     Future.failed(
-        //                       DuplicateOrganizationException(
-        //                         s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"
-        //                       )
-        //                     )
-        //                 }
-        //               case None =>
-        //             }
-
-        //             groupedRows.get("PERMISSION") match {
-        //               case Some(permissionReflections) =>
-        //                 permissionReflections.foreach({ permissionReflection =>
-        //                   permissionReflection
-        //                     .partition(_._1 == "PERMISSION") match {
-        //                     case result =>
-        //                       result._1.length match {
-        //                         case 0 =>
-        //                         case _ =>
-        //                           val permissionDef = result._1.head._2
-        //                           for (
-        //                             permission <- Right(
-        //                               new PermissionStore().makePermission
-        //                                 .setId(permissionDef(0))
-        //                                 .setKey(permissionDef(1))
-        //                                 .setLabelTextId(permissionDef(2))
-        //                                 .setDescriptionTextId(permissionDef(3))
-        //                                 .setCreatedAt(
-        //                                   Utils.timestampFromString(
-        //                                     permissionDef(6)
-        //                                   ) match {
-        //                                     case createdAt: Timestamp =>
-        //                                       createdAt
-        //                                     case _ => null
-        //                                   }
-        //                                 )
-        //                                 .setUpdatedAt(
-        //                                   Utils.timestampFromString(
-        //                                     permissionDef(7)
-        //                                   ) match {
-        //                                     case updatedAt: Timestamp =>
-        //                                       updatedAt
-        //                                     case _ => null
-        //                                   }
-        //                                 )
-        //                             ) flatMap { permission =>
-        //                               Try(permissionDef(4).toBoolean) match {
-        //                                 case Success(editable) =>
-        //                                   if (editable)
-        //                                     Right(permission.setEditable)
-        //                                   else Right(permission.setReadonly)
-        //                                 case Failure(_) => Right(permission)
-        //                               }
-        //                             } flatMap { permission =>
-        //                               result._2.partition(
-        //                                 _._1 == "PERMISSION_LABEL_LANG_VARIANT"
-        //                               ) match {
-        //                                 case result =>
-        //                                   if (result._1.isEmpty) {
-        //                                     Future.failed(
-        //                                       TextNotFoundException(
-        //                                         s"Permission ${permission.id} might lack of label in any language"
-        //                                       )
-        //                                     )
-        //                                   } else {
-        //                                     result._1.foreach({
-        //                                       labelLangVariant =>
-        //                                         val variantDef =
-        //                                           labelLangVariant._2
-        //                                         permission.setLabel(
-        //                                           Language.apply
-        //                                             .setId(variantDef(3))
-        //                                             .setCode(variantDef(2))
-        //                                             .setLabel(variantDef(4)),
-        //                                           variantDef(1)
-        //                                         )
-        //                                     })
-        //                                     result._2.filter(
-        //                                       _._1 == "PERMISSION_DESC_LANG_VARIANT"
-        //                                     ) match {
-        //                                       case result =>
-        //                                         if (result.isEmpty) {
-        //                                           Future.failed(
-        //                                             TextNotFoundException(
-        //                                               s"Permission ${permission.id} might lack of description in any language"
-        //                                             )
-        //                                           )
-        //                                         } else {
-        //                                           result.foreach({
-        //                                             descLangVariant =>
-        //                                               val variantDef =
-        //                                                 descLangVariant._2
-        //                                               permission.setDescription(
-        //                                                 Language.apply
-        //                                                   .setId(variantDef(3))
-        //                                                   .setCode(
-        //                                                     variantDef(2)
-        //                                                   )
-        //                                                   .setLabel(
-        //                                                     variantDef(4)
-        //                                                   ),
-        //                                                 variantDef(1)
-        //                                               )
-        //                                           })
-        //                                         }
-        //                                     }
-        //                                   }
-        //                               }
-        //                               Right(permission)
-        //                             }
-        //                           ) yield profile.addPermission(permission)
-        //                       }
-        //                   }
-        //                 })
-        //               case None =>
-        //             }
-
-        //             Right(profile)
-        //           }
-        //         ) yield profile)
-        //           .getOrElse(null)
-        //       case None =>
-        //     }
-        //   })
         Future.successful(profiles.toList)
       case Failure(cause) =>
         Future.failed(ProfileQueryExecutionException(cause))
@@ -1241,15 +973,16 @@ object ProfileStore {
         extends EntityFilters.Column
     case class UPDATED_AT(val order: Int = 7, val name: String = "p.UPDATED_AT")
         extends EntityFilters.Column
-    case class USER(val order: Int = 8, val name: String = "p.USER")
+    case class USER(val order: Int = 8, val name: String = "USER")
         extends EntityFilters.Column
-    case class EMAILS(val order: Int = 9, val name: String = "p.EMAILS")
+    case class EMAILS(val order: Int = 9, val name: String = "EMAILS")
         extends EntityFilters.Column
-    case class ORGANIZATION(val order: Int = 10, val name: String = "p.ORGANIZATION")
+    case class ORGANIZATION(val order: Int = 10, val name: String = "ORGANIZATION")
         extends EntityFilters.Column
-    case class GROUPS(val order: Int = 11, val name: String = "p.GROUPS")
+    case class GROUPS(val order: Int = 11, val name: String = "GROUPS")
         extends EntityFilters.Column
-
+    case class PERMISSIONS(val order: Int = 12, val name: String = "PERMISSIONS")
+        extends EntityFilters.Column
     object USER {
       case class ID(val order: Int = 0, val name: String = "u.ID")
           extends EntityFilters.Column
@@ -1316,11 +1049,11 @@ object ProfileStore {
     object GROUP {
       case class ID(val order: Int = 0, val name: String = "g.ID")
           extends EntityFilters.Column
-      case class LABEL(val order: Int = 1, val name: String = "g.NAME")
+      case class NAME(val order: Int = 1, val name: String = "g.NAME")
           extends EntityFilters.Column
-      case class QUERYABLE(val order: Int = 2, val name: String = "g.CREATED_AT")
+      case class CREATED_AT(val order: Int = 2, val name: String = "g.CREATED_AT")
           extends EntityFilters.Column
-      case class CREATED_AT(val order: Int = 3, val name: String = "g.UPDATED_AT")
+      case class UPDATED_AT(val order: Int = 3, val name: String = "g.UPDATED_AT")
           extends EntityFilters.Column
     }
 
@@ -1341,6 +1074,32 @@ object ProfileStore {
           extends EntityFilters.Column
       case class DESCRIPTION(val order: Int = 7, val name: String = "perm.DESCRIPTION")
           extends EntityFilters.Column
+
+      object LABEL {
+        case class TEXT_ID(val order: Int = 0, val name: String = "t.ID")
+            extends EntityFilters.Column
+        case class LANG_ID(val order: Int = 1, val name: String = "l.ID")
+            extends EntityFilters.Column
+        case class LANG_CODE(val order: Int = 2, val name: String = "l.CODE")
+            extends EntityFilters.Column
+        case class LANG_LABEL(val order: Int = 3, val name: String = "l.LABEL")
+            extends EntityFilters.Column
+        case class CONTENT(val order: Int = 4, val name: String = "t.CONTENT")
+            extends EntityFilters.Column
+      }
+
+      object DESCRIPTION {
+        case class TEXT_ID(val order: Int = 0, val name: String = "td.ID")
+            extends EntityFilters.Column
+        case class LANG_ID(val order: Int = 1, val name: String = "ld.ID")
+            extends EntityFilters.Column
+        case class LANG_CODE(val order: Int = 2, val name: String = "ld.CODE")
+            extends EntityFilters.Column
+        case class LANG_LABEL(val order: Int = 3, val name: String = "ld.LABEL")
+            extends EntityFilters.Column
+        case class CONTENT(val order: Int = 4, val name: String = "td.CONTENT")
+            extends EntityFilters.Column
+      }
     }
   }
 }
