@@ -2,7 +2,7 @@ package io.agamis.fusion.core.db.datastores.sql
 
 import io.agamis.fusion.core.db.models.sql.{Organization, Profile}
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
-import io.agamis.fusion.core.db.datastores.typed.sql.GetEntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
 
@@ -575,12 +575,12 @@ object OrganizationStore {
 
   case class GetOrganizationsFilters(
       filters: List[GetOrganizationsFilter] = List(),
-      orderBy: List[(GetEntityFilters.Column, Int)] = List(),
-      pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
-  ) extends GetEntityFilters
+      orderBy: List[(EntityFilters.Column, Int)] = List(),
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "o.ID") extends GetEntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "o.ID") extends EntityFilters.Column
   }
 
 }

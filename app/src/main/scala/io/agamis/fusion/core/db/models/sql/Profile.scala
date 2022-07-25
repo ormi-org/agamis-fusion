@@ -22,6 +22,25 @@ import scala.util.Failure
   */
 class Profile(implicit @transient protected val store: ProfileStore) extends Model {
 
+    @QuerySqlField(name = "alias", notNull = false)
+    private var _alias: String = null
+
+    /** Profile alias property
+      *
+      * @return profile alias [[java.lang.String String]]
+      */
+    def alias: String = _alias
+
+    /** A method for setting alias property
+      *
+      * @param alias a [[java.lang.String String]] to assign to profile alias property
+      * @return this object
+      */
+    def setAlias(alias: String): Profile = {
+      _alias = alias
+      this
+    }
+
     @QuerySqlField(name = "lastname", notNull = true)
     private var _lastname: String = null
 

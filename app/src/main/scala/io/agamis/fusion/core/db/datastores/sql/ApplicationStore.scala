@@ -15,7 +15,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{
-  GetEntityFilters,
+  EntityFilters,
   SqlStoreQuery
 }
 import io.agamis.fusion.core.db.models.sql.Application
@@ -864,11 +864,11 @@ object ApplicationStore {
 
   case class GetApplicationsFilters(
       filters: List[GetApplicationsFilter] = List(),
-      orderBy: List[(GetEntityFilters.Column, Int)] = List(),
-      pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
-  ) extends GetEntityFilters
+      orderBy: List[(EntityFilters.Column, Int)] = List(),
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "a.ID") extends GetEntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "a.ID") extends EntityFilters.Column
   }
 }

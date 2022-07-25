@@ -14,7 +14,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{
 }
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{
-  GetEntityFilters,
+  EntityFilters,
   SqlStoreQuery
 }
 import io.agamis.fusion.core.db.models.sql.{Application, FileSystem}
@@ -728,11 +728,11 @@ object FileSystemStore {
 
   case class GetFileSystemsFilters(
       filters: List[GetFileSystemsFilter] = List(),
-      orderBy: List[(GetEntityFilters.Column, Int)] = List(),
-      pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
-  ) extends GetEntityFilters
+      orderBy: List[(EntityFilters.Column, Int)] = List(),
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "fs.ID") extends GetEntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "fs.ID") extends EntityFilters.Column
   }
 }

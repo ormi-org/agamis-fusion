@@ -2,8 +2,8 @@ package io.agamis.fusion.core.db.datastores.sql
 
 import io.agamis.fusion.core.db.common.Utils
 import io.agamis.fusion.core.db.datastores.sql.ProfileStore.{
-  GetProfilesFilter,
-  GetProfilesFilters
+  ProfilesFilter,
+  ProfilesFilters
 }
 import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.groups.{
@@ -18,7 +18,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{
 }
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{
-  GetEntityFilters,
+  EntityFilters,
   SqlStoreQuery
 }
 import io.agamis.fusion.core.db.models.sql.{Group, Organization}
@@ -610,9 +610,9 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
               ),
               profileStore
                 .getProfiles(
-                  GetProfilesFilters(
+                  ProfilesFilters(
                     List(
-                      GetProfilesFilter(
+                      ProfilesFilter(
                         id = group.members
                           .filter(_._1 == true)
                           .map(_._2.id.toString)
@@ -627,9 +627,9 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                 }),
               profileStore
                 .getProfiles(
-                  GetProfilesFilters(
+                  ProfilesFilters(
                     List(
-                      GetProfilesFilter(
+                      ProfilesFilter(
                         id = group.members
                           .filter(_._1 == false)
                           .map(_._2.id.toString)
@@ -726,9 +726,9 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                     List(
                       profileStore
                         .getProfiles(
-                          GetProfilesFilters(
+                          ProfilesFilters(
                             List(
-                              GetProfilesFilter(
+                              ProfilesFilter(
                                 id = group.members
                                   .filter(_._1 == true)
                                   .map(_._2.id.toString)
@@ -745,9 +745,9 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                         }),
                       profileStore
                         .getProfiles(
-                          GetProfilesFilters(
+                          ProfilesFilters(
                             List(
-                              GetProfilesFilter(
+                              ProfilesFilter(
                                 id = group.members
                                   .filter(_._1 == false)
                                   .map(_._2.id.toString)
@@ -821,11 +821,11 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfileStore
-                    .GetProfilesFilters()
+                    .ProfilesFilters()
                     .copy(filters =
                       List(
                         ProfileStore
-                          .GetProfilesFilter()
+                          .ProfilesFilter()
                           .copy(id = group.members.map(_._2.id.toString))
                       )
                     )
@@ -916,11 +916,11 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                 profileStore
                   .getProfiles(
                     ProfileStore
-                      .GetProfilesFilters()
+                      .ProfilesFilters()
                       .copy(filters =
                         List(
                           ProfileStore
-                            .GetProfilesFilter()
+                            .ProfilesFilter()
                             .copy(id = g.members.map(_._2.id.toString))
                         )
                       )
@@ -995,11 +995,11 @@ object GroupStore {
 
   case class GetGroupsFilters(
       filters: List[GetGroupsFilter] = List(),
-      orderBy: List[(GetEntityFilters.Column, Int)] = List(), // (column, direction)
-      pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
-  ) extends GetEntityFilters
+      orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "g.ID") extends GetEntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "g.ID") extends EntityFilters.Column
   }
 }

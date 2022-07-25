@@ -11,7 +11,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.permissions.{
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{
-  GetEntityFilters,
+  EntityFilters,
   SqlStoreQuery
 }
 import io.agamis.fusion.core.db.models.sql.{Application, Permission}
@@ -470,11 +470,11 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   profileStore
                     .getProfiles(
                       ProfileStore
-                        .GetProfilesFilters()
+                        .ProfilesFilters()
                         .copy(
                           filters = List(
                             ProfileStore
-                              .GetProfilesFilter()
+                              .ProfilesFilter()
                               .copy(
                                 id = permission.owningProfiles
                                   .map(_._2.id.toString)
@@ -578,11 +578,11 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfileStore
-                    .GetProfilesFilters()
+                    .ProfilesFilters()
                     .copy(
                       filters = List(
                         ProfileStore
-                          .GetProfilesFilter()
+                          .ProfilesFilter()
                           .copy(
                             id = permissions
                               .flatMap({ permission =>
@@ -696,11 +696,11 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   profileStore
                     .getProfiles(
                       ProfileStore
-                        .GetProfilesFilters()
+                        .ProfilesFilters()
                         .copy(
                           filters = List(
                             ProfileStore
-                              .GetProfilesFilter()
+                              .ProfilesFilter()
                               .copy(
                                 id = permission.owningProfiles
                                   .map(_._2.id.toString)
@@ -788,11 +788,11 @@ object PermissionStore {
 
   case class GetPermissionsFilters(
       filters: List[GetPermissionsFilter] = List(),
-      orderBy: List[(GetEntityFilters.Column, Int)] = List(),
-      pagination: Option[GetEntityFilters.Pagination] = None // (limit, offset)
-  ) extends GetEntityFilters
+      orderBy: List[(EntityFilters.Column, Int)] = List(),
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "p.ID") extends GetEntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "p.ID") extends EntityFilters.Column
   }
 }
