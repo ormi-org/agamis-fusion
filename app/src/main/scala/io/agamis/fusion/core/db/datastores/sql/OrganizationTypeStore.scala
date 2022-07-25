@@ -16,7 +16,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtype
 import org.apache.ignite.cache.CacheAtomicityMode
 import io.agamis.fusion.core.db.datastores.sql.generics.TextStore
 import io.agamis.fusion.core.db.models.sql.generics.Language
-import io.agamis.fusion.core.db.datastores.typed.sql.GetEntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import scala.collection.mutable.ListBuffer
 import java.sql.Timestamp
@@ -200,7 +200,7 @@ class OrganizationTypeStore(implicit wrapper: IgniteClientNodeWrapper) extends S
     def getAllOrganizationTypes(implicit ec: ExecutionContext): Future[List[OrganizationType]] ={
         getOrganizationTypes(OrganizationTypeStore.GetOrganizationTypesFilters().copy(
             orderBy = List(
-                ("id", 1)
+                (OrganizationTypeStore.Column.ID(), 1)
             )
         )).transformWith({
             case Success(organizationTypes) => 
@@ -301,6 +301,11 @@ object OrganizationTypeStore {
     )
     case class GetOrganizationTypesFilters(
         filters: List[GetOrganizationTypesFilter] = List(),
-        orderBy: List[(String, Int)] = List() // (column, direction)
-    ) extends GetEntityFilters
+        orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
+        pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+    ) extends EntityFilters
+
+    object Column {
+        case class ID(val order: Int = 0, val name: String = "ot.ID") extends EntityFilters.Column
+    }
 }

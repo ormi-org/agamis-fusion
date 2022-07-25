@@ -39,15 +39,15 @@ abstract class SqlMutableStore[K, M: ClassTag](implicit wrapper: IgniteClientNod
       * @param ec implicit [[scala.concurrent.ExecutionContext ExecutionContext]]
       * @return a future result containing parallel sequence of rows
       */
-    def executeQuery(sqlQuery: SqlStoreQuery)(implicit ec: ExecutionContext): Future[Vector[List[_]]] = {
+    def executeQuery(sqlQuery: SqlStoreQuery)(implicit ec: ExecutionContext): Future[Vector[List[String]]] = {
         val queryString: String = sqlQuery.query
         Future {
             val igniteQuery = new SqlFieldsQuery(queryString)
             if (sqlQuery.params.nonEmpty) igniteQuery.setArgs(sqlQuery.params:_*)
             val query = igniteCache.query(igniteQuery)
-            var scalaRes = Vector[List[_]]()
+            var scalaRes = Vector[List[String]]()
             query.getAll.forEach(item => {
-                scalaRes :+= item.asScala.toList
+                scalaRes :+= item.asScala.toList.asInstanceOf[List[String]]
             })
             scalaRes
         }

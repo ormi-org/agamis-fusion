@@ -4,7 +4,7 @@ import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
-import io.agamis.fusion.core.db.datastores.typed.sql.GetEntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
 
 import io.agamis.fusion.core.db.common.Utils
 
@@ -175,9 +175,10 @@ object LanguageStore {
         label: List[String]
     )
     case class GetLanguagesFilters(
-        filters: List[GetLanguagesFilter],
-        orderBy: List[(String, Int)] // (column, direction)
-    ) extends GetEntityFilters
+        filters: List[GetLanguagesFilter] = List(),
+        orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
+        pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+    ) extends EntityFilters
 
     object GetLanguagesFilters {
         def none: GetLanguagesFilters = {
@@ -186,5 +187,9 @@ object LanguageStore {
                 List()
             )
         }
+    }
+
+    object Column {
+        case class ID(val order: Int = 0, val name: String = "p.ID") extends EntityFilters.Column
     }
 }

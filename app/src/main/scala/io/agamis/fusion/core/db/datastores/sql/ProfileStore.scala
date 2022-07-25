@@ -2,44 +2,47 @@ package io.agamis.fusion.core.db.datastores.sql
 
 import io.agamis.fusion.core.db.common.Utils
 import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{
-  DuplicateOrganizationException,
-  OrganizationNotFoundException
-}
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.{
-  DuplicateProfileException,
-  ProfileNotFoundException,
-  ProfileNotPersistedException,
-  ProfileQueryExecutionException,
-  StillAttachedOrganizationException
-}
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.DuplicateOrganizationException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotFoundException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.DuplicateProfileException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileNotFoundException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileNotPersistedException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileQueryExecutionException
+import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.StillAttachedOrganizationException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.generics.EmailStore
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.emails.EmailNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
-import io.agamis.fusion.core.db.datastores.typed.sql.{
-  GetEntityFilters,
-  SqlStoreQuery
-}
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.Profile
-import io.agamis.fusion.core.db.models.sql.generics.{Email, Language}
-import io.agamis.fusion.core.db.models.sql.relations.{
-  ProfileEmail,
-  ProfileGroup,
-  ProfilePermission
-}
+import io.agamis.fusion.core.db.models.sql.generics.Email
+import io.agamis.fusion.core.db.models.sql.generics.Language
+import io.agamis.fusion.core.db.models.sql.relations.ProfileEmail
+import io.agamis.fusion.core.db.models.sql.relations.ProfileGroup
+import io.agamis.fusion.core.db.models.sql.relations.ProfilePermission
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
-import org.apache.ignite.cache.{CacheAtomicityMode, CacheMode, QueryEntity}
+import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.QueryEntity
 
 import java.sql.Timestamp
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
-import org.apache.ignite.transactions.Transaction
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import io.agamis.fusion.core.db.datastores.sql.common.Filter
+import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidComparisonOperatorException
+import io.agamis.fusion.core.db.datastores.sql.common.Placeholder
+import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidOrderingOperatorException
+import io.agamis.fusion.core.db.datastores.sql.common.Pagination
+import io.agamis.fusion.core.db.datastores.sql.generics.LanguageStore
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
     extends SqlMutableStore[UUID, Profile] {
@@ -78,7 +81,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
   }
 
   def makeProfilesQuery(
-      queryFilters: ProfileStore.GetProfilesFilters
+      queryFilters: ProfileStore.ProfilesFilters
   ): SqlStoreQuery = {
     var baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
@@ -87,444 +90,370 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
       val innerWhereStatement: ListBuffer[String] = ListBuffer()
       // manage ids search
       if (filter.id.nonEmpty) {
-        innerWhereStatement += s"profile_id in (${(for (_ <- 1 to filter.id.length)
-          yield "?").mkString(",")})"
+        innerWhereStatement += s"${ProfileStore.Column.ID().name} LIKE \"%?%\""
+        queryArgs ++= filter.id
+      }
+      // manage aliases search
+      if (filter.id.nonEmpty) {
+        innerWhereStatement += s"${ProfileStore.Column.ALIAS().name} LIKE \"%?%\""
         queryArgs ++= filter.id
       }
       // manage lastnames search
       if (filter.lastname.nonEmpty) {
-        innerWhereStatement += s"profile_lastname in (${(for (_ <- 1 to filter.lastname.length)
-          yield "?").mkString(",")})"
+        innerWhereStatement += s"${ProfileStore.Column.LASTNAME().name} LIKE \"%?%\""
         queryArgs ++= filter.lastname
       }
       // manage lastnames search
       if (filter.firstname.nonEmpty) {
-        innerWhereStatement += s"profile_firstname in (${(for (_ <- 1 to filter.firstname.length)
-          yield "?").mkString(",")})"
+        innerWhereStatement += s"${ProfileStore.Column.FIRSTNAME().name} LIKE \"%?%\""
         queryArgs ++= filter.firstname
       }
       // manage lastLogin date search
-      filter.lastLogin.map { _ match {
-        case (test, time) =>
-          innerWhereStatement += s"profile_last_login ${test match {
-            case "eq"  => "="
-            case "gt"  => ">"
-            case "lt"  => "<"
-            case "neq" => "<>"
+      filter.lastLogin match {
+        case Some((test, time)) =>
+          innerWhereStatement += s"${ProfileStore.Column.LAST_LOGIN().name} ${test match {
+            case Filter.ComparisonOperator.Equal =>
+              Filter.ComparisonOperator.SQL.Equal
+            case Filter.ComparisonOperator.GreaterThan =>
+              Filter.ComparisonOperator.SQL.GreaterThan
+            case Filter.ComparisonOperator.LowerThan =>
+              Filter.ComparisonOperator.SQL.LowerThan
+            case Filter.ComparisonOperator.NotEqual =>
+              Filter.ComparisonOperator.SQL.NotEqual
+            case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }}
+      }
       // manage shared state search
       filter.isActive match {
         case Some(value) =>
-          innerWhereStatement += s"profile_is_active = ?"
-          queryArgs += value.toString
+          innerWhereStatement += s"${ProfileStore.Column.IS_ACTIVE().name} = ?"
+          queryArgs += (if (value) 1.toString else 0.toString)
         case None => ()
       }
       // manage metadate search
-      filter.createdAt.map { _ match {
-        case (test, time) =>
-          innerWhereStatement += s"profile_created_at ${test match {
-            case "eq"  => "="
-            case "gt"  => ">"
-            case "lt"  => "<"
-            case "neq" => "<>"
+      filter.createdAt match {
+        case Some((test, time)) =>
+          innerWhereStatement += s"${ProfileStore.Column.CREATED_AT().name} ${test match {
+            case Filter.ComparisonOperator.Equal =>
+              Filter.ComparisonOperator.SQL.Equal
+            case Filter.ComparisonOperator.GreaterThan =>
+              Filter.ComparisonOperator.SQL.GreaterThan
+            case Filter.ComparisonOperator.LowerThan =>
+              Filter.ComparisonOperator.SQL.LowerThan
+            case Filter.ComparisonOperator.NotEqual =>
+              Filter.ComparisonOperator.SQL.NotEqual
+            case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }}
-      filter.updatedAt.map { _ match {
-        case (test, time) =>
-          innerWhereStatement += s"profile_updated_at ${test match {
-            case "eq"  => "="
-            case "gt"  => ">"
-            case "lt"  => "<"
-            case "neq" => "<>"
+        case None => ()
+      }
+      filter.updatedAt match {
+        case Some((test, time)) =>
+          innerWhereStatement += s"${ProfileStore.Column.UPDATED_AT().name} ${test match {
+            case Filter.ComparisonOperator.Equal =>
+              Filter.ComparisonOperator.SQL.Equal
+            case Filter.ComparisonOperator.GreaterThan =>
+              Filter.ComparisonOperator.SQL.GreaterThan
+            case Filter.ComparisonOperator.LowerThan =>
+              Filter.ComparisonOperator.SQL.LowerThan
+            case Filter.ComparisonOperator.NotEqual =>
+              Filter.ComparisonOperator.SQL.NotEqual
+            case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }}
+      }
       whereStatements += innerWhereStatement.mkString(" AND ")
     })
     // compile whereStatements
-    if (whereStatements.nonEmpty) {
-      baseQueryString += " WHERE " + whereStatements.reverse.mkString(" OR ")
-    }
+    baseQueryString.replace(
+      Placeholder.WHERE_STATEMENT,
+      whereStatements.nonEmpty match {
+        case true => " WHERE " + whereStatements.reverse.mkString(" OR ")
+        case false => ""
+      }
+    )
     // manage order
-    if (queryFilters.orderBy.nonEmpty) {
-      baseQueryString += s" ORDER BY ${queryFilters.orderBy
-        .map(o =>
-          s"profile_${o._1} ${o._2 match {
-            case 1  => "ASC"
-            case -1 => "DESC"
-          }}"
-        )
-        .mkString(", ")}"
-    }
-    println(queryArgs)
+    baseQueryString.replace(
+      Placeholder.ORDER_BY_STATEMENT,
+      queryFilters.orderBy.nonEmpty match {
+        case true =>
+          s" ORDER BY ${queryFilters.orderBy
+            .map(o =>
+              s"u.${o._1} ${o._2 match {
+                case Filter.OrderingOperators.Ascending =>
+                  Filter.OrderingOperators.SQL.Ascending
+                case Filter.OrderingOperators.Descending =>
+                  Filter.OrderingOperators.SQL.Descending
+                case _ => throw InvalidOrderingOperatorException(o._2)
+              }}"
+            )
+            .mkString(", ")}"
+        case false => ""
+      }
+    )
+    // manage pagination
+    baseQueryString.replace(
+      Placeholder.PAGINATION,
+      queryFilters.pagination match {
+        case Some(p) => s" LIMIT ${p.limit} OFFSET ${p.offset} "
+        case None    => s" LIMIT ${Pagination.Default.Limit} OFFSET ${Pagination.Default.Offset} "
+      }
+    )
     makeQuery(baseQueryString)
       .setParams(queryArgs.toList)
   }
 
+  /** Get existing profiles from database
+    *
+    * @param queryFilters
+    * @param ec
+    * @return
+    */
   def getProfiles(
-      queryFilters: ProfileStore.GetProfilesFilters
+      queryFilters: ProfileStore.ProfilesFilters
   )(implicit ec: ExecutionContext): Future[List[Profile]] = {
     executeQuery(makeProfilesQuery(queryFilters)).transformWith({
       case Success(rows) =>
         val entityReflections = rows.groupBy(_.head)
-        val profiles = rows
-          .map(_.head)
-          .distinct
-          .map(entityReflections(_))
-          .map(entityReflection => {
-            val groupedRows =
-              getRelationsGroupedRowsFrom(entityReflection, 7, 8)
-            groupedRows.get("PROFILE") match {
-              case Some(profileReflections) =>
-                val profileDef = profileReflections.head.head._2
-                (for (
-                  //PROFILE.id, lastname, firstname, last_login, is_active, user_id, PROFILE.organization_id , PROFILE.created_at , PROFILE.updated_at
-                  profile <- Right(
-                    makeProfile
-                      .setId(profileDef(0))
-                      .setLastname(profileDef(1))
-                      .setFirstname(profileDef(2))
-                      .setLastLogin(
-                        Utils.timestampFromString(profileDef(3)) match {
-                          case lastlogin: Timestamp => lastlogin
-                          case _                    => null
-                        }
-                      )
+        val profiles = rows.map({ row =>
+          (for (
+            profile <- Right(
+              // make profile
+              makeProfile
+                .setId(row(ProfileStore.Column.ID().order))
+                .setAlias(row(ProfileStore.Column.ALIAS().order))
+                .setLastname(row(ProfileStore.Column.LASTNAME().order))
+                .setFirstname(row(ProfileStore.Column.FIRSTNAME().order))
+                .setLastLogin(
+                  Utils.timestampFromString(row(ProfileStore.Column.LAST_LOGIN().order)) match {
+                    case ts: Timestamp => ts
+                    case _             => null
+                  }
+                )
+                .setCreatedAt(
+                  Utils.timestampFromString(row(ProfileStore.Column.CREATED_AT().order)) match {
+                    case ts: Timestamp => ts
+                    case _             => null
+                  }
+                )
+                .setUpdatedAt(
+                  Utils.timestampFromString(row(ProfileStore.Column.UPDATED_AT().order)) match {
+                    case ts: Timestamp => ts
+                    case _             => null
+                  }
+                )
+            ) flatMap {
+              profile =>
+                Try(row(ProfileStore.Column.IS_ACTIVE().order).toBoolean) match {
+                  case Success(active) =>
+                    if (active) Right(profile.setActive())
+                    else Right(profile.setInactive())
+                  case Failure(_) => Right(profile)
+                }
+            } flatMap {
+              profile =>
+                // parse user
+                for (
+                  userReflection <- Right(row(ProfileStore.Column.USER().order).split("||"));
+                  user <- Right(
+                    new UserStore().makeUser
+                      .setId(userReflection(ProfileStore.Column.USER.ID().order))
+                      .setUsername(userReflection(ProfileStore.Column.USER.USERNAME().order))
+                      .setPasswordHash(userReflection(ProfileStore.Column.USER.PASSWORD().order))
                       .setCreatedAt(
-                        Utils.timestampFromString(profileDef(7)) match {
-                          case createdAt: Timestamp => createdAt
-                          case _                    => null
+                        Utils.timestampFromString(userReflection(ProfileStore.Column.USER.CREATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
                         }
                       )
                       .setUpdatedAt(
-                        Utils.timestampFromString(profileDef(8)) match {
-                          case updatedAt: Timestamp => updatedAt
-                          case _                    => null
+                        Utils.timestampFromString(userReflection(ProfileStore.Column.USER.UPDATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
                         }
                       )
-                  ) flatMap { profile =>
-                    Try(profileDef(4).toBoolean) match {
-                      case Success(active) =>
-                        if (active) Right(profile.setActive())
-                        else Right(profile.setInactive())
-                      case Failure(_) => Right(profile)
-                    }
-                  } flatMap { profile =>
-                    groupedRows.get("USER") match {
-                      case Some(userReflections) =>
-                        userReflections.foreach({ userReflection =>
-                          val userDef = userReflection.head._2
-                          for (
-                            user <- Right(
-                              new UserStore().makeUser
-                                .setId(userDef(0))
-                                .setUsername(userDef(1))
-                                .setPasswordHash(userDef(2))
-                                .setCreatedAt(
-                                  Utils.timestampFromString(userDef(3)) match {
-                                    case createdAt: Timestamp => createdAt
-                                    case _                    => null
-                                  }
-                                )
-                                .setUpdatedAt(
-                                  Utils.timestampFromString(userDef(4)) match {
-                                    case updatedAt: Timestamp => updatedAt
-                                    case _                    => null
-                                  }
-                                )
-                            )
-                          ) yield profile.setRelatedUser(user)
+                  )
+                ) yield profile.setRelatedUser(user)
+            } flatMap {
+              profile =>
+                // parse emails
+                row(ProfileStore.Column.EMAILS().order).split("||").foreach({ emailString =>
+                  for (
+                    emailReflection <- Right(emailString.split("|>|"));
+                    email <- Right(
+                      new EmailStore().makeEmail
+                        .setId(emailReflection(ProfileStore.Column.EMAIL.ID().order))
+                        .setAddress(emailReflection(ProfileStore.Column.EMAIL.ADDRESS().order)));
+                    isMain <- Right(Try(emailReflection(ProfileStore.Column.EMAIL.IS_MAIN().order).toBoolean) match {
+                          case Success(isMain) =>
+                            if (isMain) true
+                            else false
+                          case Failure(_) => false
                         })
-                      case None =>
-                        Future.failed(
-                          UserNotFoundException(
-                            s"Profile ${profile.id}:${profile.firstname}.${profile.lastname}"
-                          )
-                        )
-                    }
-
-                    groupedRows.get("EMAIL") match {
-                      case Some(emailReflections) =>
-                        if (emailReflections.isEmpty) {
-                          Future.failed(
-                            EmailNotFoundException(
-                              s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might have no email address"
-                            )
-                          )
-                        } else {
-                          emailReflections.foreach({ emailReflection =>
-                            val emailDef = emailReflection.head._2
-                            for (
-                              email <- Right(
-                                Email.apply
-                                  .setId(emailDef(0))
-                                  .setAddress(emailDef(1))
-                              )
-                            ) yield {
-                              Try(emailDef(2).toBoolean) match {
-                                case Success(isMain) =>
-                                  if (isMain) profile.setMainEmail(email)
-                                  else profile.addEmail(email)
-                                case Failure(_) =>
-                              }
-                            }
-                          })
+                  ) yield if(isMain) profile.setMainEmail(email) else profile.addEmail(email)
+                })
+                Right(profile)
+            } flatMap {
+              profile =>
+                // parse organizations
+                for (
+                  organizationReflection <- Right(row(ProfileStore.Column.ORGANIZATION().order).split("||"));
+                  organization <- Right(
+                    new OrganizationStore().makeOrganization
+                      .setId(organizationReflection(ProfileStore.Column.ORGANIZATION.ID().order))
+                      .setLabel(organizationReflection(ProfileStore.Column.ORGANIZATION.LABEL().order))
+                      .setCreatedAt(
+                        Utils.timestampFromString(organizationReflection(ProfileStore.Column.ORGANIZATION.CREATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
                         }
-                      case None =>
-                    }
-
-                    groupedRows.get("ORGANIZATION") match {
-                      case Some(organizationReflections) =>
-                        organizationReflections.size match {
-                          case 0 =>
-                            Future.failed(
-                              OrganizationNotFoundException(
-                                s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"
-                              )
-                            )
-                          case 1 =>
-                            val organizationReflection =
-                              organizationReflections.head
-                            organizationReflection
-                              .partition(_._1 == "ORGANIZATION") match {
-                              case result =>
-                                result._1.length match {
-                                  case 0 =>
-                                    Future.failed(
-                                      OrganizationNotFoundException(
-                                        s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} might be orphan"
-                                      )
-                                    )
-                                  case 1 =>
-                                    val orgDef = result._1(0)._2
-                                    for (
-                                      organization <- Right(
-                                        new OrganizationStore().makeOrganization
-                                          .setId(orgDef(0))
-                                          .setLabel(orgDef(1))
-                                          .setCreatedAt(
-                                            Utils.timestampFromString(
-                                              orgDef(3)
-                                            ) match {
-                                              case createdAt: Timestamp =>
-                                                createdAt
-                                              case _ => null
-                                            }
-                                          )
-                                          .setUpdatedAt(
-                                            Utils.timestampFromString(
-                                              orgDef(4)
-                                            ) match {
-                                              case updatedAt: Timestamp =>
-                                                updatedAt
-                                              case _ => null
-                                            }
-                                          )
-                                      ) flatMap { organization =>
-                                        Try(orgDef(2).toBoolean) match {
-                                          case Success(queryable) =>
-                                            if (queryable)
-                                              Right(organization.setQueryable())
-                                            else
-                                              Right(
-                                                organization.setUnqueryable()
-                                              )
-                                          case Failure(_) => Right(organization)
-                                        }
-                                      } flatMap { organization =>
-                                        result._2
-                                          .partition(_._1 == "ORGTYPE") match {
-                                          case result =>
-                                            result._1.length match {
-                                              case 0 =>
-                                              case 1 =>
-                                                val orgTypeDef = result._1(0)._2
-                                                val orgType =
-                                                  new OrganizationTypeStore().makeOrganizationType
-                                                    .setId(orgTypeDef(1))
-                                                    .setLabelTextId(
-                                                      orgTypeDef(2)
-                                                    )
-                                                    .setCreatedAt(
-                                                      Utils.timestampFromString(
-                                                        orgTypeDef(3)
-                                                      ) match {
-                                                        case createdAt: Timestamp =>
-                                                          createdAt
-                                                        case _ => null
-                                                      }
-                                                    )
-                                                    .setUpdatedAt(
-                                                      Utils.timestampFromString(
-                                                        orgTypeDef(4)
-                                                      ) match {
-                                                        case updatedAt: Timestamp =>
-                                                          updatedAt
-                                                        case _ => null
-                                                      }
-                                                    )
-                                                result._2.foreach({ result =>
-                                                  val orgTypeLangVariantDef =
-                                                    result._2
-                                                  orgType.setLabel(
-                                                    Language.apply
-                                                      .setId(
-                                                        orgTypeLangVariantDef(4)
-                                                      )
-                                                      .setCode(
-                                                        orgTypeLangVariantDef(3)
-                                                      )
-                                                      .setLabel(
-                                                        orgTypeLangVariantDef(5)
-                                                      ),
-                                                    orgTypeLangVariantDef(2)
-                                                  )
-                                                })
-                                                organization.setType(orgType)
-                                              case _ =>
-                                            }
-                                        }
-                                        Right(organization)
-                                      }
-                                    )
-                                      yield profile
-                                        .setRelatedOrganization(organization)
-                                  case _ =>
-                                    Future.failed(
-                                      DuplicateOrganizationException(
-                                        s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"
-                                      )
-                                    )
-                                }
-                            }
-                          case _ =>
-                            Future.failed(
-                              DuplicateOrganizationException(
-                                s"Profile ${profile.id}:${profile.firstname}.${profile.lastname} has duplicate organization relation"
-                              )
-                            )
+                      )
+                      .setUpdatedAt(
+                        Utils.timestampFromString(organizationReflection(ProfileStore.Column.ORGANIZATION.UPDATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
                         }
-                      case None =>
-                    }
-
-                    groupedRows.get("PERMISSION") match {
-                      case Some(permissionReflections) =>
-                        permissionReflections.foreach({ permissionReflection =>
-                          permissionReflection
-                            .partition(_._1 == "PERMISSION") match {
-                            case result =>
-                              result._1.length match {
-                                case 0 =>
-                                case _ =>
-                                  val permissionDef = result._1.head._2
-                                  for (
-                                    permission <- Right(
-                                      new PermissionStore().makePermission
-                                        .setId(permissionDef(0))
-                                        .setKey(permissionDef(1))
-                                        .setLabelTextId(permissionDef(2))
-                                        .setDescriptionTextId(permissionDef(3))
-                                        .setCreatedAt(
-                                          Utils.timestampFromString(
-                                            permissionDef(6)
-                                          ) match {
-                                            case createdAt: Timestamp =>
-                                              createdAt
-                                            case _ => null
-                                          }
-                                        )
-                                        .setUpdatedAt(
-                                          Utils.timestampFromString(
-                                            permissionDef(7)
-                                          ) match {
-                                            case updatedAt: Timestamp =>
-                                              updatedAt
-                                            case _ => null
-                                          }
-                                        )
-                                    ) flatMap { permission =>
-                                      Try(permissionDef(4).toBoolean) match {
-                                        case Success(editable) =>
-                                          if (editable)
-                                            Right(permission.setEditable)
-                                          else Right(permission.setReadonly)
-                                        case Failure(_) => Right(permission)
-                                      }
-                                    } flatMap { permission =>
-                                      result._2.partition(
-                                        _._1 == "PERMISSION_LABEL_LANG_VARIANT"
-                                      ) match {
-                                        case result =>
-                                          if (result._1.isEmpty) {
-                                            Future.failed(
-                                              TextNotFoundException(
-                                                s"Permission ${permission.id} might lack of label in any language"
-                                              )
-                                            )
-                                          } else {
-                                            result._1.foreach({
-                                              labelLangVariant =>
-                                                val variantDef =
-                                                  labelLangVariant._2
-                                                permission.setLabel(
-                                                  Language.apply
-                                                    .setId(variantDef(3))
-                                                    .setCode(variantDef(2))
-                                                    .setLabel(variantDef(4)),
-                                                  variantDef(1)
-                                                )
-                                            })
-                                            result._2.filter(
-                                              _._1 == "PERMISSION_DESC_LANG_VARIANT"
-                                            ) match {
-                                              case result =>
-                                                if (result.isEmpty) {
-                                                  Future.failed(
-                                                    TextNotFoundException(
-                                                      s"Permission ${permission.id} might lack of description in any language"
-                                                    )
-                                                  )
-                                                } else {
-                                                  result.foreach({
-                                                    descLangVariant =>
-                                                      val variantDef =
-                                                        descLangVariant._2
-                                                      permission.setDescription(
-                                                        Language.apply
-                                                          .setId(variantDef(3))
-                                                          .setCode(
-                                                            variantDef(2)
-                                                          )
-                                                          .setLabel(
-                                                            variantDef(4)
-                                                          ),
-                                                        variantDef(1)
-                                                      )
-                                                  })
-                                                }
-                                            }
-                                          }
-                                      }
-                                      Right(permission)
-                                    }
-                                  ) yield profile.addPermission(permission)
+                      )
+                  ) flatMap {
+                    org =>
+                      // parse queryable field
+                      Try(organizationReflection(ProfileStore.Column.ORGANIZATION.QUERYABLE().order).toBoolean) match {
+                        case Success(isQueryable) =>
+                          if (isQueryable) Right(org.setQueryable())
+                          else Right(org.setUnqueryable())
+                        case Failure(_) => Right(org)
+                      }
+                  } flatMap {
+                    org =>
+                      // parse orgType
+                      for (
+                        orgTypeReflection <- Right(organizationReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE().order).split("|>|"));
+                        orgType <- Right(
+                          new OrganizationTypeStore().makeOrganizationType
+                            .setId(orgTypeReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE.ID().order))
+                            .setLabelTextId(orgTypeReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE.LABEL_TEXT_ID().order))
+                            .setCreatedAt(
+                              Utils.timestampFromString(orgTypeReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE.CREATED_AT().order)) match {
+                                case ts: Timestamp => ts
+                                case _             => null
                               }
-                          }
-                        })
-                      case None =>
-                    }
-
-                    Right(profile)
+                            )
+                            .setUpdatedAt(
+                              Utils.timestampFromString(orgTypeReflection(ProfileStore.Column.ORGANIZATION.ORGANIZATIONTYPE.UPDATED_AT().order)) match {
+                                case ts: Timestamp => ts
+                                case _             => null
+                              }
+                            )
+                        ) flatMap {
+                          orgType =>
+                            // parse orgType Lang variants
+                            organizationReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL().order).split("|>|")
+                              .map(_.split("|>>|"))
+                              .foreach({
+                                orgTypeLabelReflection =>
+                                  orgType.setLabel(
+                                    Language.apply
+                                      .setId(orgTypeLabelReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL.LANG_ID().order))
+                                      .setCode(orgTypeLabelReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL.LANG_CODE().order))
+                                      .setLabel(orgTypeLabelReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL.LANG_LABEL().order)),
+                                    orgTypeLabelReflection(ProfileStore.Column.ORGANIZATION.ORG_TYPE_LABEL.CONTENT().order)
+                                  )
+                              })
+                            Right(orgType)
+                        }
+                      ) yield org.setType(orgType)
+                      Right(org)
                   }
-                ) yield profile)
-                  .getOrElse(null)
-              case None =>
+                ) yield profile.setRelatedOrganization(organization)
+            } flatMap {
+              profile => 
+                // map groups
+                row(ProfileStore.Column.GROUPS().order).split("||").map(_.split("|>|")).foreach({ group =>
+                  profile.addGroup(new GroupStore().makeGroup
+                    .setId(group(ProfileStore.Column.GROUP.ID().order))
+                    .setName(group(ProfileStore.Column.GROUP.NAME().order))
+                    .setCreatedAt(
+                      Utils.timestampFromString(group(ProfileStore.Column.GROUP.CREATED_AT().order)) match {
+                        case ts: Timestamp => ts
+                        case _             => null
+                      }
+                    )
+                    .setUpdatedAt(
+                      Utils.timestampFromString(group(ProfileStore.Column.GROUP.UPDATED_AT().order)) match {
+                        case ts: Timestamp => ts
+                        case _             => null
+                      }
+                    )
+                  )
+                })
+                Right(profile)
+            } flatMap {
+              profile =>
+                // parse permissions
+                row(ProfileStore.Column.PERMISSIONS().order).split("||").map(_.split("|>|")).foreach({ permissionReflection =>
+                  for (
+                    permission <- Right(
+                      new PermissionStore().makePermission
+                        .setId(permissionReflection(ProfileStore.Column.PERMISSION.ID().order))
+                        .setKey(permissionReflection(ProfileStore.Column.PERMISSION.KEY().order))
+                        .setCreatedAt(
+                      Utils.timestampFromString(permissionReflection(ProfileStore.Column.PERMISSION.CREATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
+                        }
+                      )
+                      .setUpdatedAt(
+                        Utils.timestampFromString(permissionReflection(ProfileStore.Column.PERMISSION.UPDATED_AT().order)) match {
+                          case ts: Timestamp => ts
+                          case _             => null
+                        }
+                      )
+                    ) flatMap {
+                      // parse editable field
+                      permission =>
+                        Try(permissionReflection(ProfileStore.Column.PERMISSION.EDITABLE().order).toBoolean) match {
+                          case Success(isEditable) =>
+                            if (isEditable) Right(permission.setEditable)
+                            else Right(permission.setReadonly)
+                          case Failure(_) => Right(permission)
+                        }
+                    } flatMap {
+                      // parse label and description variants
+                      permission =>
+                        permissionReflection(ProfileStore.Column.PERMISSION.LABEL().order).split("|>>|")
+                          .map(_.split("|>>>|"))
+                          .foreach({
+                            labelReflection =>
+                              permission.setLabel(
+                                Language.apply
+                                  .setId(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_ID().order))
+                                  .setCode(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_CODE().order))
+                                  .setLabel(labelReflection(ProfileStore.Column.PERMISSION.LABEL.LANG_LABEL().order)),
+                                labelReflection(ProfileStore.Column.PERMISSION.LABEL.CONTENT().order)
+                              )
+                          })
+                        permissionReflection(ProfileStore.Column.PERMISSION.DESCRIPTION().order).split("|>>|")
+                          .map(_.split("|>>>|"))
+                          .foreach({
+                            descReflection =>
+                              permission.setLabel(
+                                Language.apply
+                                  .setId(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_ID().order))
+                                  .setCode(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_CODE().order))
+                                  .setLabel(descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.LANG_LABEL().order)),
+                                descReflection(ProfileStore.Column.PERMISSION.DESCRIPTION.CONTENT().order)
+                              )
+                          })
+                        Right(permission)
+                    }
+                  ) yield profile.addPermission(permission)
+                })
+                Right(profile)
             }
-          })
-        Future.successful(profiles.toList.asInstanceOf[List[Profile]])
+          ) yield profile).getOrElse(null)
+        })
+        Future.successful(profiles.toList)
       case Failure(cause) =>
         Future.failed(ProfileQueryExecutionException(cause))
     })
@@ -533,10 +462,10 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
   def getAllProfiles(implicit ec: ExecutionContext): Future[List[Profile]] = {
     getProfiles(
       ProfileStore
-        .GetProfilesFilters()
+        .ProfilesFilters()
         .copy(
           orderBy = List(
-            ("id", 1)
+            (ProfileStore.Column.ID(), 1)
           )
         )
     ).transformWith({
@@ -554,11 +483,11 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
   )(implicit ec: ExecutionContext): Future[Profile] = {
     getProfiles(
       ProfileStore
-        .GetProfilesFilters()
+        .ProfilesFilters()
         .copy(
           filters = List(
             ProfileStore
-              .GetProfilesFilter()
+              .ProfilesFilter()
               .copy(
                 id = List(id)
               )
@@ -998,18 +927,168 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
 }
 
 object ProfileStore {
-  case class GetProfilesFilter(
-      id: List[String] = List(),
-      lastname: List[String] = List(),
-      firstname: List[String] = List(),
+  case class ProfilesFilter(
+      id: Option[String] = None,
+      alias: Option[String] = None,
+      lastname: Option[String] = None,
+      firstname: Option[String] = None,
       lastLogin: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       isActive: Option[Boolean] = None,
-      createdAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
-      updatedAt: List[(String, Timestamp)] = List() // (date, (eq, lt, gt, ne))
+      createdAt: Option[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
+      updatedAt: Option[(String, Timestamp)] = List() // (date, (eq, lt, gt, ne))
   )
 
-  case class GetProfilesFilters(
-      filters: List[GetProfilesFilter] = List(),
-      orderBy: List[(String, Int)] = List() // (column, direction)
-  ) extends GetEntityFilters
+  case class ProfilesFilters(
+      filters: List[ProfilesFilter] = List(),
+      orderBy: List[(EntityFilters.Column, Int)] =
+        List(), // (column, direction)
+      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
+  ) extends EntityFilters
+
+  object Column {
+    case class ID(val order: Int = 0, val name: String = "p.ID")
+        extends EntityFilters.Column
+    case class ALIAS(val order: Int = 1, val name: String = "p.ALIAS")
+        extends EntityFilters.Column
+    case class LASTNAME(val order: Int = 2, val name: String = "p.LASTNAME")
+        extends EntityFilters.Column
+    case class FIRSTNAME(val order: Int = 3, val name: String = "p.FIRSTNAME")
+        extends EntityFilters.Column
+    case class LAST_LOGIN(val order: Int = 4, val name: String = "p.LAST_LOGIN")
+        extends EntityFilters.Column
+    case class IS_ACTIVE(val order: Int = 5, val name: String = "p.IS_ACTIVE")
+        extends EntityFilters.Column
+    case class CREATED_AT(val order: Int = 6, val name: String = "p.CREATED_AT")
+        extends EntityFilters.Column
+    case class UPDATED_AT(val order: Int = 7, val name: String = "p.UPDATED_AT")
+        extends EntityFilters.Column
+    case class USER(val order: Int = 8, val name: String = "USER")
+        extends EntityFilters.Column
+    case class EMAILS(val order: Int = 9, val name: String = "EMAILS")
+        extends EntityFilters.Column
+    case class ORGANIZATION(val order: Int = 10, val name: String = "ORGANIZATION")
+        extends EntityFilters.Column
+    case class GROUPS(val order: Int = 11, val name: String = "GROUPS")
+        extends EntityFilters.Column
+    case class PERMISSIONS(val order: Int = 12, val name: String = "PERMISSIONS")
+        extends EntityFilters.Column
+    object USER {
+      case class ID(val order: Int = 0, val name: String = "u.ID")
+          extends EntityFilters.Column
+      case class USERNAME(val order: Int = 1, val name: String = "u.USERNAME")
+          extends EntityFilters.Column
+      case class PASSWORD(val order: Int = 2, val name: String = "u.PASSWORD")
+          extends EntityFilters.Column
+      case class CREATED_AT(val order: Int = 3, val name: String = "u.CREATED_AT")
+          extends EntityFilters.Column
+      case class UPDATED_AT(val order: Int = 4, val name: String = "u.UPDATED_AT")
+          extends EntityFilters.Column
+    }
+
+    object EMAIL {
+      case class ID(val order: Int = 0, val name: String = "e.ID")
+          extends EntityFilters.Column
+      case class ADDRESS(val order: Int = 1, val name: String = "e.ADDRESS")
+          extends EntityFilters.Column
+      case class IS_MAIN(val order: Int = 2, val name: String = "pe.IS_MAIN")
+          extends EntityFilters.Column
+    }
+
+    object ORGANIZATION {
+      case class ID(val order: Int = 0, val name: String = "o.ID")
+          extends EntityFilters.Column
+      case class LABEL(val order: Int = 1, val name: String = "o.LABEL")
+          extends EntityFilters.Column
+      case class QUERYABLE(val order: Int = 2, val name: String = "o.QUERYABLE")
+          extends EntityFilters.Column
+      case class CREATED_AT(val order: Int = 3, val name: String = "o.CREATED_AT")
+          extends EntityFilters.Column
+      case class UPDATED_AT(val order: Int = 4, val name: String = "o.UPDATED_AT")
+          extends EntityFilters.Column
+      case class ORGANIZATIONTYPE(val order: Int = 5, val name: String = "o.ORGANIZATIONTYPE")
+          extends EntityFilters.Column
+      case class ORG_TYPE_LABEL(val order: Int = 6, val name: String = "o.ORG_TYPE_LABEL")
+          extends EntityFilters.Column
+
+      object ORGANIZATIONTYPE {
+        case class ID(val order: Int = 0, val name: String = "ot.ID")
+            extends EntityFilters.Column
+        case class LABEL_TEXT_ID(val order: Int = 1, val name: String = "ot.LABEL_TEXT_ID")
+            extends EntityFilters.Column
+        case class CREATED_AT(val order: Int = 2, val name: String = "ot.CREATED_AT")
+            extends EntityFilters.Column
+        case class UPDATED_AT(val order: Int = 3, val name: String = "ot.UPDATED_AT")
+            extends EntityFilters.Column
+      }
+
+      object ORG_TYPE_LABEL {
+        case class TEXT_ID(val order: Int = 0, val name: String = "t.ID")
+            extends EntityFilters.Column
+        case class LANG_ID(val order: Int = 1, val name: String = "l.ID")
+            extends EntityFilters.Column
+        case class LANG_CODE(val order: Int = 2, val name: String = "l.CODE")
+            extends EntityFilters.Column
+        case class LANG_LABEL(val order: Int = 3, val name: String = "l.LABEL")
+            extends EntityFilters.Column
+        case class CONTENT(val order: Int = 4, val name: String = "t.CONTENT")
+            extends EntityFilters.Column
+      }
+    }
+
+    object GROUP {
+      case class ID(val order: Int = 0, val name: String = "g.ID")
+          extends EntityFilters.Column
+      case class NAME(val order: Int = 1, val name: String = "g.NAME")
+          extends EntityFilters.Column
+      case class CREATED_AT(val order: Int = 2, val name: String = "g.CREATED_AT")
+          extends EntityFilters.Column
+      case class UPDATED_AT(val order: Int = 3, val name: String = "g.UPDATED_AT")
+          extends EntityFilters.Column
+    }
+
+    object PERMISSION {
+      case class ID(val order: Int = 0, val name: String = "perm.ID")
+          extends EntityFilters.Column
+      case class KEY(val order: Int = 1, val name: String = "perm.`KEY`")
+          extends EntityFilters.Column
+      case class EDITABLE(val order: Int = 2, val name: String = "perm.EDITABLE")
+          extends EntityFilters.Column
+      case class APPLICATION_ID(val order: Int = 3, val name: String = "perm.APPLICATION_ID")
+          extends EntityFilters.Column
+      case class CREATED_AT(val order: Int = 4, val name: String = "perm.CREATED_AT")
+          extends EntityFilters.Column
+      case class UPDATED_AT(val order: Int = 5, val name: String = "perm.UPDATED_AT")
+          extends EntityFilters.Column
+      case class LABEL(val order: Int = 6, val name: String = "perm.LABEL")
+          extends EntityFilters.Column
+      case class DESCRIPTION(val order: Int = 7, val name: String = "perm.DESCRIPTION")
+          extends EntityFilters.Column
+
+      object LABEL {
+        case class TEXT_ID(val order: Int = 0, val name: String = "t.ID")
+            extends EntityFilters.Column
+        case class LANG_ID(val order: Int = 1, val name: String = "l.ID")
+            extends EntityFilters.Column
+        case class LANG_CODE(val order: Int = 2, val name: String = "l.CODE")
+            extends EntityFilters.Column
+        case class LANG_LABEL(val order: Int = 3, val name: String = "l.LABEL")
+            extends EntityFilters.Column
+        case class CONTENT(val order: Int = 4, val name: String = "t.CONTENT")
+            extends EntityFilters.Column
+      }
+
+      object DESCRIPTION {
+        case class TEXT_ID(val order: Int = 0, val name: String = "td.ID")
+            extends EntityFilters.Column
+        case class LANG_ID(val order: Int = 1, val name: String = "ld.ID")
+            extends EntityFilters.Column
+        case class LANG_CODE(val order: Int = 2, val name: String = "ld.CODE")
+            extends EntityFilters.Column
+        case class LANG_LABEL(val order: Int = 3, val name: String = "ld.LABEL")
+            extends EntityFilters.Column
+        case class CONTENT(val order: Int = 4, val name: String = "td.CONTENT")
+            extends EntityFilters.Column
+      }
+    }
+  }
 }
