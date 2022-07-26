@@ -1,39 +1,27 @@
-SELECT permission_id, permission_key, permission_editable, permission_label_text_id, permission_description_text_id, permission_created_at, permission_updated_at, info_data, type_data
-FROM
-(
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', PERMISSION.id, PERMISSION.key, PERMISSION.editable, PERMISSION.label_text_id, PERMISSION.description_text_id, PERMISSION.created_at, PERMISSION.updated_at) AS info_data, 'PERMISSION' AS type_data
-	FROM $schema.PERMISSION
-	UNION ALL
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', PROFILE.id, lastname, firstname, CONCAT_WS(';', EMAIL.id, EMAIL.address), last_login, is_active, PROFILE.created_at , PROFILE.updated_at) AS info_data, 'PROFILE' AS type_data
-	FROM $schema.PERMISSION AS PERMISSION
-	INNER JOIN $schema.PROFILE_PERMISSION AS PROF_PER ON PROF_PER.permission_id = PERMISSION.id
-	INNER JOIN $schema.PROFILE AS PROFILE ON PROFILE.id = PROF_PER.profile_id
-	INNER JOIN $schema.PROFILE_EMAIL AS PROFILE_EMAIL ON PROFILE_EMAIL.profile_id = PROFILE.id
-	INNER JOIN $schema.EMAIL AS EMAIL ON PROFILE_EMAIL.email_id = EMAIL.id
-	WHERE PROFILE_EMAIL.is_main = TRUE
-	UNION ALL
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', "GROUP".id, "GROUP".name, "GROUP".created_at, "GROUP".updated_at) AS info_data, 'GROUP' AS type_data
-	FROM $schema.PERMISSION AS PERMISSION
-	INNER JOIN $schema.GROUP_PERMISSION AS GROUP_PER ON GROUP_PER.permission_id = PERMISSION.id
-	INNER JOIN $schema."GROUP" AS "GROUP" ON "GROUP".id = GROUP_PER.group_id
-	UNION ALL
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', APP.id, APP.label, APP.version, APP.app_universal_id, APP.status, APP.manifest_url, APP.store_url, APP.created_at, APP.updated_at) AS info_data, 'APPLICATION' AS type_data
-	FROM $schema.PERMISSION AS PERMISSION
-	INNER JOIN $schema.APPLICATION AS APP ON APP.id = PERMISSION.application_id	
-	UNION ALL
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', PERMISSION.id, content, code, language_id, label, TEXT.id) AS info_data, 'PERMISSION_LABEL_LANG_VARIANT' AS type_data			
-	FROM $schema.PERMISSION AS PERMISSION
-	INNER JOIN $schema.TEXT AS TEXT ON TEXT.id = PERMISSION.label_text_id
-	INNER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id
-	UNION ALL
-	SELECT PERMISSION.id AS permission_id, PERMISSION.key AS permission_key, PERMISSION.editable AS permission_editable, PERMISSION.label_text_id AS permission_label_text_id, PERMISSION.description_text_id AS permission_description_text_id, PERMISSION.created_at AS permission_created_at, PERMISSION.updated_at AS permission_updated_at,
-	CONCAT_WS('||', PERMISSION.id, content, code, language_id, label, TEXT.id) AS info_data, 'PERMISSION_DESC_LANG_VARIANT' AS type_data
-	FROM $schema.PERMISSION AS PERMISSION
-	INNER JOIN $schema.TEXT AS TEXT ON TEXT.id = PERMISSION.description_text_id
-	INNER JOIN $schema.LANGUAGE AS LANG ON TEXT.language_id = LANG.id
-)
+SELECT perm.ID, perm.`KEY`, perm.EDITABLE, perm.LABEL_TEXT_ID, perm.DESCRIPTION_TEXT_ID, perm.CREATED_AT, perm.UPDATED_AT,
+NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('|>|', p.ID, p.LASTNAME, p.FIRSTNAME, p.LAST_LOGIN, p.IS_ACTIVE, p.CREATED_AT, p.UPDATED_AT),'') SEPARATOR '||'),'') as PROFILES,
+NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('|>|', g.ID, g.NAME, g.CREATED_AT, g.UPDATED_AT),'') SEPARATOR '||'),'') as `GROUPS`,
+NULLIF(CONCAT_WS('||', a.ID, a.APP_UNIVERSAL_ID, a.`VERSION`, a.STATUS, a.MANIFEST_URL, a.STORE_URL, a.CREATED_AT, a.UPDATED_AT),'') as APPLICATION,
+NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('|>|', t.ID, l.ID, l.CODE, l.LABEL, t.CONTENT),'') SEPARATOR '||'),'') as LABEL,
+NULLIF(GROUP_CONCAT(DISTINCT NULLIF(CONCAT_WS('|>|', td.ID, ld.ID, ld.CODE, ld.LABEL, td.CONTENT),'') SEPARATOR '||'),'') as DESCRIPTION
+FROM (
+	SELECT ID, `KEY`, EDITABLE, LABEL_TEXT_ID, DESCRIPTION_TEXT_ID, APPLICATION_ID, CREATED_AT, UPDATED_AT
+	FROM $SCHEMA.PERMISSION $PAGINATION
+) AS perm
+LEFT JOIN $SCHEMA.PROFILE_PERMISSION pp ON pp.PERMISSION_ID = perm.ID
+LEFT JOIN $SCHEMA.PROFILE W_p ON W_p.ID = pp.PROFILE_ID
+LEFT JOIN $SCHEMA.PROFILE p ON p.ID = pp.PROFILE_ID
+LEFT JOIN $SCHEMA.GROUP_PERMISSION gp ON gp.PERMISSION_ID = perm.ID
+LEFT JOIN $SCHEMA.`GROUP` W_g ON W_g.ID = gp.GROUP_ID
+LEFT JOIN $SCHEMA.`GROUP` g ON g.ID = gp.GROUP_ID
+INNER JOIN $SCHEMA.APPLICATION W_a ON W_a.ID = perm.APPLICATION_ID
+INNER JOIN $SCHEMA.APPLICATION a ON a.ID = perm.APPLICATION_ID
+INNER JOIN $SCHEMA.`TEXT` W_t ON W_t.ID = perm.LABEL_TEXT_ID
+INNER JOIN $SCHEMA.`TEXT` t ON t.ID = perm.LABEL_TEXT_ID
+INNER JOIN $SCHEMA.`LANGUAGE` l ON l.ID = t.LANGUAGE_ID
+INNER JOIN $SCHEMA.`TEXT` W_td ON W_td.ID = perm.DESCRIPTION_TEXT_ID
+INNER JOIN $SCHEMA.`TEXT` td ON td.ID = perm.DESCRIPTION_TEXT_ID
+INNER JOIN $SCHEMA.`LANGUAGE` ld ON ld.ID = td.LANGUAGE_ID
+$WHERE_STATEMENT
+GROUP BY perm.ID, perm.`KEY`, perm.EDITABLE, perm.LABEL_TEXT_ID, perm.DESCRIPTION_TEXT_ID, perm.CREATED_AT, perm.UPDATED_AT, APPLICATION
+$ORDER_BY_STATEMENT;

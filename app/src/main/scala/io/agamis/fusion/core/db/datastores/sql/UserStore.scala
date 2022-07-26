@@ -68,34 +68,49 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       val innerWhereStatement: ListBuffer[String] = ListBuffer()
       // manage ids search
       if (filter.id.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.ID().name} LIKE \"%?%\""
-        queryArgs ++= filter.id.get
+        innerWhereStatement += filter.id.map({ id =>
+          queryArgs += id
+          s"${UserStore.Column.ID().name} LIKE \"%?%\""
+        }).mkString(" OR ")
       }
       // manage usernames search
       if (filter.username.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.USERNAME().name} LIKE \"%?%\""
-        queryArgs ++= filter.username.get
+        innerWhereStatement += filter.username.map({ f =>
+          queryArgs += f._2
+          s"${UserStore.Column.USERNAME().name} ${f._1 match {
+            case Filter.Type.Equals => "= ?"
+            case Filter.Type.Like   => "LIKE \"%?%\""
+          }}"
+        }).mkString(" OR ")
       }
       // manage relations filtering
       if (filter.profile_id.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.PROFILE.ID().name} LIKE \"%?%\""
-        queryArgs ++= filter.profile_id.get
+        innerWhereStatement += filter.profile_id.map({ profile_id =>
+          queryArgs += profile_id
+          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ID().name)} LIKE \"%?%\""
+        }).mkString(" OR ")
       }
       if (filter.profile_alias.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.PROFILE.ALIAS().name} LIKE \"%?%\""
-        queryArgs ++= filter.profile_alias.get
+        innerWhereStatement += filter.profile_alias.map({ profile_alias =>
+          queryArgs += profile_alias
+          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ALIAS().name)} LIKE \"%?%\""
+        }).mkString(" OR ")
       }
       if (filter.profile_lastname.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.PROFILE.LASTNAME().name} LIKE \"%?%\""
-        queryArgs ++= filter.profile_lastname.get
+        innerWhereStatement += filter.profile_lastname.map({ profile_lastname =>
+          queryArgs += profile_lastname
+          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LASTNAME().name)} LIKE \"%?%\""
+        }).mkString(" OR ")
       }
       if (filter.profile_firstname.nonEmpty) {
-        innerWhereStatement += s"${UserStore.Column.PROFILE.FIRSTNAME().name} LIKE \"%?%\""
-        queryArgs ++= filter.profile_firstname.get
+        innerWhereStatement += filter.profile_firstname.map({ profile_firstname =>
+          queryArgs += profile_firstname
+          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.FIRSTNAME().name)} LIKE \"%?%\""
+        }).mkString(" OR ")
       }
-      filter.profile_lastLogin.foreach({_ match {
+      filter.profile_lastLogin.map({ _ match {
         case (test, time) =>
-          innerWhereStatement += s"${UserStore.Column.PROFILE.LAST_LOGIN().name} ${test match {
+          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LAST_LOGIN().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -107,11 +122,10 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-        case None => ()
-      }})
+      }}).mkString(" OR ")
       filter.profile_createdAt.foreach({_ match {
         case (test, time) =>
-          innerWhereStatement += s"${UserStore.Column.PROFILE.CREATED_AT().name} ${test match {
+          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.CREATED_AT().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -123,11 +137,10 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-        case None => ()
       }})
       filter.profile_updatedAt.foreach({_ match {
         case (test, time) =>
-          innerWhereStatement += s"${UserStore.Column.PROFILE.UPDATED_AT().name} ${test match {
+          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.UPDATED_AT().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -139,7 +152,6 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-        case None => ()
       }})
       // manage metadate search
       filter.createdAt.foreach({_ match {
@@ -156,7 +168,6 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-        case None => ()
       }})
       filter.updatedAt.foreach({_ match {
         case (test, time) =>
@@ -215,7 +226,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
   }
 
   // Get existing users from database
-  def getUsers(queryFilters: UserStore.GetUsersFilters)(implicit ec: ExecutionContext): Future[List[User]] = {
+  def getUsers(queryFilters: UserStore.UsersFilters)(implicit ec: ExecutionContext): Future[List[User]] = {
     executeQuery(makeUsersQuery(queryFilters)).transformWith({
       case Success(rows) =>
         val users = rows.map({ row =>
@@ -335,7 +346,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             UserStore
               .UsersFilter()
               .copy(
-                username = Some(username)
+                username = List((Filter.Type.Equals, username))
               )
           )
         )
@@ -365,7 +376,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             )
           )
           .transformWith({
-            case Success(_) => Future.unit
+            case Success(_) => Future.successful((tx, user))
             case Failure(cause) =>
               Future.failed(UserNotPersistedException(cause))
           })
@@ -480,12 +491,12 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
 
 object UserStore {
   case class UsersFilter(
-      id: Option[String] = None,
-      username: Option[String] = None,
-      profile_id: Option[String] = None,
-      profile_alias: Option[String] = None,
-      profile_lastname: Option[String] = None,
-      profile_firstname: Option[String] = None,
+      id: List[String] = List(),
+      username: List[(Filter.Type.Value, String)] = List(),
+      profile_id: List[String] = List(),
+      profile_alias: List[String] = List(),
+      profile_lastname: List[String] = List(),
+      profile_firstname: List[String] = List(),
       profile_lastLogin: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       profile_createdAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       profile_updatedAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))

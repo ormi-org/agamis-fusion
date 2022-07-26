@@ -469,19 +469,14 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   profileStore
                     .getProfiles(
                       ProfileStore
-                        .ProfilesFilters()
-                        .copy(
-                          filters = List(
-                            ProfileStore
-                              .ProfilesFilter()
-                              .copy(
-                                id = permission.owningProfiles
-                                  .map(_._2.id.toString)
-                              )
-                          ),
-                          orderBy = List(
-                            (PermissionStore.Column.ID(), 1)
-                          )
+                        .ProfilesFilters(
+                          filters = permission.owningProfiles
+                          .map({ p =>
+                            ProfileStore.ProfilesFilter(
+                              id = Some(p._2.id.toString)
+                            )
+                          }),
+                          orderBy = List((PermissionStore.Column.ID(), 1))
                         )
                     )
                     .transformWith({
@@ -507,19 +502,13 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   groupStore
                     .getGroups(
                       GroupStore
-                        .GetGroupsFilters()
-                        .copy(
-                          filters = List(
-                            GroupStore
-                              .GetGroupsFilter()
-                              .copy(
-                                id =
-                                  permission.owningGroups.map(_._2.id.toString)
-                              )
-                          ),
-                          orderBy = List(
-                            (GroupStore.Column.ID(), 1)
-                          )
+                        .GroupsFilters(
+                          filters = permission.owningGroups.map({ group =>
+                            GroupStore.GroupsFilter(
+                              id = Some(group._2.id.toString)
+                            )
+                          }),
+                          orderBy = List((GroupStore.Column.ID(), 1))
                         )
                     )
                     .transformWith({
@@ -544,7 +533,7 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
           .transformWith({
             case Success(_) =>
               commitTransaction(tx).transformWith({
-                case Success(_) => Future.unit
+                case Success(_) => Future.successful(tx)
                 case Failure(cause) =>
                   Future.failed(PermissionNotPersistedException(cause))
               })
@@ -577,20 +566,16 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfileStore
-                    .ProfilesFilters()
-                    .copy(
-                      filters = List(
-                        ProfileStore
-                          .ProfilesFilter()
-                          .copy(
-                            id = permissions
-                              .flatMap({ permission =>
-                                permission.owningProfiles.map(_._2)
-                              })
-                              .distinctBy(_.id)
-                              .map(_.id.toString)
+                    .ProfilesFilters(
+                      filters = permissions.flatMap({ permission =>
+                        permission.owningProfiles.map(_._2)
+                        .distinctBy(_.id)
+                        .map({ p =>
+                          ProfileStore.ProfilesFilter(
+                            id = Some(p.id.toString)
                           )
-                      )
+                        })
+                      })
                     )
                 )
                 .transformWith({
@@ -622,20 +607,16 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
               groupStore
                 .getGroups(
                   GroupStore
-                    .GetGroupsFilters()
-                    .copy(
-                      filters = List(
-                        GroupStore
-                          .GetGroupsFilter()
-                          .copy(
-                            id = permissions
-                              .flatMap({ permission =>
-                                permission.owningGroups.map(_._2)
-                              })
-                              .distinctBy(_.id)
-                              .map(_.id.toString)
-                          )
-                      )
+                    .GroupsFilters(
+                      filters = permissions.flatMap({ permission =>
+                        permission.owningGroups.map(_._2)
+                      })
+                      .distinctBy(_.id)
+                      .map({ permission =>
+                        GroupStore.GroupsFilter(
+                          id = Some(permission.id.toString)
+                        )
+                      })
                     )
                 )
                 .transformWith({
@@ -693,19 +674,13 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   profileStore
                     .getProfiles(
                       ProfileStore
-                        .ProfilesFilters()
-                        .copy(
-                          filters = List(
-                            ProfileStore
-                              .ProfilesFilter()
-                              .copy(
-                                id = permission.owningProfiles
-                                  .map(_._2.id.toString)
-                              )
-                          ),
-                          orderBy = List(
-                            (PermissionStore.Column.ID(), 1)
-                          )
+                        .ProfilesFilters(
+                          filters = permission.owningProfiles.map({ p =>
+                            ProfileStore.ProfilesFilter(
+                              id = Some(p._2.id.toString)
+                            )
+                          }),
+                          orderBy = List((PermissionStore.Column.ID(), 1))
                         )
                     )
                     .transformWith({
@@ -728,30 +703,24 @@ class PermissionStore(implicit wrapper: IgniteClientNodeWrapper)
                   groupStore
                     .getGroups(
                       GroupStore
-                        .GetGroupsFilters()
-                        .copy(
-                          filters = List(
-                            GroupStore
-                              .GetGroupsFilter()
-                              .copy(
-                                id =
-                                  permission.owningGroups.map(_._2.id.toString)
-                              )
-                          ),
-                          orderBy = List(
-                            (GroupStore.Column.ID(), 1)
-                          )
+                        .GroupsFilters(
+                          filters = permission.owningGroups.map({ g =>
+                            GroupStore.GroupsFilter(
+                              id = Some(g._2.id.toString)
+                            )
+                          }),
+                          orderBy = List((GroupStore.Column.ID(), 1))
                         )
-                    )
-                ).transformWith({
-                  case Success(groups) =>
-                    groupStore.bulkPersistGroups(
-                      (permission.owningGroups.sortBy(_._2.id).map(_._1) zip groups).map({ group =>
-                        group._2.removePermission(permission)
-                      })
-                    )
-                  case Failure(cause) => Future.failed(cause)
-                })
+                    ).transformWith({
+                      case Success(groups) =>
+                        groupStore.bulkPersistGroups(
+                          (permission.owningGroups.sortBy(_._2.id).map(_._1) zip groups).map({ group =>
+                            group._2.removePermission(permission)
+                          })
+                        )
+                      case Failure(cause) => Future.failed(cause)
+                    })
+                )
               } else Nil
             }
         ).transformWith({

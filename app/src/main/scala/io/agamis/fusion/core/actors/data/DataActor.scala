@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext
 object DataActor {
 
   final val DataShardName = "Data"
+  trait Field
   trait Command
   trait Response
   trait State {

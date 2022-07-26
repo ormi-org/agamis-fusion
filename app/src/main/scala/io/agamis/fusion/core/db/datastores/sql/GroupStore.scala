@@ -84,7 +84,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
     *   a simple [[SqlStoreQuery SqlStoreQuery]]
     */
   def makeGroupsQuery(
-      queryFilters: GroupStore.GetGroupsFilters
+      queryFilters: GroupStore.GroupsFilters
   ): SqlStoreQuery = {
     var baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
@@ -93,14 +93,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
       val innerWhereStatement: ListBuffer[String] = ListBuffer()
       // manage ids search
       if (filter.id.nonEmpty) {
-        innerWhereStatement += s"group_id in (${(for (_ <- 1 to filter.id.length)
-          yield "?").mkString(",")})"
+        innerWhereStatement += s"group_id LIKE \"%?%\""
         queryArgs ++= filter.id
       }
       // manage names search
       if (filter.name.nonEmpty) {
-        innerWhereStatement += s"group_name in (${(for (_ <- 1 to filter.name.length)
-          yield "?").mkString(",")})"
+        innerWhereStatement += s"group_name LIKE \"%?%\""
         queryArgs ++= filter.name
       }
       // manage metadate search
@@ -162,7 +160,7 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
     *   a future [[List List]] of [[Group Group]]
     */
   def getGroups(
-      queryFilters: GroupStore.GetGroupsFilters
+      queryFilters: GroupStore.GroupsFilters
   )(implicit ec: ExecutionContext): Future[List[Group]] = {
     executeQuery(makeGroupsQuery(queryFilters)).transformWith({
       case Success(rows) =>
@@ -500,11 +498,8 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
   def getAllGroups(implicit ec: ExecutionContext): Future[List[Group]] = {
     getGroups(
       GroupStore
-        .GetGroupsFilters()
-        .copy(
-          orderBy = List(
-            (GroupStore.Column.ID(), 1)
-          )
+        .GroupsFilters(
+          orderBy = List((GroupStore.Column.ID(), 1))
         )
     ).transformWith({
       case Success(groups) =>
@@ -529,14 +524,11 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
   def getGroupById(id: String)(implicit ec: ExecutionContext): Future[Group] = {
     getGroups(
       GroupStore
-        .GetGroupsFilters()
-        .copy(
+        .GroupsFilters(
           filters = List(
-            GroupStore
-              .GetGroupsFilter()
-              .copy(
-                id = List(id)
-              )
+            GroupStore.GroupsFilter(
+              id = Some(id)
+            )
           )
         )
     ).transformWith({
@@ -610,13 +602,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfilesFilters(
-                    List(
+                    group.members.filter(_._1 == true)
+                    .map({ m =>
                       ProfilesFilter(
-                        id = group.members
-                          .filter(_._1 == true)
-                          .map(_._2.id.toString)
+                        id = Some(m._2.id.toString)
                       )
-                    )
+                    })
                   )
                 )
                 .transformWith({
@@ -627,13 +618,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfilesFilters(
-                    List(
+                    group.members.filter(_._1 == false)
+                    .map({ m =>
                       ProfilesFilter(
-                        id = group.members
-                          .filter(_._1 == false)
-                          .map(_._2.id.toString)
+                        id = Some(m._2.id.toString)
                       )
-                    )
+                    })
                   )
                 )
                 .transformWith({
@@ -722,13 +712,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                       profileStore
                         .getProfiles(
                           ProfilesFilters(
-                            List(
+                            group.members.filter(_._1 == true)
+                            .map({ m =>
                               ProfilesFilter(
-                                id = group.members
-                                  .filter(_._1 == true)
-                                  .map(_._2.id.toString)
+                                id = Some(m._2.id.toString)
                               )
-                            )
+                            })
                           )
                         )
                         .transformWith({
@@ -741,13 +730,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                       profileStore
                         .getProfiles(
                           ProfilesFilters(
-                            List(
+                            group.members.filter(_._1 == false)
+                            .map({ m =>
                               ProfilesFilter(
-                                id = group.members
-                                  .filter(_._1 == false)
-                                  .map(_._2.id.toString)
+                                id = Some(m._2.id.toString)
                               )
-                            )
+                            })
                           )
                         )
                         .transformWith({
@@ -816,13 +804,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
               profileStore
                 .getProfiles(
                   ProfileStore
-                    .ProfilesFilters()
-                    .copy(filters =
-                      List(
-                        ProfileStore
-                          .ProfilesFilter()
-                          .copy(id = group.members.map(_._2.id.toString))
-                      )
+                    .ProfilesFilters(
+                      group.members.map({ m =>
+                        ProfilesFilter(
+                          id = Some(m._2.id.toString)
+                        )
+                      })
                     )
                 )
                 .transformWith({
@@ -907,13 +894,12 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
                 profileStore
                   .getProfiles(
                     ProfileStore
-                      .ProfilesFilters()
-                      .copy(filters =
-                        List(
-                          ProfileStore
-                            .ProfilesFilter()
-                            .copy(id = g.members.map(_._2.id.toString))
-                        )
+                      .ProfilesFilters(
+                        g.members.map({ m =>
+                          ProfilesFilter(
+                            id = Some(m._2.id.toString)
+                          )
+                        })
                       )
                   )
                   .transformWith({
@@ -977,15 +963,15 @@ class GroupStore(implicit wrapper: IgniteClientNodeWrapper)
 }
 
 object GroupStore {
-  case class GetGroupsFilter(
-      id: List[String] = List(),
-      name: List[String] = List(),
+  case class GroupsFilter(
+      id: Option[String] = None,
+      name: Option[String] = None,
       createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
       updatedAt: Option[(String, Timestamp)] = None // (date, (eq, lt, gt, ne))
   )
 
-  case class GetGroupsFilters(
-      filters: List[GetGroupsFilter] = List(),
+  case class GroupsFilters(
+      filters: List[GroupsFilter] = List(),
       orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
       pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
   ) extends EntityFilters

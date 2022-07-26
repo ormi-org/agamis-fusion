@@ -43,6 +43,7 @@ import io.agamis.fusion.core.db.datastores.sql.common.Placeholder
 import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidOrderingOperatorException
 import io.agamis.fusion.core.db.datastores.sql.common.Pagination
 import io.agamis.fusion.core.db.datastores.sql.generics.LanguageStore
+import org.apache.ignite.transactions.Transaction
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
     extends SqlMutableStore[UUID, Profile] {
@@ -109,8 +110,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
         queryArgs ++= filter.firstname
       }
       // manage lastLogin date search
-      filter.lastLogin match {
-        case Some((test, time)) =>
+      filter.lastLogin.foreach({_ match {
+        case (test, time) =>
           innerWhereStatement += s"${ProfileStore.Column.LAST_LOGIN().name} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
@@ -123,7 +124,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }
+      }})
       // manage shared state search
       filter.isActive match {
         case Some(value) =>
@@ -132,8 +133,8 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
         case None => ()
       }
       // manage metadate search
-      filter.createdAt match {
-        case Some((test, time)) =>
+      filter.createdAt.foreach({_ match {
+        case (test, time) =>
           innerWhereStatement += s"${ProfileStore.Column.CREATED_AT().name} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
@@ -146,10 +147,9 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-        case None => ()
-      }
-      filter.updatedAt match {
-        case Some((test, time)) =>
+      }})
+      filter.updatedAt.foreach({_ match {
+        case (test, time) =>
           innerWhereStatement += s"${ProfileStore.Column.UPDATED_AT().name} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
@@ -162,7 +162,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }
+      }})
       whereStatements += innerWhereStatement.mkString(" AND ")
     })
     // compile whereStatements
@@ -489,7 +489,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             ProfileStore
               .ProfilesFilter()
               .copy(
-                id = List(id)
+                id = Some(id)
               )
           )
         )
@@ -934,8 +934,8 @@ object ProfileStore {
       firstname: Option[String] = None,
       lastLogin: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       isActive: Option[Boolean] = None,
-      createdAt: Option[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
-      updatedAt: Option[(String, Timestamp)] = List() // (date, (eq, lt, gt, ne))
+      createdAt: Option[(String, Timestamp)] = None, // (date, (eq, lt, gt, ne))
+      updatedAt: Option[(String, Timestamp)] = None // (date, (eq, lt, gt, ne))
   )
 
   case class ProfilesFilters(

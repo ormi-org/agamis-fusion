@@ -1,6 +1,12 @@
 package io.agamis.fusion.core.db.datastores.sql.common
 
 object Filter {
+  object Type extends Enumeration {
+    type Value = String
+    val Equals: Value = "="
+    val Like: Value = "LIKE"
+  }
+
   object ComparisonOperator extends Enumeration {
     type Value = String
     val Equal: Value = "eq"

@@ -4,7 +4,6 @@ trait EntityFilters {
     def filters: List[_]
     def orderBy: List[(EntityFilters.Column, Int)]
     def pagination: Option[EntityFilters.Pagination]
-    // def ordered: Boolean = orderBy.nonEmpty
 }
 
 object EntityFilters {
@@ -13,10 +12,7 @@ object EntityFilters {
         def name: String
     }
 
-    trait Pagination {
-        def limit: Int
-        def offset: Int
-    }
+    case class Pagination(limit: Int, offset: Int)
 
     def IN_WHERE_CLAUSE(baseColName: String): String = {
         return s"W_${baseColName}"

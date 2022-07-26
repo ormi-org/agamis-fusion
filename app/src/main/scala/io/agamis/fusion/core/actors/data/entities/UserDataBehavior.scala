@@ -15,6 +15,8 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotPer
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserQueryExecutionException
 import io.agamis.fusion.core.db.models.sql.User
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import io.agamis.fusion.core.db.datastores.sql.common.Filter
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
 // import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 
 import java.sql.Timestamp
@@ -30,12 +32,24 @@ object UserDataBehavior {
   sealed trait Command extends DataActor.Command
   sealed trait Response extends DataActor.State
 
+  // fields
+  object Field extends Enumeration {
+    type Value = String
+    val ID: Value = "id"
+    val USERNAME: Value = "username"
+    val LIMIT: Value = "limit"
+    val OFFSET: Value = "offset"
+    val CREATED_AT: Value = "created_at"
+    val UPDATED_AT: Value = "updated_at"
+    val ORDER_BY: Value = "order_by"
+  }
+
   // queries
   final case class Query(
     id: List[UUID],
     username: List[String],
-    limit: Long,
-    offset: Long,
+    limit: Int,
+    offset: Int,
     createdAt: List[(String, Instant)],
     updatedAt: List[(String, Instant)],
     orderBy: List[(String, Int)]
@@ -126,17 +140,22 @@ object UserDataBehavior {
             }
           ) {
             val query = eqy.query
-            val filters = UserStore.GetUsersFilters().copy(
-              filters = List(UserStore.GetUsersFilter().copy(
+            val filters = UserStore.UsersFilters().copy(
+              filters = List(UserStore.UsersFilter().copy(
                 id = if(query.id.nonEmpty) query.id.map { _.toString } else List(),
-                username = if(query.username.nonEmpty) query.username else List(),
+                username = if(query.username.nonEmpty) query.username.map((Filter.Type.Like, _)) else List(),
                 createdAt = if(query.createdAt.nonEmpty) query.createdAt.map { c => (c._1, Timestamp.from(c._2)) } else List(),
                 updatedAt = if(query.updatedAt.nonEmpty) query.updatedAt.map { u => (u._1, Timestamp.from(u._2)) } else List(),
               )),
-              orderBy = if(query.orderBy.nonEmpty) query.orderBy else List(("id", 1))
+              orderBy = if(query.orderBy.nonEmpty) query.orderBy.map({ o =>
+                (o._1 match {
+                  case Field.ID => UserStore.Column.ID()
+                }, o._2)
+              }) else List((UserStore.Column.ID(), 1)),
+              pagination = Some(EntityFilters.Pagination(query.limit, query.offset))
             )
             // Caching
-            ctx.pipeToSelf(store.getUsers(filters, query.limit, query.offset)) {
+            ctx.pipeToSelf(store.getUsers(filters)) {
               case Success(userList) =>
                 val newState = MultiUserState(state.entityId, userList, Ok())
                 WrappedState(newState, eqy.replyTo)

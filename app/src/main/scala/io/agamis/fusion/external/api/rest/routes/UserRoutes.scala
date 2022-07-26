@@ -107,6 +107,8 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
     })
   }
 
+  import io.agamis.fusion.core.actors.data.entities.UserDataBehavior.Field
+
   lazy val routes: Route =
     concat(
       pathPrefix("users")(
@@ -114,13 +116,13 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
           // query on all users
           get {
             parameters(
-              "id".as[List[String]],
-              "username".as[List[String]],
-              "offset".as[Long],
-              "limit".as[Long],
-              "created_at".as[List[(String, String)]],
-              "updated_at".as[List[(String, String)]],
-              "order_by".as[List[(String, Int)]]
+              Field.ID.as[List[String]],
+              Field.USERNAME.as[List[String]],
+              Field.OFFSET.as[Int],
+              Field.LIMIT.as[Int],
+              Field.CREATED_AT.as[List[(String, String)]],
+              Field.UPDATED_AT.as[List[(String, String)]],
+              Field.ORDER_BY.as[List[(String, Int)]]
             ).as(UserQuery.apply _) { queryString =>
               val query: UserDataBehavior.Query = UserDataBehavior.Query(
                 queryString.id.map(UUID.fromString(_)),
@@ -172,7 +174,7 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
               }
             };
             //get by username
-            parameters("username".as[String]) { (username) =>
+            parameters(Field.USERNAME.as[String]) { (username) =>
               onComplete(getUserByUsername(username)) {
                 case Success(resp: UserApiResponse) =>
                   resp match {

@@ -43,6 +43,9 @@ import org.apache.ignite.cache.QueryEntity
 import io.agamis.fusion.core.db.models.sql.generics.Email
 import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
+import io.agamis.fusion.core.db.models.sql.Organization
+import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
+import org.apache.ignite.transactions.Transaction
 
 class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper)
     extends SqlMutableStore[UUID, Organization] {
