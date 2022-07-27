@@ -68,6 +68,9 @@ object Core {
                         // TODO
                         // Node type for spawning embeded applications backend and serving frontend client
                     } else
+                    if (cluster.selfMember.hasRole("fusion-node-db-initiator")) {
+                        
+                    } else 
                     if (cluster.selfMember.hasRole("fusion-node-rest-v1")) {
                         // Node type for serving v1 rest api endpoint
                         implicit val system = context.system

@@ -103,6 +103,12 @@
 			</bean>
 		</property>
 
+		<property name="clientConnectorConfiguration">
+				<bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+						<property name="sslEnabled" value="false"/>
+				</bean>
+		</property>
+
 		<property name="discoverySpi">
 			<bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
 				<property name="ipFinder">

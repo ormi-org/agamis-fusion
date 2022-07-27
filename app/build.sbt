@@ -6,7 +6,7 @@ scalaVersion := "2.13.8"
 
 lazy val akkaVersion = "2.6.14"
 lazy val akkaHttpVersion = "10.2.9"
-lazy val igniteVersion = "2.10.0"
+lazy val igniteVersion = "2.13.0"
 lazy val akkaManagementVersion = "1.1.3"
 
 autoAPIMappings := true

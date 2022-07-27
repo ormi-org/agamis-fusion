@@ -2,9 +2,7 @@ version: "3.8"
 
 volumes:
   ignite-persistence-volume-1:
-    external: true
   ignite-persistence-volume-2:
-    external: true
     
 networks:
   default:
