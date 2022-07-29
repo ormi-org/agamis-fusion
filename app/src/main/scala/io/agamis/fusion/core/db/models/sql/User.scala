@@ -14,7 +14,7 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 
-class User(implicit @transient protected val store: UserStore) extends Model {
+class User(implicit @transient protected var store: UserStore) extends Model {
 
     @QuerySqlField(name = "username", notNull = true)
     private var _username: String = null
@@ -71,6 +71,17 @@ class User(implicit @transient protected val store: UserStore) extends Model {
 
     def authenticate(plainPassword: String): Boolean = {
         Security.validate(plainPassword, this._password)
+    }
+
+    def setStore(store: UserStore): User = {
+        this.store = store
+        this
+    }
+
+    // init transient fields for preventing null values
+    def readResolve() = {
+        this._relatedProfiles = List()
+        this
     }
 
     object Security {

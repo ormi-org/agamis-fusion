@@ -58,6 +58,10 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     new User
   }
 
+  def transmutate(u: User): User = {
+    u.setStore(this)
+  }
+
   def makeUsersQuery(queryFilters: UserStore.UsersFilters): SqlStoreQuery = {
     var baseQueryString = queryString.replace(Placeholder.SCHEMA, schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
@@ -309,7 +313,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       case Success(users) =>
         users.length match {
           case 0 => Future.failed(NoEntryException("User table is empty"))
-          case _ => Future.successful(users)
+          case _ => Future.successful(users.map(transmutate(_)))
         }
       case Failure(cause) => Future.failed(cause)
     })
@@ -326,7 +330,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     .transformWith({
       case Success(user) =>
         user match {
-          case _: User => Future.successful(user)
+          case _: User => Future.successful(transmutate(user))
           case null    => Future.failed(UserNotFoundException(s"User $id couldn't be found"))
         }
       case Failure(cause) => Future.failed(cause)
@@ -355,7 +359,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             Future.failed(
               UserNotFoundException(s"User $username couldn't be found")
             )
-          case 1 => Future.successful(users.head)
+          case 1 => Future.successful(transmutate(users.head))
           case _ => Future.failed(new DuplicateUserException)
         }
       case Failure(cause) => Future.failed(cause)

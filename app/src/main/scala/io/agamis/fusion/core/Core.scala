@@ -53,7 +53,7 @@ object Core {
                         // TODO
                         // Node type for handling datastore operations, resolving and caching queries results
                         val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
-                        ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.entityId))
+                        ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.shard, ctx.entityId))
                             .withSettings(ClusterShardingSettings(context.system).withRole("fusion-node-data")))
                     }
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {

@@ -45,7 +45,7 @@ object Server {
       implicit val system = parentSystem
       val data: ActorRef[ShardingEnvelope[DataActor.Command]] =
         ClusterSharding(system).init(Entity(EntityTypeKey[DataActor.Command](DataActor.DataShardName))
-        (createBehavior = ctx => DataActor(ctx.entityId)))
+        (createBehavior = ctx => DataActor(ctx.shard, ctx.entityId)))
 
       val topLevel: Route =
         concat(

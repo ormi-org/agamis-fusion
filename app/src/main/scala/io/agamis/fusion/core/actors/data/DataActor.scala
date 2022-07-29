@@ -18,19 +18,34 @@ import io.agamis.fusion.core.actors.data.entities.ApplicationDataBehavior
 import io.agamis.fusion.core.actors.data.entities.TextDataBehavior
 import io.agamis.fusion.core.actors.data.entities.LanguageDataBehavior
 import io.agamis.fusion.core.actors.data.entities.EmailDataBehavior
+import io.agamis.fusion.env.EnvContainer
+import io.agamis.fusion.core.actors.common.CachePolicy
+import akka.actor.typed.ActorRef
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import scala.concurrent.duration._
 
 object DataActor {
 
   final val DataShardName = "Data"
   trait Field
   trait Command
+  final case class Idle() extends Command
   trait Response
   trait State {
     def entityId: String
   }
   final case class EmptyState(entityId: String) extends State
 
-  def apply(entityId: String): Behavior[Command] = Behaviors.setup { context =>
+  def IdleBehavior(shard: ActorRef[ClusterSharding.ShardCommand]): PartialFunction[(ActorContext[Command], Command), Behavior[Command]] = {
+    return {
+      case (ctx: ActorContext[_], _: Idle) => {
+        shard ! ClusterSharding.Passivate(ctx.self)
+        Behaviors.same
+      }
+    }
+  }
+
+  def apply(shard: ActorRef[ClusterSharding.ShardCommand], entityId: String): Behavior[Command] = Behaviors.setup { context =>
     implicit val wrapper: IgniteClientNodeWrapper = IgniteClientNodeWrapper(context.system)
 
     implicit val ec: ExecutionContext = 
@@ -38,8 +53,18 @@ object DataActor {
         DispatcherSelector.fromConfig("db-operations-dispatcher")
       )
     
+    implicit val cachingPolicy: String = EnvContainer.getString("fusion.cache.sql.when")
+    implicit val cachingTimeToLive: Int = cachingPolicy match {
+      case CachePolicy.ALWAYS => EnvContainer.getString("fusion.cache.sql.ttl").toInt
+      case CachePolicy.ON_READ => EnvContainer.getString("fusion.cache.sql.ttl").toInt
+      case CachePolicy.NEVER  => 0
+    }
+
+    if (cachingTimeToLive > 0) context.setReceiveTimeout(cachingTimeToLive.seconds, Idle())
+    
     Behaviors.receivePartial(
-      UserDataBehavior(EmptyState(entityId)).asInstanceOf[PartialFunction[(ActorContext[Command], Command), Behavior[Command]]]
+      IdleBehavior(shard)
+      .orElse(UserDataBehavior(EmptyState(entityId)).asInstanceOf[PartialFunction[(ActorContext[Command], Command), Behavior[Command]]])
       .orElse(ProfileDataBehavior(EmptyState(entityId)).asInstanceOf[PartialFunction[(ActorContext[Command], Command), Behavior[Command]]])
       .orElse(PermissionDataBehavior(EmptyState(entityId)).asInstanceOf[PartialFunction[(ActorContext[Command], Command), Behavior[Command]]])
       .orElse(OrganizationTypeDataBehavior(EmptyState(entityId)).asInstanceOf[PartialFunction[(ActorContext[Command], Command), Behavior[Command]]])

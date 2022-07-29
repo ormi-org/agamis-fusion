@@ -96,7 +96,7 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
 
   def createUser(uMut: UserDataBehavior.UserMutation): Future[UserDataBehavior.Response] = {
     data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-crt-%s".format(UUID.randomUUID()), UserDataBehavior.CreateUser(ref, uMut))
+      ShardingEnvelope("user-%s".format(UUID.randomUUID()), UserDataBehavior.CreateUser(ref, uMut))
     }
   }
 
@@ -170,7 +170,7 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
           }
         )
       ),
-      path("user")(
+      pathPrefix("user")(
         concat(
           //get by username
           get {
