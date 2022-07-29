@@ -8,6 +8,7 @@ import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import spray.json._
+import io.agamis.fusion.core.db.models.sql.Application
 
 /**
   * Permission DTO with JSON support
@@ -34,37 +35,15 @@ final case class PermissionDto (
 
 object PermissionDto {
   def from(p: Permission): PermissionDto = {
-    apply(
+    PermissionDto(
       Some(p.id),
       p.key,
       p.labels,
       p.descriptions,
-      Some(ApplicationDto.from(p.relatedApplication.orNull)),
+      p.relatedApplication.collect { case a: Application => ApplicationDto.from(a) },
       p.editable,
       Some(p.createdAt.toInstant),
       Some(p.updatedAt.toInstant)
-    )
-  }
-
-  def apply(
-    id: Option[UUID],
-    key: String,
-    labels: Map[(UUID, UUID), (String, String)],
-    descriptions: Map[(UUID, UUID), (String, String)],
-    relatedApplication: Option[ApplicationDto],
-    editable: Boolean,
-    createdAt: Option[Instant],
-    updatedAt: Option[Instant]
-  ): PermissionDto = {
-    PermissionDto(
-      id,
-      key,
-      labels,
-      descriptions,
-      relatedApplication,
-      editable,
-      createdAt,
-      updatedAt
     )
   }
 }

@@ -9,6 +9,8 @@ import io.agamis.fusion.core.db.models.sql.Profile
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+import io.agamis.fusion.core.db.models.sql.Organization
+import io.agamis.fusion.core.db.models.sql.User
 
 /**
   * Profile DTO with JSON support
@@ -27,9 +29,9 @@ import spray.json._
   */
 final case class ProfileDto(
     id: Option[UUID],
+    alias: Option[String],
     lastName: String,
     firstName: String,
-    mainEmail: String,
     emails: List[String],
     permissions: Option[List[PermissionDto]],
     organization: Option[OrganizationDto],
@@ -41,46 +43,18 @@ final case class ProfileDto(
 
 object ProfileDto {
   def from(p: Profile): ProfileDto = {
-    apply(
+    ProfileDto(
       Some(p.id),
+      p.alias,
       p.lastname,
       p.firstname,
-      p.mainEmail.address,
       p.emails.filter(_._1 == true).map(_._2.address),
       Some(p.permissions.filter(_._1 == true).map(r => PermissionDto.from(r._2))),
-      Some(OrganizationDto.from(p.relatedOrganization.orNull)),
+      p.relatedOrganization.collect { case o: Organization => OrganizationDto.from(o) },
       p.lastLogin.toInstant,
-      Some(p.relatedUser.getOrElse(null).id.toString),
+      p.relatedUser.collect { case u: User => u.id.toString },
       Some(p.createdAt.toInstant),
       Some(p.updatedAt.toInstant)
-    )
-  }
-
-  def apply(
-    id: Option[UUID],
-    lastName: String,
-    firstName: String,
-    mainEmail: String,
-    emails: List[String],
-    permissions: Option[List[PermissionDto]],
-    organization: Option[OrganizationDto],
-    lastLogin: Instant,
-    userId: Option[String],
-    createdAt: Option[Instant],
-    updatedAt: Option[Instant]
-  ): ProfileDto = {
-    ProfileDto(
-      id,
-      lastName,
-      firstName,
-      mainEmail,
-      emails,
-      permissions,
-      organization,
-      lastLogin,
-      userId,
-      createdAt,
-      updatedAt
     )
   }
 }

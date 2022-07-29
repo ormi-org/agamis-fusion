@@ -15,7 +15,6 @@ import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.User
-import io.agamis.fusion.core.db.models.sql.generics.Email
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.CacheAtomicityMode
@@ -30,7 +29,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import io.agamis.fusion.core.db.models.sql.generics.Email
 import org.apache.ignite.transactions.Transaction
 
 class UserStore(implicit wrapper: IgniteClientNodeWrapper)
@@ -61,7 +59,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
   }
 
   def makeUsersQuery(queryFilters: UserStore.UsersFilters): SqlStoreQuery = {
-    var baseQueryString = queryString.replace("$SCHEMA", schema)
+    var baseQueryString = queryString.replace(Placeholder.SCHEMA, schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
     val whereStatements: ListBuffer[String] = ListBuffer()
     queryFilters.filters.foreach({ filter =>
@@ -110,7 +108,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       }
       filter.profile_lastLogin.map({ _ match {
         case (test, time) =>
-          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LAST_LOGIN().name)} ${test match {
+          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LAST_LOGIN().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -122,7 +120,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             case _ => throw InvalidComparisonOperatorException(test)
           }} ?"
           queryArgs += time.toString
-      }}).mkString(" OR ")
+      }})
       filter.profile_createdAt.foreach({_ match {
         case (test, time) =>
           innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.CREATED_AT().name)} ${test match {
@@ -184,10 +182,10 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
           }} ?"
           queryArgs += time.toString
       }})
-      whereStatements += innerWhereStatement.mkString(" AND ")
+      if (innerWhereStatement.nonEmpty) whereStatements += innerWhereStatement.mkString(" AND ")
     })
     // compile whereStatements
-    baseQueryString.replace(
+    baseQueryString = baseQueryString.replace(
       Placeholder.WHERE_STATEMENT,
       whereStatements.nonEmpty match {
         case true  => " WHERE " + whereStatements.reverse.mkString(" OR ")
@@ -195,13 +193,13 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       }
     )
     // manage order
-    baseQueryString.replace(
+    baseQueryString = baseQueryString.replace(
       Placeholder.ORDER_BY_STATEMENT,
       queryFilters.orderBy.nonEmpty match {
         case true =>
           s" ORDER BY ${queryFilters.orderBy
             .map(o =>
-              s"u.${o._1} ${o._2 match {
+              s"u.${o._1.name} ${o._2 match {
                 case Filter.OrderingOperators.Ascending =>
                   Filter.OrderingOperators.SQL.Ascending
                 case Filter.OrderingOperators.Descending =>
@@ -214,7 +212,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       }
     )
     // manage pagination
-    baseQueryString.replace(
+    baseQueryString = baseQueryString.replace(
       Placeholder.PAGINATION,
       queryFilters.pagination match {
         case Some(p) => s" LIMIT ${p.limit} OFFSET ${p.offset} "
@@ -234,17 +232,17 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             user <- Right(
               // make user
               makeUser
-                .setId(row(UserStore.Column.ID().order))
-                .setUsername(row(UserStore.Column.USERNAME().order))
-                .setPasswordHash(row(UserStore.Column.PASSWORD().order))
+                .setId(row(UserStore.Column.ID().order).asInstanceOf[UUID])
+                .setUsername(row(UserStore.Column.USERNAME().order).asInstanceOf[String])
+                .setPasswordHash(row(UserStore.Column.PASSWORD().order).asInstanceOf[String])
                 .setCreatedAt(
-                  Utils.timestampFromString(row(UserStore.Column.CREATED_AT().order)) match {
+                  row(UserStore.Column.CREATED_AT().order).asInstanceOf[Timestamp] match {
                     case ts: Timestamp => ts
                     case _             => null
                   }
                 )
                 .setUpdatedAt(
-                  Utils.timestampFromString(row(UserStore.Column.UPDATED_AT().order)) match {
+                  row(UserStore.Column.UPDATED_AT().order).asInstanceOf[Timestamp] match {
                     case ts: Timestamp => ts
                     case _             => null
                   }
@@ -252,9 +250,9 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
             ) flatMap {
               user => 
                 // map profiles
-                row(UserStore.Column.PROFILES().order).split("||").foreach({ profileString =>
+                row(UserStore.Column.PROFILES().order).asInstanceOf[String].split("""\|\|""").foreach({ profileString =>
                   for (
-                    profileReflection <- Right(profileString.split("|>|"));
+                    profileReflection <- Right(profileString.split("""\|>\|"""));
                     profile <- Right(
                       new ProfileStore().makeProfile
                         .setId(profileReflection(UserStore.Column.PROFILE.ID().order))

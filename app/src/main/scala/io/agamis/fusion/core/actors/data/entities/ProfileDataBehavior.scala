@@ -30,8 +30,8 @@ object ProfileDataBehavior {
     isActive: Option[Boolean],
     createdAt: List[(String, Instant)],
     updatedAt: List[(String, Instant)],
-    limit: Int,
-    offset: Int,
+    limit: Option[Int],
+    offset: Option[Int],
     orderBy: List[(String, Int)]
   ) extends Identifiable with Timetracked with Pageable
 

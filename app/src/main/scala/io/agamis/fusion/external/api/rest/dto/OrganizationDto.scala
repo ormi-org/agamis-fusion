@@ -13,6 +13,8 @@ import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import spray.json._
+import io.agamis.fusion.core.db.models.sql.FileSystem
+import io.agamis.fusion.core.db.models.sql.OrganizationType
 
 /**
   * Organization DTO with JSON
@@ -32,11 +34,11 @@ import spray.json._
 final case class OrganizationDto(
     id: Option[UUID],
     label: String,
-    `type`: OrganizationTypeDto,
+    `type`: Option[OrganizationTypeDto],
     queryable: Boolean,
     profiles: Option[List[ProfileDto]],
     groups: Option[List[GroupDto]],
-    defaultFileSystem: FileSystemDto,
+    defaultFileSystem: Option[FileSystemDto],
     fileSystems: Option[List[FileSystemDto]],
     applications: Option[
       List[(OrganizationApplication.Status, ApplicationDto)]
@@ -47,16 +49,16 @@ final case class OrganizationDto(
 
 object OrganizationDto {
   def from(o: Organization): OrganizationDto = {
-    apply(
+    OrganizationDto(
       Some(o.id),
       o.label,
-      OrganizationTypeDto.from(o.`type`.orNull),
+      o.`type`.collect { case ot: OrganizationType => OrganizationTypeDto.from(ot) },
       o.queryable,
       Some(
         o.relatedProfiles.filter(_._1 == true).map(r => ProfileDto.from(r._2))
       ),
       Some(o.relatedGroups.filter(_._1 == true).map(r => GroupDto.from(r._2))),
-      FileSystemDto.from(o.defaultFileSystem),
+      o.defaultFileSystem.collect { case fs: FileSystem => FileSystemDto.from(fs) },
       Some(o.fileSystems.map(r => FileSystemDto.from(r._2))),
       Some(
         o.applications
@@ -70,36 +72,6 @@ object OrganizationDto {
       ),
       Some(o.createdAt.toInstant),
       Some(o.updatedAt.toInstant)
-    )
-  }
-
-  def apply(
-      id: Option[UUID],
-      label: String,
-      `type`: OrganizationTypeDto,
-      queryable: Boolean,
-      profiles: Option[List[ProfileDto]],
-      groups: Option[List[GroupDto]],
-      defaultFileSystem: FileSystemDto,
-      fileSystems: Option[List[FileSystemDto]],
-      applications: Option[
-        List[(OrganizationApplication.Status, ApplicationDto)]
-      ],
-      createdAt: Option[Instant],
-      updatedAt: Option[Instant]
-  ): OrganizationDto = {
-    OrganizationDto(
-      id,
-      label,
-      `type`,
-      queryable,
-      profiles,
-      groups,
-      defaultFileSystem,
-      fileSystems,
-      applications,
-      createdAt,
-      updatedAt
     )
   }
 }

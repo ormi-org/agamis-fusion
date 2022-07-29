@@ -5,21 +5,12 @@ import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonFormat
 
 final case class UserMutation (
-  username: Option[String],
-  password: Option[String]
+  username: String,
+  password: String
 )
 
-object UserMutation {
-  def apply(
-    username: Option[String],
-    password: Option[String]
-  ): UserMutation = {
-    UserMutation(username, password)
-  }
-}
-
 trait UserMutationJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val userMutationFormat: RootJsonFormat[UserMutation] = jsonFormat2(UserMutation.apply)
+  implicit val userMutationFormat: RootJsonFormat[UserMutation] = jsonFormat2(UserMutation)
 }
 
 object UserMutationJsonProtocol extends UserMutationJsonSupport

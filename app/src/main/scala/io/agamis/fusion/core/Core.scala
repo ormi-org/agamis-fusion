@@ -55,22 +55,19 @@ object Core {
                         val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
                         ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.entityId))
                             .withSettings(ClusterShardingSettings(context.system).withRole("fusion-node-data")))
-                    } else
+                    }
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {
                         // TODO
                         // Node type for handling filesystem operations
-                    } else
+                    }
                     if (cluster.selfMember.hasRole("fusion-node-session")) {
                         // TODO
                         // Node type for handling session save handling and life-cycle
-                    } else
+                    }
                     if (cluster.selfMember.hasRole("fusion-node-app")) {
                         // TODO
                         // Node type for spawning embeded applications backend and serving frontend client
-                    } else
-                    if (cluster.selfMember.hasRole("fusion-node-db-initiator")) {
-                        
-                    } else 
+                    }
                     if (cluster.selfMember.hasRole("fusion-node-rest-v1")) {
                         // Node type for serving v1 rest api endpoint
                         implicit val system = context.system

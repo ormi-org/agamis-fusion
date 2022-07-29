@@ -221,31 +221,31 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             profile <- Right(
               // make profile
               makeProfile
-                .setId(row(ProfileStore.Column.ID().order))
-                .setAlias(row(ProfileStore.Column.ALIAS().order))
-                .setLastname(row(ProfileStore.Column.LASTNAME().order))
-                .setFirstname(row(ProfileStore.Column.FIRSTNAME().order))
+                .setId(row(ProfileStore.Column.ID().order).asInstanceOf[UUID])
+                .setAlias(row(ProfileStore.Column.ALIAS().order).asInstanceOf[String])
+                .setLastname(row(ProfileStore.Column.LASTNAME().order).asInstanceOf[String])
+                .setFirstname(row(ProfileStore.Column.FIRSTNAME().order).asInstanceOf[String])
                 .setLastLogin(
-                  Utils.timestampFromString(row(ProfileStore.Column.LAST_LOGIN().order)) match {
+                  Utils.timestampFromString(row(ProfileStore.Column.LAST_LOGIN().order).asInstanceOf[String]) match {
                     case ts: Timestamp => ts
                     case _             => null
                   }
                 )
                 .setCreatedAt(
-                  Utils.timestampFromString(row(ProfileStore.Column.CREATED_AT().order)) match {
+                  Utils.timestampFromString(row(ProfileStore.Column.CREATED_AT().order).asInstanceOf[String]) match {
                     case ts: Timestamp => ts
                     case _             => null
                   }
                 )
                 .setUpdatedAt(
-                  Utils.timestampFromString(row(ProfileStore.Column.UPDATED_AT().order)) match {
+                  Utils.timestampFromString(row(ProfileStore.Column.UPDATED_AT().order).asInstanceOf[String]) match {
                     case ts: Timestamp => ts
                     case _             => null
                   }
                 )
             ) flatMap {
               profile =>
-                Try(row(ProfileStore.Column.IS_ACTIVE().order).toBoolean) match {
+                Try(row(ProfileStore.Column.IS_ACTIVE().order).asInstanceOf[String].toBoolean) match {
                   case Success(active) =>
                     if (active) Right(profile.setActive())
                     else Right(profile.setInactive())
@@ -255,7 +255,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
               profile =>
                 // parse user
                 for (
-                  userReflection <- Right(row(ProfileStore.Column.USER().order).split("||"));
+                  userReflection <- Right(row(ProfileStore.Column.USER().order).asInstanceOf[String].split("||"));
                   user <- Right(
                     new UserStore().makeUser
                       .setId(userReflection(ProfileStore.Column.USER.ID().order))
@@ -278,7 +278,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             } flatMap {
               profile =>
                 // parse emails
-                row(ProfileStore.Column.EMAILS().order).split("||").foreach({ emailString =>
+                row(ProfileStore.Column.EMAILS().order).asInstanceOf[String].split("||").foreach({ emailString =>
                   for (
                     emailReflection <- Right(emailString.split("|>|"));
                     email <- Right(
@@ -298,7 +298,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
               profile =>
                 // parse organizations
                 for (
-                  organizationReflection <- Right(row(ProfileStore.Column.ORGANIZATION().order).split("||"));
+                  organizationReflection <- Right(row(ProfileStore.Column.ORGANIZATION().order).asInstanceOf[String].split("||"));
                   organization <- Right(
                     new OrganizationStore().makeOrganization
                       .setId(organizationReflection(ProfileStore.Column.ORGANIZATION.ID().order))
@@ -369,7 +369,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             } flatMap {
               profile => 
                 // map groups
-                row(ProfileStore.Column.GROUPS().order).split("||").map(_.split("|>|")).foreach({ group =>
+                row(ProfileStore.Column.GROUPS().order).asInstanceOf[String].split("||").map(_.split("|>|")).foreach({ group =>
                   profile.addGroup(new GroupStore().makeGroup
                     .setId(group(ProfileStore.Column.GROUP.ID().order))
                     .setName(group(ProfileStore.Column.GROUP.NAME().order))
@@ -391,7 +391,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
             } flatMap {
               profile =>
                 // parse permissions
-                row(ProfileStore.Column.PERMISSIONS().order).split("||").map(_.split("|>|")).foreach({ permissionReflection =>
+                row(ProfileStore.Column.PERMISSIONS().order).asInstanceOf[String].split("||").map(_.split("|>|")).foreach({ permissionReflection =>
                   for (
                     permission <- Right(
                       new PermissionStore().makePermission

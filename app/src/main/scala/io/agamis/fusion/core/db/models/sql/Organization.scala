@@ -87,8 +87,8 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
     }
 
     @transient
-    private var _defaultFileSystem: FileSystem = _
-    def defaultFileSystem: FileSystem = _defaultFileSystem
+    private var _defaultFileSystem: Option[FileSystem] = _
+    def defaultFileSystem: Option[FileSystem] = _defaultFileSystem
     def setDefaultFileSystem(fileSystem: FileSystem): Organization = {
         _fileSystems.find(_._2.id == fileSystem.id) match {
             case Some(_) =>
@@ -96,7 +96,7 @@ class Organization(implicit @transient protected val store: OrganizationStore) e
                     if (f._2.id == fileSystem.id) f.copy(_1 = false)
                     else f
                 })
-                _defaultFileSystem = fileSystem
+                _defaultFileSystem = Some(fileSystem)
                 this
             case None => throw UnsafeFilesystemMountException.MUST_BE_MOUNTED_FIRST()
         }

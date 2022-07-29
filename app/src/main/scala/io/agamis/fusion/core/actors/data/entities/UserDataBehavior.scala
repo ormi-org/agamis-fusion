@@ -26,6 +26,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
+import akka.util.Timeout
 
 object UserDataBehavior {
 
@@ -48,8 +49,8 @@ object UserDataBehavior {
   final case class Query(
     id: List[UUID],
     username: List[String],
-    limit: Int,
-    offset: Int,
+    limit: Option[Int],
+    offset: Option[Int],
     createdAt: List[(String, Instant)],
     updatedAt: List[(String, Instant)],
     orderBy: List[(String, Int)]
@@ -129,7 +130,7 @@ object UserDataBehavior {
         }
         case (ctx: ActorContext[Command], eqy: ExecuteQuery) => {
           if (
-            state match {
+            (state match {
               case _: DataActor.EmptyState => true
               case s: State => {
                 s.status match {
@@ -137,7 +138,7 @@ object UserDataBehavior {
                   case _ => true
                 }
               }
-            }
+            }) || true
           ) {
             val query = eqy.query
             val filters = UserStore.UsersFilters().copy(
@@ -152,7 +153,10 @@ object UserDataBehavior {
                   case Field.ID => UserStore.Column.ID()
                 }, o._2)
               }) else List((UserStore.Column.ID(), 1)),
-              pagination = Some(EntityFilters.Pagination(query.limit, query.offset))
+              pagination = (query.limit, query.offset) match {
+                case (Some(limit), Some(offset)) => Some(EntityFilters.Pagination(limit, offset))
+                case _                           => None
+              }
             )
             // Caching
             ctx.pipeToSelf(store.getUsers(filters)) {

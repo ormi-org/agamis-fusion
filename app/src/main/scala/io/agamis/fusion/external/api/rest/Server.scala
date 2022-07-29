@@ -22,8 +22,23 @@ import io.agamis.fusion.external.api.rest.routes.ProfileRoutes
 import io.agamis.fusion.external.api.rest.routes.UserRoutes
 
 import scala.concurrent.Future
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 
 object Server {
+
+  object TopLevelApiMessage extends SprayJsonSupport with DefaultJsonProtocol {
+
+    case class Message(
+      val apiVersions: List[String] = List("v1")
+    )
+
+    implicit val MessageFormat = jsonFormat1(Message)
+
+    def apply(): String = {
+      Message().toJson.prettyPrint
+    }
+  }
 
   object V1 {
     def apply(host: String, port: Int, parentSystem: ActorSystem[Nothing]): Future[ServerBinding] = {
@@ -34,8 +49,22 @@ object Server {
 
       val topLevel: Route =
         concat(
+          path("api")(
+            concat(
+              get {
+                complete(TopLevelApiMessage())
+              }
+            )
+          ),
           pathPrefix("api")(
             concat(
+              path("v1")(
+                concat(
+                  get {
+                    complete("Fusion API v1 Route")
+                  }
+                )
+              ),
               pathPrefix("v1")(
                 concat(
                   pathPrefix("auth")(

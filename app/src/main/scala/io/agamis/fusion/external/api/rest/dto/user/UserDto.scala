@@ -34,28 +34,12 @@ object UserDto {
     * @param user
     */
   def from(user: User): UserDto = {
-    apply(
+    UserDto(
       Some(user.id),
       user.username,
       user.relatedProfiles.filter(_._1 == true).map(r => ProfileDto.from(r._2)),
       Some(user.createdAt.toInstant),
       Some(user.updatedAt.toInstant)
-    )
-  }
-
-  def apply(
-    id: Option[UUID],
-    username: String,
-    profiles: List[ProfileDto],
-    createdAt: Option[Instant],
-    updatedAt: Option[Instant]
-  ): UserDto = {
-    UserDto(
-      id,
-      username,
-      profiles,
-      createdAt,
-      updatedAt
     )
   }
 }

@@ -33,6 +33,10 @@ trait Model {
         _id = UUID.fromString(id)
         this
     }
+    def setId(id: UUID): this.type = {
+      _id = id
+      this
+    }
 
     @QuerySqlField(name = "created_at", notNull = true)
     protected var _createdAt: Timestamp = Timestamp.from(Instant.now)
