@@ -4,7 +4,6 @@
 .ammonite/
 metals.sbt
 *.code-workspace
-/.vscode
 .idea
 target/
 
