@@ -1,12 +1,4 @@
 ThisBuild / scalaVersion := "2.13.10"
-bloopAggregateSourceDependencies in Global := true
+onLoad in Global := { Command.process("project fusion", _: State) } compose (onLoad in Global).value
 
-lazy val root = (project in file("."))
-    .settings(
-        name := "fusion"
-    )
-    .aggregate(
-        fusionCore
-    )
-    
-lazy val fusionCore = project.in(file("./packages/fusion-core"))
+lazy val fusion = (project in file("./packages/fusion-core"))
