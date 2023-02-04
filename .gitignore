@@ -9,6 +9,9 @@ target/
 
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# sbt local
+.bsp
+
 # compiled output
 dist
 tmp
