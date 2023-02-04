@@ -1,8 +1,0 @@
-{
-	"name": "scalasbt-dev",
-	"image": "docker.fiction-factory.fr/scala-sbt-openjdk11-debian",
-	"extensions": [
-		"scalameta.metals",
-		"ms-vsliveshare.vsliveshare"
-	]
-}

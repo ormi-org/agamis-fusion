@@ -1,0 +1,12 @@
+{
+  "name": "init",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "devDependencies": {
+    "@nrwl/nx-cloud": "latest",
+    "nx": "15.6.3",
+    "prettier": "^2.8.3"
+  }
+}
