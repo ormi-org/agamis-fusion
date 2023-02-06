@@ -43,9 +43,6 @@ object Server {
   object V1 {
     def apply(host: String, port: Int, parentSystem: ActorSystem[Nothing]): Future[ServerBinding] = {
       implicit val system = parentSystem
-      val data: ActorRef[ShardingEnvelope[DataActor.Command]] =
-        ClusterSharding(system).init(Entity(EntityTypeKey[DataActor.Command](DataActor.DataShardName))
-        (createBehavior = ctx => DataActor(ctx.shard, ctx.entityId)))
 
       val topLevel: Route =
         concat(
@@ -77,7 +74,7 @@ object Server {
                   new OrganizationTypeRoutes().routes,
                   new PermissionRoutes().routes,
                   new ProfileRoutes().routes,
-                  new UserRoutes(data).routes
+                  new UserRoutes().routes
                 )
               )
             )

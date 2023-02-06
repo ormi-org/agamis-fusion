@@ -4,6 +4,7 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.DispatcherSelector
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.Behaviors
+import io.agamis.fusion.core.actors.serialization.JsonSerializable
 import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 
@@ -28,7 +29,7 @@ object DataActor {
 
   final val DataShardName = "Data"
   trait Field
-  trait Command
+  trait Command extends JsonSerializable
   final case class Idle() extends Command
   trait Response
   trait State {

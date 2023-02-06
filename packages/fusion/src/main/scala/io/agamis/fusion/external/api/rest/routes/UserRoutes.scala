@@ -26,13 +26,16 @@ import akka.http.scaladsl.server.Directives
 import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
 import java.time.Instant
+import akka.cluster.sharding.typed.scaladsl.EntityRef
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 
 /** Class User Routes
   *
   * @param system
   * @param data
   */
-class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit system: ActorSystem[_]) extends UserApiJsonSupport {
+class UserRoutes()(implicit system: ActorSystem[_]) extends UserApiJsonSupport {
 
   import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
   import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -45,6 +48,8 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
   import io.agamis.fusion.core.actors.data.entities.UserDataBehavior.SingleUserState
 
   private implicit val ec: ExecutionContext = system.executionContext
+  private val sharding = ClusterSharding(system)
+  private val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
 
   // asking someone requires a timeout and a scheduler, if the timeout hits without response
   // the ask is failed with a TimeoutException
@@ -77,38 +82,38 @@ class UserRoutes(data: ActorRef[ShardingEnvelope[DataActor.Command]])(implicit s
   }
 
   def getUserById(id: UUID): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.GetUserById(ref, id))
+    sharding.entityRefFor(TypeKey, "user-%s".format(id.toString())).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.GetUserById(ref, id)
     }
   }
 
   def getUserByUsername(username: String): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-uname-%s".format(username), UserDataBehavior.GetUserByUsername(ref, username))
+    sharding.entityRefFor(TypeKey, "user-uname-%s".format(username)).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.GetUserByUsername(ref, username)
     }
   }
 
   def queryUsers(query: UserDataBehavior.Query): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-query-%d".format(query.hashCode()), UserDataBehavior.ExecuteQuery(ref, query))
+    sharding.entityRefFor(TypeKey, "user-query-%d".format(query.hashCode)).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.ExecuteQuery(ref, query)
     }
   }
 
   def createUser(uMut: UserDataBehavior.UserMutation): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-%s".format(UUID.randomUUID()), UserDataBehavior.CreateUser(ref, uMut))
+    sharding.entityRefFor(TypeKey, "user-%s".format(UUID.randomUUID)).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.CreateUser(ref, uMut)
     }
   }
 
   def updateUser(id: UUID, uMut: UserDataBehavior.UserMutation): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.UpdateUser(ref, id, uMut))
+    sharding.entityRefFor(TypeKey, "user-%s".format(id.toString)).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.UpdateUser(ref, id, uMut)
     }
   }
 
   def deleteUser(id: UUID): Future[UserDataBehavior.Response] = {
-    data.ask { ref: ActorRef[UserDataBehavior.Response] =>
-      ShardingEnvelope("user-%s".format(id.toString()), UserDataBehavior.DeleteUser(ref, id))
+    sharding.entityRefFor(TypeKey, "user-%s".format(id.toString)).ask { ref: ActorRef[UserDataBehavior.Response] =>
+      UserDataBehavior.DeleteUser(ref, id)
     }
   }
 

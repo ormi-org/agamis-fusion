@@ -19,39 +19,55 @@ import akka.Done
 import akka.actor
 import akka.management.scaladsl.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
-import org.slf4j.Logger
 import scala.util.Success
 import scala.util.Failure
 import io.agamis.fusion.core.actors.data.DataActor
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.cluster.sharding.typed.ClusterShardingSettings
+import scala.concurrent.ExecutionContext
+import akka.event.slf4j.Logger
+import org.slf4j
 
 object Core {
 
+    val logger = Logger("Core")
+
     def startNode(behavior: Behavior[NotUsed], clusterName: String, appConfig: Config): Future[Done] = {
+        val logoIconStream = getClass.getResourceAsStream("/io/agamis/fusion/media/fusion-logo.ans")
+        scala.io.Source.fromInputStream(logoIconStream).getLines().foreach(logger.info(_))
+        logger.info("Starting Agamis Fusion v0.1.0 - © 2021-2023 The Open Rich Media Initiative")
         val system = ActorSystem(behavior, clusterName, appConfig)
+        logger.info(s"Started Agamis Fusion !")
         system.whenTerminated
     }
 
     object Behavior {
         object Root {
-            def apply(port: Int, defaultPort: Int): Behavior[NotUsed] =
+            def apply(): Behavior[NotUsed] =
                 Behaviors.setup { context =>
-                    implicit val classicSystem: actor.ActorSystem = TypedActorSystemOps(context.system).toClassic
                     val cluster = Cluster(context.system)
 
                     // Logging role of the current starting node
-                    context.log.info(s"starting node with roles: [${cluster.selfMember.roles.mkString(",")}]")
+                    logger.info(s"Starting node with roles: [${cluster.selfMember.roles.mkString(",")}]")
 
-                    if (cluster.selfMember.hasRole("k8s")) {
+                    if (cluster.selfMember.hasRole("bootstrap")) {
                         // Start http management API
-                        AkkaManagement(classicSystem).start()
-                        // Auto join k8s based cluster
-                        ClusterBootstrap(classicSystem).start()
+                        logger.info(s"Bootstrapping cluster...")
+                        implicit lazy val ec: ExecutionContext = context.system.executionContext;
+                        AkkaManagement(context.system).start().onComplete({
+                            case Success(uri) => {
+                                logger.info(s"Successfuly started akka-management on URI { ${uri} }")
+                            }
+                            case Failure(exception) => {
+                                logger.info(s"Failed to start akka-management due to : ${exception.toString}")
+                            }
+                        })
+                        // Auto join cluster
+                        ClusterBootstrap(context.system).start()
                     }
-                    if (cluster.selfMember.hasRole("fusion-node-data")) {
-                        // TODO
+                    if (cluster.selfMember.hasRole("fusion-node-data") || cluster.selfMember.hasRole("fusion-node-data-proxy")) {
                         // Node type for handling datastore operations, resolving and caching queries results
+                        // Check role
                         val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
                         ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.shard, ctx.entityId))
                             .withSettings(ClusterShardingSettings(context.system).withRole("fusion-node-data")))
@@ -73,20 +89,21 @@ object Core {
                         implicit val system = context.system
                         implicit val log = context.log
                         val httpPort = context.system.settings.config.getString("akka.http.server.default-http-port")
-                        val interface = if (cluster.selfMember.hasRole("docker") || cluster.selfMember.hasRole("k8s")) {
+                        val interface = if (cluster.selfMember.hasRole("cluster")) {
                             "0.0.0.0"
                         } else {
                             "localhost"
                         }
                         RestEndpoint[RestEndpoint.V1](interface, httpPort.toInt)
                     }
+                    logger.info(s"Started Node from config !")
                     Behaviors.empty
                 }
         }
 
         private case object RestEndpoint {
             sealed trait V1
-            def apply[V1](interface: String, port: Int)(implicit system: ActorSystem[_], log: Logger) = {
+            def apply[V1](interface: String, port: Int)(implicit system: ActorSystem[_], log: slf4j.Logger) = {
                 implicit val ec: ExecutionContextExecutor = system.executionContext
 
                 val binding = Server.V1(interface, port, system)
@@ -102,7 +119,7 @@ object Core {
         }
 
         private case object DataNode {
-            def apply()(implicit system: ActorSystem[_], log: Logger) = {
+            def apply()(implicit system: ActorSystem[_], log: slf4j.Logger) = {
                 // implicit 
             }
         }

@@ -1,16 +1,28 @@
 ThisBuild / scalaVersion := "2.13.10"
 
-lazy val akkaVersion = "2.6.14"
-lazy val akkaHttpVersion = "10.2.9"
+lazy val akkaVersion = "2.7.0"
+lazy val akkaHttpVersion = "10.4.0"
 lazy val igniteVersion = "2.10.0"
-lazy val akkaManagementVersion = "1.1.3"
+lazy val akkaManagementVersion = "1.2.0"
 
 lazy val fusion = (project in file("."))
   .settings(
     name := "fusion",
-    version := "1.0",
+    version := "0.1.0",
     autoAPIMappings := true,
-    scalacOptions ++= Seq("-feature", "-deprecation", "-Ywarn-unused"),
+    scalacOptions ++= Seq("-feature", "-deprecation"),
+    javaOptions ++= Seq(
+      "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+      "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "--add-opens=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED",
+      "--add-opens=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED",
+      "--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang=ALL-UNNAMED"
+    ),
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -18,6 +30,7 @@ lazy val fusion = (project in file("."))
       "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.typesafe.akka" %% "akka-serialization-jackson" % akkaVersion,
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster-sharding" % akkaVersion,

@@ -7,7 +7,17 @@
       "run_fusion-node-rest-v1": {
         "executor": "nx:run-commands",
         "options": {
-            "command": "sbt \"runMain io.agamis.fusion.Main\" -J--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED -J--add-exports=java.base/sun.nio.ch=ALL-UNNAMED -J--add-exports=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED -J--add-exports=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED -J--add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED -J--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED -J-Dconfig.resource=application-fusion-node-rest-v1.dev.conf"
+          "command": "sbt '; set fork := true ; set javaOptions += \"-Dconfig.resource=application-fusion-node-rest-v1.dev.conf\" ; runMain io.agamis.fusion.Main'",
+          "color": true,
+          "parallel": true
+        }
+      },
+      "run_fusion-node-data-v1": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "sbt '; set fork := true ; set javaOptions += \"-Dconfig.resource=application-fusion-node-data.dev.conf\" ; runMain io.agamis.fusion.Main'",
+          "color": true,
+          "parallel": true
         }
       }
     }
