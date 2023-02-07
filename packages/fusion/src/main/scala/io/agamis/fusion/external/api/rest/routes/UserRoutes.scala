@@ -72,7 +72,7 @@ class UserRoutes()(implicit system: ActorSystem[_]) extends UserApiJsonSupport {
         case MultiUserState(_, result, status) => 
           status match {
             case ok: UserDataBehavior.Ok =>
-              UserQueryResponse(result.map(u => UserDto.from(u)), ApiStatus(StatusCodes.OK, ok.msg))
+              UserQueryResponse(result, ApiStatus(StatusCodes.OK, ok.msg))
             case nfound: UserDataBehavior.NotFound =>
               UserQueryResponse(List(), ApiStatus(StatusCodes.NotFound, nfound.msg))
             case exception: UserDataBehavior.InternalException => 

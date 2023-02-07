@@ -3,6 +3,14 @@
     "configurations": [
         {
             "type": "scala",
+            "request": "attach",
+            "name": "Debug a scala process",
+            "buildTarget": "fusion",
+            "hostName": "localhost",
+            "port": 5015
+        },
+        {
+            "type": "scala",
             "request": "launch",
             "name": "fusion-node-rest-v1",
             "mainClass": "io.agamis.fusion.Main",

@@ -28,6 +28,9 @@ import scala.util.Failure
 import scala.util.Success
 import akka.util.Timeout
 import io.agamis.fusion.core.actors.common.CachePolicy
+import io.agamis.fusion.external.api.rest.dto.user.UserDto
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonSubTypes
 
 object UserDataBehavior {
 
@@ -104,6 +107,13 @@ object UserDataBehavior {
   // ) extends Command
 
   // responses
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @JsonSubTypes(
+    Array(
+      new JsonSubTypes.Type(value = classOf[Ok], name = "ok"),
+      new JsonSubTypes.Type(value = classOf[NotFound], name = "notFound"),
+      new JsonSubTypes.Type(value = classOf[InternalException], name = "internalException")
+  ))
   sealed trait Status {
     def msg: String
   }
@@ -124,7 +134,7 @@ object UserDataBehavior {
   ) extends State
   final case class MultiUserState(
       entityId: String,
-      result: List[User] = List(),
+      result: List[UserDto] = List(),
       status: Status
   ) extends State
   final case class WrappedState(
@@ -216,7 +226,7 @@ object UserDataBehavior {
             CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
           ctx.pipeToSelf(store.getUsers(filters)) {
             case Success(userList) =>
-              val newState = MultiUserState(state.entityId, userList, Ok())
+              val newState = MultiUserState(state.entityId, userList.map(UserDto.from(_)), Ok())
               WrappedState(newState, eqy.replyTo, mustCache)
             case Failure(exception) =>
               exception match {

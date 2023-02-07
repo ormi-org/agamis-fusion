@@ -5,19 +5,17 @@ volumes:
   ignite-persistence-volume-2:
     
 networks:
-  default:
-    external:
-      name: ogdt-fusion-dev
+  ignite
 
 services:
   ignite-instance-1:
     container_name: apache-ignite-1
     image: apacheignite/ignite
     volumes:
-      - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
+      - ~/ignite/ignite-config.xml:/ignite-config/ignite-config.xml
       - ignite-persistence-volume-1:/opt/storage
     environment:
-      - CONFIG_URI=/ignite-config/ignite-default-config.xml
+      - CONFIG_URI=/ignite-config/ignite-config.xml
       - OPTION_LIBS=control-center-agent
     ports:
       - 11211:11211
@@ -26,10 +24,10 @@ services:
     container_name: apache-ignite-2
     image: apacheignite/ignite
     volumes:
-      - <rootdir>/ignite/ignite-default-config.xml:/ignite-config/ignite-default-config.xml
+      - ~/ignite/ignite-config.xml:/ignite-config/ignite-config.xml
       - ignite-persistence-volume-2:/opt/storage
     environment:
-      - CONFIG_URI=/ignite-config/ignite-default-config.xml
+      - CONFIG_URI=/ignite-config/ignite-config.xml
       - OPTION_LIBS=control-center-agent
     ports:
       - 11212:11211

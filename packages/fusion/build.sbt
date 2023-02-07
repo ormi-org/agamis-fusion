@@ -5,6 +5,8 @@ lazy val akkaHttpVersion = "10.4.0"
 lazy val igniteVersion = "2.10.0"
 lazy val akkaManagementVersion = "1.2.0"
 
+val jacksonVersion = "2.14.2"
+
 lazy val fusion = (project in file("."))
   .settings(
     name := "fusion",
@@ -50,6 +52,9 @@ lazy val fusion = (project in file("."))
       // JWT
       "com.github.jwt-scala" %% "jwt-core" % "7.1.5",
       "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5",
+      // Jackson
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+      // "com.fasterxml.jackson.datatype" %% "jackson-datatype-jsr310" % jacksonVersion,
       // Bcrypt 
       "at.favre.lib" % "bcrypt" % "0.9.0"
     )

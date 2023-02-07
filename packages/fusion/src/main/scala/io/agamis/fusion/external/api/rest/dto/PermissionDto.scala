@@ -9,6 +9,14 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import spray.json._
 import io.agamis.fusion.core.db.models.sql.Application
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
+import com.fasterxml.jackson.annotation.JsonCreator
+import io.agamis.fusion.external.api.rest.dto.common.typed.LanguageMapping
+import java.util.ArrayList
+import scala.collection.mutable.ListBuffer
 
 /**
   * Permission DTO with JSON support
@@ -25,8 +33,8 @@ import io.agamis.fusion.core.db.models.sql.Application
 final case class PermissionDto (
   id: Option[UUID],
   key: String,
-  labels: Map[(UUID, UUID), (String, String)],
-  descriptions: Map[(UUID, UUID), (String, String)],
+  labels: List[LanguageMapping],
+  descriptions: List[LanguageMapping],
   relatedApplication: Option[ApplicationDto],
   editable: Boolean,
   createdAt: Option[Instant],
@@ -38,8 +46,26 @@ object PermissionDto {
     PermissionDto(
       Some(p.id),
       p.key,
-      p.labels,
-      p.descriptions,
+      p.labels.foldLeft(ListBuffer.empty[LanguageMapping]) {
+        (acc, i) => {
+          acc += new LanguageMapping(
+            i._1._1,
+            i._1._2,
+            i._2._1,
+            i._2._2
+          )
+        }
+      }.toList,
+      p.descriptions.foldLeft(ListBuffer.empty[LanguageMapping]) {
+        (acc, i) => {
+          acc += new LanguageMapping(
+            i._1._1,
+            i._1._2,
+            i._2._1,
+            i._2._2
+          )
+        }
+      }.toList,
       p.relatedApplication.collect { case a: Application => ApplicationDto.from(a) },
       p.editable,
       Some(p.createdAt.toInstant),
@@ -50,6 +76,7 @@ object PermissionDto {
 
 trait PermissionJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     import io.agamis.fusion.external.api.rest.dto.application.ApplicationJsonProtocol._
+    import io.agamis.fusion.external.api.rest.dto.common.typed.LanguageMappingJsonProtocol._
 
     implicit val permissionFormat: RootJsonFormat[PermissionDto] = jsonFormat8(PermissionDto.apply)
 }

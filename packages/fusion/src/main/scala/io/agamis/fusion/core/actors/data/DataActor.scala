@@ -32,7 +32,7 @@ object DataActor {
   trait Command extends JsonSerializable
   final case class Idle() extends Command
   trait Response
-  trait State {
+  trait State extends JsonSerializable {
     def entityId: String
   }
   final case class EmptyState(entityId: String) extends State
@@ -46,8 +46,7 @@ object DataActor {
     }
   }
 
-  def apply(shard: ActorRef[ClusterSharding.ShardCommand], entityId: String): Behavior[Command] = Behaviors.setup { context =>
-    implicit val wrapper: IgniteClientNodeWrapper = IgniteClientNodeWrapper(context.system)
+  def apply(shard: ActorRef[ClusterSharding.ShardCommand], entityId: String)(implicit wrapper: IgniteClientNodeWrapper): Behavior[Command] = Behaviors.setup { context =>
 
     implicit val ec: ExecutionContext = 
       context.system.dispatchers.lookup(

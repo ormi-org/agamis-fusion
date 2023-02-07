@@ -8,6 +8,8 @@ import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.external.api.rest.dto.common.JsonFormatters._
 import spray.json._
+import io.agamis.fusion.external.api.rest.dto.common.typed.LanguageMapping
+import scala.collection.mutable.ListBuffer
 
 /** OrganizationType DTO with JSON support
   *
@@ -19,7 +21,7 @@ import spray.json._
   */
 final case class OrganizationTypeDto(
   id: Option[UUID],
-  label: Map[(UUID, UUID), (String, String)],
+  labels: List[LanguageMapping],
   relatedOrganizations: Option[List[OrganizationDto]],
   createdAt: Option[Instant],
   updatedAt: Option[Instant]
@@ -29,7 +31,16 @@ object OrganizationTypeDto {
   def from(o: OrganizationType): OrganizationTypeDto = {
     apply(
       Some(o.id),
-      o.labels,
+      o.labels.foldLeft(ListBuffer.empty[LanguageMapping]) {
+        (acc, i) => {
+          acc += new LanguageMapping(
+            i._1._1,
+            i._1._2,
+            i._2._1,
+            i._2._2
+          )
+        }
+      }.toList,
       Some(
         o.relatedOrganizations
           .filter(_._1 == true)
@@ -42,7 +53,7 @@ object OrganizationTypeDto {
 
   def apply(
     id: Option[UUID],
-    labels: Map[(UUID, UUID), (String, String)],
+    labels: List[LanguageMapping],
     relatedOrganizations: Option[List[OrganizationDto]],
     createdAt: Option[Instant],
     updatedAt: Option[Instant]
@@ -59,6 +70,7 @@ object OrganizationTypeDto {
 
 trait OrganizationTypeJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   import io.agamis.fusion.external.api.rest.dto.organization.OrganizationJsonProtocol.organizationFormat
+  import io.agamis.fusion.external.api.rest.dto.common.typed.LanguageMappingJsonProtocol.languageMappingFormat
 
   implicit val organizationTypeFormat: RootJsonFormat[OrganizationTypeDto] =
     jsonFormat5(OrganizationTypeDto.apply)

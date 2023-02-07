@@ -23,13 +23,13 @@ import org.apache.ignite.transactions.Transaction
 class Profile(implicit @transient protected val store: ProfileStore) extends Model {
 
     @QuerySqlField(name = "alias", notNull = false)
-    private var _alias: Option[String] = None
+    private var _alias: String = null
 
     /** Profile alias property
       *
       * @return profile alias [[java.lang.String String]]
       */
-    def alias: Option[String] = _alias
+    def alias: Option[String] = Some(_alias)
 
     /** A method for setting alias property
       *
@@ -37,7 +37,7 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
       * @return this object
       */
     def setAlias(alias: String): Profile = {
-      _alias = Some(alias)
+      _alias = alias
       this
     }
 

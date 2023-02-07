@@ -67,6 +67,11 @@ object Core {
                     }
                     if (cluster.selfMember.hasRole("fusion-node-data") || cluster.selfMember.hasRole("fusion-node-data-proxy")) {
                         // Node type for handling datastore operations, resolving and caching queries results
+                        // Start database connection at startup (only on data node; excluding proxies)
+                        implicit var wrapper: IgniteClientNodeWrapper = null
+                        if (cluster.selfMember.hasRole("fusion-node-data")) {
+                            wrapper = IgniteClientNodeWrapper(context.system)
+                        }
                         // Check role
                         val TypeKey = EntityTypeKey[DataActor.Command](DataActor.DataShardName)
                         ClusterSharding(context.system).init(Entity(TypeKey)(createBehavior = ctx => DataActor(ctx.shard, ctx.entityId))
