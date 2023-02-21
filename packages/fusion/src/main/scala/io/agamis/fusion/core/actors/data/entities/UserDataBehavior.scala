@@ -129,7 +129,7 @@ object UserDataBehavior {
   }
   final case class SingleUserState(
       entityId: String,
-      result: Option[User],
+      result: Option[UserDto],
       status: Status
   ) extends State
   final case class MultiUserState(
@@ -271,7 +271,7 @@ object UserDataBehavior {
             CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
           ctx.pipeToSelf(store.getUserById(qry.id.toString())) {
             case Success(u) =>
-              val newState = SingleUserState(state.entityId, Some(u), Ok())
+              val newState = SingleUserState(state.entityId, Some(UserDto.from(u)), Ok())
               WrappedState(newState, qry.replyTo, mustCache)
             case Failure(exception) => {
               exception match {
@@ -321,7 +321,7 @@ object UserDataBehavior {
             CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
           ctx.pipeToSelf(store.getUserByUsername(qry.username.toString())) {
             case Success(u) =>
-              val newState = SingleUserState(state.entityId, Some(u), Ok())
+              val newState = SingleUserState(state.entityId, Some(UserDto.from(u)), Ok())
               WrappedState(newState, qry.replyTo, mustCache)
             case Failure(exception) => {
               exception match {
@@ -376,9 +376,9 @@ object UserDataBehavior {
               // Persist it
               .persist
           ) {
-            case Success((tx, user)) =>
+            case Success((tx, u)) =>
               store.commitTransaction(tx)
-              val newState = SingleUserState(state.entityId, Some(user), Ok())
+              val newState = SingleUserState(state.entityId, Some(UserDto.from(u)), Ok())
               WrappedState(newState, crt.replyTo, mustCache)
             case Failure(exception) => {
               exception match {
@@ -447,9 +447,9 @@ object UserDataBehavior {
               }
             }
         } yield ctx.pipeToSelf(newUserState.persist) {
-          case Success((tx, user)) =>
+          case Success((tx, u)) =>
             store.commitTransaction(tx)
-            val newState = SingleUserState(state.entityId, Some(user), Ok())
+            val newState = SingleUserState(state.entityId, Some(UserDto.from(u)), Ok())
             WrappedState(newState, upd.replyTo, mustCache)
           case Failure(exception) =>
             exception match {
@@ -506,9 +506,9 @@ object UserDataBehavior {
               }
             }
         } yield ctx.pipeToSelf(user.remove) {
-          case Success((tx, user)) =>
+          case Success((tx, u)) =>
             store.commitTransaction(tx)
-            WrappedState(SingleUserState(user.id.toString, Some(user), Ok()), del.replyTo, false)
+            WrappedState(SingleUserState(user.id.toString, Some(UserDto.from(u)), Ok()), del.replyTo, false)
           case Failure(exception) =>
             exception match {
               case UserNotPersistedException(msg, cause) =>

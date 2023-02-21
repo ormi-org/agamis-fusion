@@ -350,7 +350,7 @@ class Tree private (fs: FileSystem) {
     * @param deleted a count of the effectively deleted file
     * @param errors  a list of errors caught from a file deletion
     */
-  final case class DeleteManyFilesResult(deleted: Int, errors: List[String])
+  case class DeleteManyFilesResult(deleted: Int, errors: List[String])
 
   /** A method for deleting many files in the '''File Tree'''
     *

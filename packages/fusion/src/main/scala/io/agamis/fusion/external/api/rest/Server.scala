@@ -24,6 +24,7 @@ import io.agamis.fusion.external.api.rest.routes.UserRoutes
 import scala.concurrent.Future
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
+import io.agamis.fusion.core.services.UserService
 
 object Server {
 
@@ -43,6 +44,8 @@ object Server {
   object V1 {
     def apply(host: String, port: Int, parentSystem: ActorSystem[Nothing]): Future[ServerBinding] = {
       implicit val system = parentSystem
+      implicit val sharding = ClusterSharding(system)
+      implicit val userService: UserService = new UserService
 
       val topLevel: Route =
         concat(

@@ -54,7 +54,8 @@ lazy val fusion = (project in file("."))
       "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5",
       // Jackson
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-      // "com.fasterxml.jackson.datatype" %% "jackson-datatype-jsr310" % jacksonVersion,
+      // Mockito
+      "org.scalatestplus" %% "mockito-4-6" % "3.2.15.0" % "test",
       // Bcrypt 
       "at.favre.lib" % "bcrypt" % "0.9.0"
     )
