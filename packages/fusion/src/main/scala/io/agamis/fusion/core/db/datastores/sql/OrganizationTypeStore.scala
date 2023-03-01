@@ -16,7 +16,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtype
 import org.apache.ignite.cache.CacheAtomicityMode
 import io.agamis.fusion.core.db.datastores.sql.generics.TextStore
 import io.agamis.fusion.core.db.models.sql.generics.Language
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import scala.collection.mutable.ListBuffer
 import java.sql.Timestamp
@@ -301,11 +301,11 @@ object OrganizationTypeStore {
     )
     case class GetOrganizationTypesFilters(
         filters: List[GetOrganizationTypesFilter] = List(),
-        orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
-        pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
-    ) extends EntityFilters
+        orderBy: List[(EntityQueryParams.Column, Int)] = List(), // (column, direction)
+        pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+    ) extends EntityQueryParams
 
     object Column {
-        case class ID(val order: Int = 0, val name: String = "ot.ID") extends EntityFilters.Column
+        case class ID(val order: Int = 0, val name: String = "ot.ID") extends EntityQueryParams.Column
     }
 }

@@ -8,6 +8,7 @@ get:
     - $ref: '../../parameters/pagination-size.yaml'
     - $ref: '../../parameters/created_at-filter.yaml'
     - $ref: '../../parameters/updated_at-filter.yaml'
+    - $ref: '../../parameters/include.yaml'
     - in: query
       name: username
       example: cvs
@@ -22,9 +23,14 @@ get:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '../../schemas/types/0.user-with-relations.yaml'
+            type: object
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '../../schemas/types/0.user-with-relations.yaml'
+              status:
+                $ref: '../../schemas/generics/status.yaml'
     400:
       description: Bad request for users fetching
       content:
@@ -70,7 +76,12 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../../schemas/types/0.user.yaml'
+            type: object
+            properties:
+              result:
+                $ref: '../../schemas/types/0.user.yaml'
+              status:
+                $ref: '../../schemas/generics/status.yaml'
     400:
       description: Bad request for users fetching
       content:

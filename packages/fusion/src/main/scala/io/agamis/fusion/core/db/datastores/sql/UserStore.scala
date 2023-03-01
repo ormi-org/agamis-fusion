@@ -12,7 +12,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFou
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotPersistedException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserQueryExecutionException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.User
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
@@ -62,11 +62,11 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     u.setStore(this)
   }
 
-  def makeUsersQuery(queryFilters: UserStore.UsersFilters): SqlStoreQuery = {
+  def makeUsersQuery(queryParams: UserStore.UserQueryParams): SqlStoreQuery = {
     var baseQueryString = queryString.replace(Placeholder.SCHEMA, schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
     val whereStatements: ListBuffer[String] = ListBuffer()
-    queryFilters.filters.foreach({ filter =>
+    queryParams.filters.foreach({ filter =>
       val innerWhereStatement: ListBuffer[String] = ListBuffer()
       // manage ids search
       if (filter.id.nonEmpty) {
@@ -89,30 +89,30 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       if (filter.profile_id.nonEmpty) {
         innerWhereStatement += filter.profile_id.map({ profile_id =>
           queryArgs += profile_id
-          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ID().name)} LIKE \"%?%\""
+          s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ID().name)} LIKE \"%?%\""
         }).mkString(" OR ")
       }
       if (filter.profile_alias.nonEmpty) {
         innerWhereStatement += filter.profile_alias.map({ profile_alias =>
           queryArgs += profile_alias
-          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ALIAS().name)} LIKE \"%?%\""
+          s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.ALIAS().name)} LIKE \"%?%\""
         }).mkString(" OR ")
       }
       if (filter.profile_lastname.nonEmpty) {
         innerWhereStatement += filter.profile_lastname.map({ profile_lastname =>
           queryArgs += profile_lastname
-          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LASTNAME().name)} LIKE \"%?%\""
+          s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LASTNAME().name)} LIKE \"%?%\""
         }).mkString(" OR ")
       }
       if (filter.profile_firstname.nonEmpty) {
         innerWhereStatement += filter.profile_firstname.map({ profile_firstname =>
           queryArgs += profile_firstname
-          s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.FIRSTNAME().name)} LIKE \"%?%\""
+          s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.FIRSTNAME().name)} LIKE \"%?%\""
         }).mkString(" OR ")
       }
       filter.profile_lastLogin.map({ _ match {
         case (test, time) =>
-          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LAST_LOGIN().name)} ${test match {
+          innerWhereStatement += s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.LAST_LOGIN().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -127,7 +127,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       }})
       filter.profile_createdAt.foreach({_ match {
         case (test, time) =>
-          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.CREATED_AT().name)} ${test match {
+          innerWhereStatement += s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.CREATED_AT().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -142,7 +142,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
       }})
       filter.profile_updatedAt.foreach({_ match {
         case (test, time) =>
-          innerWhereStatement += s"${EntityFilters.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.UPDATED_AT().name)} ${test match {
+          innerWhereStatement += s"${EntityQueryParams.IN_WHERE_CLAUSE(UserStore.Column.PROFILE.UPDATED_AT().name)} ${test match {
             case Filter.ComparisonOperator.Equal =>
               Filter.ComparisonOperator.SQL.Equal
             case Filter.ComparisonOperator.GreaterThan =>
@@ -199,9 +199,9 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     // manage order
     baseQueryString = baseQueryString.replace(
       Placeholder.ORDER_BY_STATEMENT,
-      queryFilters.orderBy.nonEmpty match {
+      queryParams.orderBy.nonEmpty match {
         case true =>
-          s" ORDER BY ${queryFilters.orderBy
+          s" ORDER BY ${queryParams.orderBy
             .map(o =>
               s"u.${o._1.name} ${o._2 match {
                 case Filter.OrderingOperators.Ascending =>
@@ -218,7 +218,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     // manage pagination
     baseQueryString = baseQueryString.replace(
       Placeholder.PAGINATION,
-      queryFilters.pagination match {
+      queryParams.pagination match {
         case Some(p) => s" LIMIT ${p.limit} OFFSET ${p.offset} "
         case None    => s" LIMIT ${Pagination.Default.Limit} OFFSET ${Pagination.Default.Offset} "
       }
@@ -228,8 +228,8 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
   }
 
   // Get existing users from database
-  def getUsers(queryFilters: UserStore.UsersFilters)(implicit ec: ExecutionContext): Future[List[User]] = {
-    executeQuery(makeUsersQuery(queryFilters)).transformWith({
+  def getUsers(queryParams: UserStore.UserQueryParams)(implicit ec: ExecutionContext): Future[List[User]] = {
+    executeQuery(makeUsersQuery(queryParams)).transformWith({
       case Success(rows) =>
         val users = rows.map({ row =>
           (for (
@@ -303,7 +303,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
   def getAllUsers(implicit ec: ExecutionContext): Future[List[User]] = {
     getUsers(
       UserStore
-        .UsersFilters()
+        .UserQueryParams()
         .copy(
           orderBy = List(
             (UserStore.Column.ID(), 1)
@@ -342,7 +342,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
   )(implicit ec: ExecutionContext): Future[User] = {
     getUsers(
       UserStore
-        .UsersFilters()
+        .UserQueryParams()
         .copy(
           filters = List(
             UserStore
@@ -505,44 +505,44 @@ object UserStore {
       createdAt: List[(String, Timestamp)] = List(), // (date, (eq, lt, gt, ne))
       updatedAt: List[(String, Timestamp)] = List() // (date, (eq, lt, gt, ne))
   )
-  case class UsersFilters(
+  case class UserQueryParams(
       filters: List[UsersFilter] = List(),
-      orderBy: List[(EntityFilters.Column, Int)] =
+      orderBy: List[(EntityQueryParams.Column, Int)] =
         List(), // (column, direction)
-      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
-  ) extends EntityFilters
+      pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+  ) extends EntityQueryParams
 
   object Column {
     case class ID(val order: Int = 0, val name: String = "u.ID")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class USERNAME(val order: Int = 1, val name: String = "u.USERNAME")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class PASSWORD(val order: Int = 2, val name: String = "u.PASSWORD")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class CREATED_AT(val order: Int = 3, val name: String = "u.CREATED_AT")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class UPDATED_AT(val order: Int = 4, val name: String = "u.UPDATED_AT")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class PROFILES(val order: Int = 5, val name: String = "PROFILES")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
 
     object PROFILE {
       case class ID(val order: Int = 0, val name: String = "p.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class ALIAS(val order: Int = 1, val name: String = "p.ALIAS")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class LASTNAME(val order: Int = 2, val name: String = "p.LASTNAME")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class FIRSTNAME(val order: Int = 3, val name: String = "p.FIRSTNAME")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class LAST_LOGIN(val order: Int = 4, val name: String = "p.LAST_LOGIN")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class IS_ACTIVE(val order: Int = 5, val name: String = "p.IS_ACTIVE")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class CREATED_AT(val order: Int = 6, val name: String = "p.CREATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class UPDATED_AT(val order: Int = 7, val name: String = "p.UPDATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
     }
   }
 }

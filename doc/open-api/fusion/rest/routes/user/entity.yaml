@@ -4,6 +4,7 @@ get:
   summary: Gets a single user
   parameters:
     - $ref: '../../parameters/authorization.yaml'
+    - $ref: '../../parameters/include.yaml'
     - in: path
       name: id
       description: id of the user to get
@@ -16,9 +17,33 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/types/0.user-with-relations.yaml"
+            type: object
+            properties:
+              result:
+                $ref: "../../schemas/types/0.user-with-relations.yaml"
+              status:
+                allOf:
+                  - $ref: '../../schemas/generics/status.yaml'
+                  - type: object
+                    properties:
+                      message:
+                        example: null
     404:
       description: User not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                allOf:
+                  - $ref: '../../schemas/generics/status.yaml'
+                  - type: object
+                    properties:
+                      code:
+                        example: 404
+                      message:
+                        example: "User not found"
 put:
   tags:
     - User

@@ -17,10 +17,10 @@ class UserService()(implicit sharding: ClusterSharding) {
     // the ask is failed with a TimeoutException
     implicit val timeout = Timeout(10.seconds)
 
-    def getUserById(id: UUID): Future[UserDataBehavior.Response] = {
+    def getUserById(id: UUID, include: List[String]): Future[UserDataBehavior.Response] = {
         sharding.entityRefFor(TypeKey, "user-%s".format(id.toString())).ask {
             ref: ActorRef[UserDataBehavior.Response] =>
-                UserDataBehavior.GetUserById(ref, id)
+                UserDataBehavior.GetUserById(ref, id, include)
         }
     }
 

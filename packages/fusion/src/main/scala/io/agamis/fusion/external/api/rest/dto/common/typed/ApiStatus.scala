@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.StatusCode
 
 final case class ApiStatus (
   code: StatusCode,
-  message: String
+  message: Option[String]
 )
 
 trait ApiStatusJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {

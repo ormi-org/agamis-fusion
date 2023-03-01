@@ -18,7 +18,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.{
 }
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.{
-  EntityFilters,
+  EntityQueryParams,
   SqlStoreQuery
 }
 import io.agamis.fusion.core.db.models.sql.{Group, Organization}
@@ -972,11 +972,11 @@ object GroupStore {
 
   case class GroupsFilters(
       filters: List[GroupsFilter] = List(),
-      orderBy: List[(EntityFilters.Column, Int)] = List(), // (column, direction)
-      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
-  ) extends EntityFilters
+      orderBy: List[(EntityQueryParams.Column, Int)] = List(), // (column, direction)
+      pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+  ) extends EntityQueryParams
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "g.ID") extends EntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "g.ID") extends EntityQueryParams.Column
   }
 }

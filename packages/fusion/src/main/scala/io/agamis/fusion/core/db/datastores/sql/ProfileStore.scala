@@ -14,7 +14,7 @@ import io.agamis.fusion.core.db.datastores.sql.generics.EmailStore
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.emails.EmailNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.Profile
 import io.agamis.fusion.core.db.models.sql.generics.Email
@@ -940,154 +940,154 @@ object ProfileStore {
 
   case class ProfilesFilters(
       filters: List[ProfilesFilter] = List(),
-      orderBy: List[(EntityFilters.Column, Int)] =
+      orderBy: List[(EntityQueryParams.Column, Int)] =
         List(), // (column, direction)
-      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
-  ) extends EntityFilters
+      pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+  ) extends EntityQueryParams
 
   object Column {
     case class ID(val order: Int = 0, val name: String = "p.ID")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class ALIAS(val order: Int = 1, val name: String = "p.ALIAS")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class LASTNAME(val order: Int = 2, val name: String = "p.LASTNAME")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class FIRSTNAME(val order: Int = 3, val name: String = "p.FIRSTNAME")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class LAST_LOGIN(val order: Int = 4, val name: String = "p.LAST_LOGIN")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class IS_ACTIVE(val order: Int = 5, val name: String = "p.IS_ACTIVE")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class CREATED_AT(val order: Int = 6, val name: String = "p.CREATED_AT")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class UPDATED_AT(val order: Int = 7, val name: String = "p.UPDATED_AT")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class USER(val order: Int = 8, val name: String = "USER")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class EMAILS(val order: Int = 9, val name: String = "EMAILS")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class ORGANIZATION(val order: Int = 10, val name: String = "ORGANIZATION")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class GROUPS(val order: Int = 11, val name: String = "GROUPS")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     case class PERMISSIONS(val order: Int = 12, val name: String = "PERMISSIONS")
-        extends EntityFilters.Column
+        extends EntityQueryParams.Column
     object USER {
       case class ID(val order: Int = 0, val name: String = "u.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class USERNAME(val order: Int = 1, val name: String = "u.USERNAME")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class PASSWORD(val order: Int = 2, val name: String = "u.PASSWORD")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class CREATED_AT(val order: Int = 3, val name: String = "u.CREATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class UPDATED_AT(val order: Int = 4, val name: String = "u.UPDATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
     }
 
     object EMAIL {
       case class ID(val order: Int = 0, val name: String = "e.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class ADDRESS(val order: Int = 1, val name: String = "e.ADDRESS")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class IS_MAIN(val order: Int = 2, val name: String = "pe.IS_MAIN")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
     }
 
     object ORGANIZATION {
       case class ID(val order: Int = 0, val name: String = "o.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class LABEL(val order: Int = 1, val name: String = "o.LABEL")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class QUERYABLE(val order: Int = 2, val name: String = "o.QUERYABLE")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class CREATED_AT(val order: Int = 3, val name: String = "o.CREATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class UPDATED_AT(val order: Int = 4, val name: String = "o.UPDATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class ORGANIZATIONTYPE(val order: Int = 5, val name: String = "o.ORGANIZATIONTYPE")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class ORG_TYPE_LABEL(val order: Int = 6, val name: String = "o.ORG_TYPE_LABEL")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
 
       object ORGANIZATIONTYPE {
         case class ID(val order: Int = 0, val name: String = "ot.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LABEL_TEXT_ID(val order: Int = 1, val name: String = "ot.LABEL_TEXT_ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class CREATED_AT(val order: Int = 2, val name: String = "ot.CREATED_AT")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class UPDATED_AT(val order: Int = 3, val name: String = "ot.UPDATED_AT")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
       }
 
       object ORG_TYPE_LABEL {
         case class TEXT_ID(val order: Int = 0, val name: String = "t.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_ID(val order: Int = 1, val name: String = "l.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_CODE(val order: Int = 2, val name: String = "l.CODE")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_LABEL(val order: Int = 3, val name: String = "l.LABEL")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class CONTENT(val order: Int = 4, val name: String = "t.CONTENT")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
       }
     }
 
     object GROUP {
       case class ID(val order: Int = 0, val name: String = "g.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class NAME(val order: Int = 1, val name: String = "g.NAME")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class CREATED_AT(val order: Int = 2, val name: String = "g.CREATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class UPDATED_AT(val order: Int = 3, val name: String = "g.UPDATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
     }
 
     object PERMISSION {
       case class ID(val order: Int = 0, val name: String = "perm.ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class KEY(val order: Int = 1, val name: String = "perm.`KEY`")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class EDITABLE(val order: Int = 2, val name: String = "perm.EDITABLE")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class APPLICATION_ID(val order: Int = 3, val name: String = "perm.APPLICATION_ID")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class CREATED_AT(val order: Int = 4, val name: String = "perm.CREATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class UPDATED_AT(val order: Int = 5, val name: String = "perm.UPDATED_AT")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class LABEL(val order: Int = 6, val name: String = "perm.LABEL")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
       case class DESCRIPTION(val order: Int = 7, val name: String = "perm.DESCRIPTION")
-          extends EntityFilters.Column
+          extends EntityQueryParams.Column
 
       object LABEL {
         case class TEXT_ID(val order: Int = 0, val name: String = "t.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_ID(val order: Int = 1, val name: String = "l.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_CODE(val order: Int = 2, val name: String = "l.CODE")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_LABEL(val order: Int = 3, val name: String = "l.LABEL")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class CONTENT(val order: Int = 4, val name: String = "t.CONTENT")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
       }
 
       object DESCRIPTION {
         case class TEXT_ID(val order: Int = 0, val name: String = "td.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_ID(val order: Int = 1, val name: String = "ld.ID")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_CODE(val order: Int = 2, val name: String = "ld.CODE")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class LANG_LABEL(val order: Int = 3, val name: String = "ld.LABEL")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
         case class CONTENT(val order: Int = 4, val name: String = "td.CONTENT")
-            extends EntityFilters.Column
+            extends EntityQueryParams.Column
       }
     }
   }

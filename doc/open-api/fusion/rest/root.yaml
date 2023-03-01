@@ -1,7 +1,7 @@
-openapi: 3.0.3
+openapi: 3.0.1
 info:
-  title: Fusion API
-  description: OpenAPI 3.0.3 specification for Fusion REST API 1.0.0
+  title: Fusion REST API
+  description: OpenAPI 3.0.1 specification for Fusion REST API 1.0.0
   version: 1.0.0
  
 servers:
@@ -12,33 +12,33 @@ servers:
 
 tags:
   - name: User
-  - name: Profile
-  - name: Organization
-  - name: OrganizationType
+  # - name: Profile
+  # - name: Organization
+  # - name: OrganizationType
 
 paths:
   /users:
     $ref: "./routes/user/repo.yaml"
   /user/{id}:
     $ref: "./routes/user/entity.yaml"
-  /user/{id}/profiles:
-    $ref: "./routes/user/profile/repo.yaml"
+  # /user/{id}/profiles:
+  #   $ref: "./routes/user/profile/repo.yaml"
 
-  /profiles:
-    $ref: "./routes/profile/repo.yaml"
-  /profile/{id}:
-    $ref: "./routes/profile/entity.yaml"
-  /profile/{id}/user:
-    $ref: "./routes/profile/user/entity.yaml"
+  # /profiles:
+  #   $ref: "./routes/profile/repo.yaml"
+  # /profile/{id}:
+  #   $ref: "./routes/profile/entity.yaml"
+  # /profile/{id}/user:
+  #   $ref: "./routes/profile/user/entity.yaml"
 
-  /organizations:
-    $ref: "./routes/organization/repo.yaml"
-  /organization/types:
-    $ref: "./routes/organization/type/repo.yaml"
-  /organization/type/{id}:
-    $ref: "./routes/organization/type/entity.yaml"
-  /organization/{id}:
-    $ref: "./routes/organization/entity.yaml"
+  # /organizations:
+  #   $ref: "./routes/organization/repo.yaml"
+  # /organization/types:
+  #   $ref: "./routes/organization/type/repo.yaml"
+  # /organization/type/{id}:
+  #   $ref: "./routes/organization/type/entity.yaml"
+  # /organization/{id}:
+  #   $ref: "./routes/organization/entity.yaml"
 
   # /groups:
   #   $ref: "./routes/group/repo.yaml"

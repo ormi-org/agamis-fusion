@@ -16,8 +16,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserQueryE
 import io.agamis.fusion.core.db.models.sql.User
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.agamis.fusion.core.db.datastores.sql.common.Filter
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
-// import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -47,6 +46,7 @@ object UserDataBehavior {
     val CREATED_AT: Value = "created_at"
     val UPDATED_AT: Value = "updated_at"
     val ORDER_BY: Value = "order_by"
+    val INCLUDE: Value = "include"
   }
 
   // queries
@@ -57,7 +57,8 @@ object UserDataBehavior {
       offset: Option[Int],
       createdAt: List[(String, Instant)],
       updatedAt: List[(String, Instant)],
-      orderBy: List[(String, Int)]
+      orderBy: List[(String, Int)],
+      include: List[String]
   ) extends Identifiable
       with Timetracked
       with Pageable
@@ -76,7 +77,8 @@ object UserDataBehavior {
 
   final case class GetUserById(
       replyTo: ActorRef[Response],
-      id: UUID
+      id: UUID,
+      include: List[String]
   ) extends Command
 
   final case class GetUserByUsername(
@@ -180,16 +182,17 @@ object UserDataBehavior {
             }
           })
         ) {
+          // Set query and its parameters
           val query = eqy.query
           val filters = UserStore
-            .UsersFilters()
+            .UserQueryParams()
             .copy(
               filters = List(
                 UserStore
                   .UsersFilter()
                   .copy(
                     id = if (query.id.nonEmpty) query.id.map { _.toString }
-                    else List(),
+                      else List(),
                     username =
                       if (query.username.nonEmpty)
                         query.username.map((Filter.Type.Like, _))
@@ -218,12 +221,14 @@ object UserDataBehavior {
                 else List((UserStore.Column.ID(), 1)),
               pagination = (query.limit, query.offset) match {
                 case (Some(limit), Some(offset)) =>
-                  Some(EntityFilters.Pagination(limit, offset))
+                  Some(EntityQueryParams.Pagination(limit, offset))
                 case _ => None
               }
             )
+          // Check if it must use cache
           val mustCache: Boolean =
             CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
+          // Pipe future as a WrappedState message to this behavior
           ctx.pipeToSelf(store.getUsers(filters)) {
             case Success(userList) =>
               val newState = MultiUserState(state.entityId, userList.map(UserDto.from(_)), Ok())
@@ -403,6 +408,7 @@ object UserDataBehavior {
         }
         Behaviors.same
       }
+      // Update process
       case (ctx: ActorContext[Command], upd: UpdateUser) => {
         val mustCache = CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
         for {

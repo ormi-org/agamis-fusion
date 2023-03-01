@@ -1,17 +1,14 @@
 allOf:
+  - $ref: "../generics/identifiable.yaml"
   - type: object
     properties:
-      lastname:
+      alias:
+        type: string
+        example: "IamChauncey"
+      lastName:
         type: string
         example: Von Stonks
-      firstname:
+      firstName:
         type: string
         example: Chauncey
-      main_email:
-        type: string
-        example: chauncey.vonstonks@example.com
-      emails:
-        type: array
-        items:
-          type: string
-        example: ["myothermail@example.com", "chaunceyIsHappy@example.com"]
+  - $ref: "../generics/timed.yaml"

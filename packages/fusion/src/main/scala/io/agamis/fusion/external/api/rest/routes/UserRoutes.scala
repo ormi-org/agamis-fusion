@@ -30,6 +30,7 @@ import akka.cluster.sharding.typed.scaladsl.EntityRef
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import io.agamis.fusion.core.services.UserService
+import akka.http.scaladsl.model.headers.Location
 
 /** Class User Routes
   *
@@ -65,28 +66,28 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                             case Some(u) =>
                                 SingleUserResponse(
                                   Some(excludeFields(u)),
-                                  ApiStatus(StatusCodes.OK, ok.msg)
+                                  ApiStatus(StatusCodes.OK, None)
                                 )
                             case None =>
                                 SingleUserResponse(
                                   None,
                                   ApiStatus(
                                     StatusCodes.InternalServerError,
-                                    s"Service responded '${ok.msg}' but provided an empty result"
+                                    Some(s"Service responded '${ok.msg}' but provided an empty result")
                                   )
                                 )
                         }
                     case nfound: UserDataBehavior.NotFound =>
                         SingleUserResponse(
                           None,
-                          ApiStatus(StatusCodes.NotFound, nfound.msg)
+                          ApiStatus(StatusCodes.NotFound, Some(nfound.msg))
                         )
                     case exception: UserDataBehavior.InternalException =>
                         SingleUserResponse(
                           None,
                           ApiStatus(
                             StatusCodes.InternalServerError,
-                            exception.msg
+                            Some(exception.msg)
                           )
                         )
                 }
@@ -95,19 +96,19 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                     case ok: UserDataBehavior.Ok =>
                         UserQueryResponse(
                           result.map(excludeFields(_)),
-                          ApiStatus(StatusCodes.OK, ok.msg)
+                          ApiStatus(StatusCodes.OK, None)
                         )
                     case nfound: UserDataBehavior.NotFound =>
                         UserQueryResponse(
                           List(),
-                          ApiStatus(StatusCodes.NotFound, nfound.msg)
+                          ApiStatus(StatusCodes.NotFound, Some(nfound.msg))
                         )
                     case exception: UserDataBehavior.InternalException =>
                         SingleUserResponse(
                           None,
                           ApiStatus(
                             StatusCodes.InternalServerError,
-                            exception.msg
+                            Some(exception.msg)
                           )
                         )
                 }
@@ -145,7 +146,8 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                     Field.LIMIT.as[Int].optional,
                     Field.CREATED_AT.as[List[(String, String)]].optional,
                     Field.UPDATED_AT.as[List[(String, String)]].optional,
-                    Field.ORDER_BY.as[List[(String, Int)]].optional
+                    Field.ORDER_BY.as[List[(String, Int)]].optional,
+                    Field.INCLUDE.as[List[String]].optional
                   ).as(UserQuery.apply _) { queryString =>
                       val query: UserDataBehavior.Query =
                           UserDataBehavior.Query(
@@ -155,7 +157,8 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                             queryString.limit,
                             queryString.createdAt,
                             queryString.updatedAt,
-                            queryString.orderBy
+                            queryString.orderBy,
+                            queryString.include
                           )
                       onComplete(userService.queryUsers(query)) {
                           case Success(resp) =>
@@ -205,7 +208,9 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                           case Success(resp) =>
                               mapToApiResponse(resp) match {
                                   case SingleUserResponse(result, status) =>
-                                      complete(status.code, result)
+                                      respondWithHeaders(Location(s"/api/v1/user/${result.get.id.get.toString}")) {
+                                        complete(StatusCodes.Created)
+                                      }
                                   case _ =>
                                       complete(
                                         StatusCodes.InternalServerError,
@@ -245,8 +250,9 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                   concat(
                     //get by id
                     get {
+                      parameters(Field.INCLUDE.as[List[String]].optional) { (include) =>
                         onComplete(
-                          userService.getUserById(UUID.fromString(id))
+                          userService.getUserById(UUID.fromString(id), include.getOrElse(List()))
                         ) {
                             case Success(resp) =>
                                 mapToApiResponse(resp) match {
@@ -261,6 +267,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                             case Failure(cause) =>
                                 complete(StatusCodes.InternalServerError, cause)
                         }
+                      }
                     },
                     // update user
                     put {

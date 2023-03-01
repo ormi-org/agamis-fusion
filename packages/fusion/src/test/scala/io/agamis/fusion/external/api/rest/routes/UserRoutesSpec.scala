@@ -25,6 +25,7 @@ import java.time.Instant
 import io.agamis.fusion.external.api.rest.dto.user.UserMutation
 import scala.util.Success
 import io.agamis.fusion.core.db.models.sql.User
+import akka.http.scaladsl.model.headers.Location
 
 class UserRoutesSpec
     extends AnyWordSpec
@@ -110,6 +111,7 @@ class UserRoutesSpec
               None,
               List(),
               List(),
+              List(),
               List()
             )
             val expected = Future.successful(
@@ -147,7 +149,8 @@ class UserRoutesSpec
             doReturn(expected)
                 .when(userService)
                 .getUserById(
-                  UUID.fromString("9ad0d0a3-e621-4a35-aaeb-38533ef090c4")
+                  UUID.fromString("9ad0d0a3-e621-4a35-aaeb-38533ef090c4"),
+                  List()
                 )
             Get(
               "/user/9ad0d0a3-e621-4a35-aaeb-38533ef090c4"
@@ -196,7 +199,7 @@ class UserRoutesSpec
             }
         }
 
-        "return input user for POST request on plural root path" in {
+        "return ok response with location for POST request on plural root path" in {
             val expected = Future.successful(
               UserDataBehavior.SingleUserState(
                 "user-%s".format(OUTPUT_TEST_USER.id.get.toString),
@@ -216,10 +219,9 @@ class UserRoutesSpec
               "/users",
               INPUT_TEST_USER
             ) ~> userRoutes.routes ~> check {
-                status shouldEqual StatusCodes.OK
-                val result = responseAs[UserDto]
-                val expected = OUTPUT_TEST_USER.copy()
-                result should be(expected)
+                status shouldEqual StatusCodes.Created
+                header("Location") shouldNot be (None)
+                header("Location") should be (Some(Location(s"/api/v1/user/${OUTPUT_TEST_USER.id.get.toString}")))
             }
         }
 

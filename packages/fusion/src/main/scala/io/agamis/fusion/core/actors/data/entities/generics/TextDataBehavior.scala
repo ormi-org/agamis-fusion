@@ -12,7 +12,7 @@ import io.agamis.fusion.core.db.datastores.sql.generics.TextStore
 import io.agamis.fusion.core.db.models.sql.generics.Text
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import io.agamis.fusion.core.db.datastores.sql.common.Filter
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 
 import java.sql.Timestamp
 import java.time.Instant

@@ -1,12 +1,11 @@
 allOf:
+  - $ref: "../generics/identifiable.yaml"
   - type: object
     required:
       - id
       - username
       - profiles
     properties:
-      id:
-        $ref: "../generics/id.yaml"
       username:
         type: string
         example: cvs

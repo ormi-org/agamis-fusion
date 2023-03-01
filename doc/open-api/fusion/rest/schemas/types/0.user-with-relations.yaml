@@ -5,4 +5,4 @@ allOf:
       profiles:
         type: array
         items:
-          $ref: "./1.profile.yaml"
+          $ref: "./1.profile-dto.yaml"

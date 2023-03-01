@@ -10,7 +10,8 @@ final case class UserQuery (
   offset: Option[Int],
   createdAt: List[(String, Instant)],
   updatedAt: List[(String, Instant)],
-  orderBy: List[(String, Int)]
+  orderBy: List[(String, Int)],
+  include: List[String]
 ) extends QueryBase(limit, offset, createdAt, updatedAt)
 
 object UserQuery {
@@ -21,7 +22,8 @@ object UserQuery {
     Option[Int],
     Option[List[(String, String)]],
     Option[List[(String, String)]],
-    Option[List[(String, Int)]]
+    Option[List[(String, Int)]],
+    Option[List[String]],
   )): UserQuery = {
     UserQuery(
       param._1.getOrElse(List()),
@@ -36,7 +38,8 @@ object UserQuery {
         case Some(l) => l.map(obj => (obj._1, Instant.parse(obj._2)))
         case None => List()
       },
-      param._7.getOrElse(List())
+      param._7.getOrElse(List()),
+      param._8.getOrElse(List())
     )
   }
 }

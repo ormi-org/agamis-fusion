@@ -1,8 +1,7 @@
 allOf:
+  - $ref: "../generics/identifiable.yaml"
   - type: object
     properties:
-      id:
-        $ref: "../generics/id.yaml"
       lastname:
         type: string
         example: Von Stonks
@@ -21,5 +20,5 @@ allOf:
         type: string
         format: date-time
       user_id:
-        $ref: "../generics/id.yaml"
+        $ref: '../generics/id.yaml'
   - $ref: "../generics/timed.yaml"

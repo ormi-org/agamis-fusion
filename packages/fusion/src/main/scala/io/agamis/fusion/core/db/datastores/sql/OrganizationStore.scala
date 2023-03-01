@@ -9,7 +9,7 @@ import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtype
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.OrganizationtypeNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityFilters
+import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.CacheAtomicityMode
@@ -567,12 +567,12 @@ object OrganizationStore {
 
   case class GetOrganizationsFilters(
       filters: List[GetOrganizationsFilter] = List(),
-      orderBy: List[(EntityFilters.Column, Int)] = List(),
-      pagination: Option[EntityFilters.Pagination] = None // (limit, offset)
-  ) extends EntityFilters
+      orderBy: List[(EntityQueryParams.Column, Int)] = List(),
+      pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+  ) extends EntityQueryParams
 
   object Column {
-    case class ID(val order: Int = 0, val name: String = "o.ID") extends EntityFilters.Column
+    case class ID(val order: Int = 0, val name: String = "o.ID") extends EntityQueryParams.Column
   }
 
 }

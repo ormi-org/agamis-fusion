@@ -1,12 +1,12 @@
 package io.agamis.fusion.core.db.datastores.typed.sql
 
-trait EntityFilters {
+trait EntityQueryParams {
     def filters: List[_]
-    def orderBy: List[(EntityFilters.Column, Int)]
-    def pagination: Option[EntityFilters.Pagination]
+    def orderBy: List[(EntityQueryParams.Column, Int)]
+    def pagination: Option[EntityQueryParams.Pagination]
 }
 
-object EntityFilters {
+object EntityQueryParams {
     trait Column {
         def order: Int
         def name: String
