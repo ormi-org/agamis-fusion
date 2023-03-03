@@ -119,14 +119,17 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
       * @param user
       *   the user dto to filter
       */
-    def excludeFields(user: UserDto): UserDto = {
+    private def excludeFields(user: UserDto): UserDto = {
         return user.copy(
-          profiles = user.profiles.map {
+          profiles = user.profiles match {
+            case Some(profiles) => Some(profiles.map {
               _.copy(
                 emails = None,
                 organization = None,
                 permissions = None
               )
+            })
+            case None => None
           }
         )
     }
@@ -147,7 +150,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                     Field.CREATED_AT.as[List[(String, String)]].optional,
                     Field.UPDATED_AT.as[List[(String, String)]].optional,
                     Field.ORDER_BY.as[List[(String, Int)]].optional,
-                    Field.INCLUDE.as[List[String]].optional
+                    Field.INCLUDE.as[String].repeated
                   ).as(UserQuery.apply _) { queryString =>
                       val query: UserDataBehavior.Query =
                           UserDataBehavior.Query(
@@ -226,7 +229,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
           ),
           pathPrefix("user")(
             concat(
-              //get by username
+              // get by username
               get {
                   parameters(Field.USERNAME.as[String]) { (username) =>
                       onComplete(userService.getUserByUsername(username)) {

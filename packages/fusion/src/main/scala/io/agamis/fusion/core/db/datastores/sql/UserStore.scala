@@ -30,6 +30,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import org.apache.ignite.transactions.Transaction
+import io.agamis.fusion.core.db.datastores.sql.exceptions.NoSuchTableException
+import io.agamis.fusion.core.db.datastores.typed.sql.IncludableFields
 
 class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     extends SqlMutableStore[UUID, User] {
@@ -40,16 +42,7 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
     if (wrapper.cacheExists(cache)) {
       wrapper.getCache[UUID, User](cache)
     } else {
-      wrapper.createCache[UUID, User](
-        wrapper
-          .makeCacheConfig[UUID, User]
-          .setCacheMode(CacheMode.REPLICATED)
-          .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
-          .setDataRegionName("Fusion")
-          .setName(cache)
-          .setSqlSchema(schema)
-          .setIndexedTypes(classOf[UUID], classOf[User])
-      )
+      throw new NoSuchTableException("Table USER does not exist")
     }
 
   // Create and get new User Object
@@ -223,6 +216,14 @@ class UserStore(implicit wrapper: IgniteClientNodeWrapper)
         case None    => s" LIMIT ${Pagination.Default.Limit} OFFSET ${Pagination.Default.Offset} "
       }
     )
+    // include relation fields
+    baseQueryString = (queryParams.include match {
+      case None => baseQueryString
+      case Some(fields) => UserStore.Includables.values.toList.foldLeft(baseQueryString)((acc, incl) => {
+        acc.replace(incl.placeholder, if (fields.contains(incl.name)) "TRUE" else "FALSE")
+      })
+    })
+    // return made query
     makeQuery(baseQueryString)
       .setParams(queryArgs.toList)
   }
@@ -509,7 +510,8 @@ object UserStore {
       filters: List[UsersFilter] = List(),
       orderBy: List[(EntityQueryParams.Column, Int)] =
         List(), // (column, direction)
-      pagination: Option[EntityQueryParams.Pagination] = None // (limit, offset)
+      pagination: Option[EntityQueryParams.Pagination] = None, // (limit, offset)
+      include: Option[List[String]] = None
   ) extends EntityQueryParams
 
   object Column {
@@ -544,5 +546,11 @@ object UserStore {
       case class UPDATED_AT(val order: Int = 7, val name: String = "p.UPDATED_AT")
           extends EntityQueryParams.Column
     }
+  }
+
+  object Includables extends IncludableFields {
+    type Includable = IncludableDetails
+
+    val PROFILES = IncludableDetails(1, "profiles", "$INCLUDE_PROFILES")
   }
 }

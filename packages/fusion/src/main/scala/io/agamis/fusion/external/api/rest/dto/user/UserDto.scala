@@ -22,7 +22,7 @@ import io.agamis.fusion.core.db.models.sql.User
 final case class UserDto (
   id: Option[UUID],
   username: String,
-  profiles: List[ProfileDto],
+  profiles: Option[List[ProfileDto]],
   createdAt: Option[Instant],
   updatedAt: Option[Instant]
 )
@@ -37,7 +37,7 @@ object UserDto {
     UserDto(
       Some(user.id),
       user.username,
-      user.relatedProfiles.filter(_._1 == true).map(r => ProfileDto.from(r._2)),
+      Some(user.relatedProfiles.filter(_._1 == true).map(r => ProfileDto.from(r._2))),
       Some(user.createdAt.toInstant),
       Some(user.updatedAt.toInstant)
     )

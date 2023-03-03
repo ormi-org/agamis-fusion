@@ -26,6 +26,8 @@ import io.agamis.fusion.external.api.rest.dto.user.UserMutation
 import scala.util.Success
 import io.agamis.fusion.core.db.models.sql.User
 import akka.http.scaladsl.model.headers.Location
+import org.scalatest.PrivateMethodTester
+import akka.http.scaladsl.model.AttributeKey
 
 class UserRoutesSpec
     extends AnyWordSpec
@@ -33,7 +35,8 @@ class UserRoutesSpec
     with Matchers
     with ScalatestRouteTest
     with MockitoSugar
-    with UserJsonSupport {
+    with UserJsonSupport
+    with PrivateMethodTester {
 
     val testKit = ActorTestKit()
     implicit val testSystem: ActorSystem[_] = testKit.system
@@ -44,44 +47,50 @@ class UserRoutesSpec
 
     override def afterAll(): Unit = testKit.shutdownTestKit()
 
-    private val TEST_USERS: List[UserDto] = List(
-      UserDto(
+    private val BASE_DTO: UserDto = UserDto(
         Some(UUID.fromString("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3")),
         "chauncey.vonsnuffles",
-        List(
-          ProfileDto(
-            Some(UUID.fromString("10157d43-eaea-415d-be66-d81312394cc6")),
-            Some("ItsmeChauncey"),
-            "Von snuffles",
-            "Chauncey",
-            Some(List()),
-            Some(List()),
-            None,
-            Instant.parse("2023-02-14T23:31:54.081426541Z"),
-            Some("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3"),
-            Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
-            Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
+        Some(
+          List(
+            ProfileDto(
+              Some(UUID.fromString("10157d43-eaea-415d-be66-d81312394cc6")),
+              Some("ItsmeChauncey"),
+              "Von snuffles",
+              "Chauncey",
+              None,
+              None,
+              None,
+              Instant.parse("2023-02-14T23:31:54.081426541Z"),
+              Some("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3"),
+              Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
+              Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
+            )
           )
         ),
         Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
         Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
-      ),
+    )
+
+    private val TEST_USERS: List[UserDto] = List(
+      BASE_DTO,
       UserDto(
         Some(UUID.fromString("9ad0d0a3-e621-4a35-aaeb-38533ef090c4")),
         "acat.fromiowa",
-        List(
-          ProfileDto(
-            Some(UUID.fromString("c94a9314-466d-4b69-bfe0-c8cb83cb3445")),
-            Some("Acat"),
-            "A cat",
-            "from Iowa",
-            Some(List()),
-            Some(List()),
-            None,
-            Instant.parse("2023-02-20T19:07:23.081426541Z"),
-            Some("9ad0d0a3-e621-4a35-aaeb-38533ef090c4"),
-            Some(Instant.parse("2023-02-20T19:07:23.081426541Z")),
-            Some(Instant.parse("2023-02-20T19:07:23.081426541Z"))
+        Some(
+          List(
+            ProfileDto(
+              Some(UUID.fromString("c94a9314-466d-4b69-bfe0-c8cb83cb3445")),
+              Some("Acat"),
+              "A cat",
+              "from Iowa",
+              None,
+              None,
+              None,
+              Instant.parse("2023-02-20T19:07:23.081426541Z"),
+              Some("9ad0d0a3-e621-4a35-aaeb-38533ef090c4"),
+              Some(Instant.parse("2023-02-20T19:07:23.081426541Z")),
+              Some(Instant.parse("2023-02-20T19:07:23.081426541Z"))
+            )
           )
         ),
         Some(Instant.parse("2023-02-20T19:07:23.081426541Z")),
@@ -97,13 +106,72 @@ class UserRoutesSpec
     private val OUTPUT_TEST_USER: UserDto = UserDto(
       Some(UUID.fromString("8af7ea95-76df-4749-a7cc-cd41e6a37d65")),
       "NotARealChauncey",
-      List(),
+      Some(List()),
       Some(Instant.parse("2023-02-21T09:31:54.081426541Z")),
       Some(Instant.parse("2023-02-21T09:31:54.081426541Z"))
     )
 
+    "excludeFields" should {
+        "return a user dto with no profiles field WHEN profiles field is None" in {
+          val excludeFieldsPrivateMethod = PrivateMethod[UserDto](Symbol("excludeFields"))
+          val processedDto = userRoutes invokePrivate excludeFieldsPrivateMethod(BASE_DTO.copy(profiles = None))
+          processedDto.profiles shouldBe (None)
+        }
+
+        "return a user dto with excluded field WHEN profiles field is Some dto" in {
+          val excludeFieldsPrivateMethod = PrivateMethod[UserDto](Symbol("excludeFields"))
+          val processedDto = userRoutes invokePrivate excludeFieldsPrivateMethod(BASE_DTO)
+          val expected = 
+              BASE_DTO.profiles.get(0).copy(
+                emails = None,
+                organization = None,
+                permissions = None
+              )
+          processedDto.profiles.get(0) shouldBe (expected)
+        }
+    }
+
     "User routes" should {
-        "return a user list for GET request on plural root path with no query params" in {
+        "return a user list for GET request ON plural root path with include query params" in {
+            val query = UserDataBehavior.Query(
+              List(),
+              List(),
+              None,
+              None,
+              List(),
+              List(),
+              List(),
+              List("profiles")
+            )
+            val expected = Future.successful(
+              UserDataBehavior.MultiUserState(
+                "user-query-%d".format(query.hashCode),
+                TEST_USERS,
+                UserDataBehavior.Ok()
+              )
+            )
+            doReturn(expected).when(userService).queryUsers(query)
+            Get("/users?include=profiles") ~> userRoutes.routes ~> check {
+                status shouldEqual StatusCodes.OK
+                val result = responseAs[List[UserDto]]
+                val expected = TEST_USERS.map((u: UserDto) => {
+                    u.copy(profiles = u.profiles match {
+                        case Some(profiles) =>
+                            Some(profiles.map((p) => {
+                                p.copy(
+                                  emails = None,
+                                  organization = None,
+                                  permissions = None
+                                )
+                            }))
+                        case None => None
+                    })
+                })
+                result should be(expected)
+            }
+        }
+
+        "return a user list (no relation) for GET request on plural root path with no query params" in {
             val query = UserDataBehavior.Query(
               List(),
               List(),
@@ -117,7 +185,9 @@ class UserRoutesSpec
             val expected = Future.successful(
               UserDataBehavior.MultiUserState(
                 "user-query-%d".format(query.hashCode),
-                TEST_USERS,
+                TEST_USERS.map((u) => {
+                    u.copy(profiles = None)
+                }),
                 UserDataBehavior.Ok()
               )
             )
@@ -125,14 +195,8 @@ class UserRoutesSpec
             Get("/users") ~> userRoutes.routes ~> check {
                 status shouldEqual StatusCodes.OK
                 val result = responseAs[List[UserDto]]
-                val expected = TEST_USERS.map((u: UserDto) => {
-                    u.copy(profiles = u.profiles.map((p) => {
-                        p.copy(
-                          emails = None,
-                          organization = None,
-                          permissions = None
-                        )
-                    }))
+                val expected = TEST_USERS.map((u) => {
+                    u.copy(profiles = None)
                 })
                 result should be(expected)
             }
@@ -158,13 +222,17 @@ class UserRoutesSpec
                 status shouldEqual StatusCodes.OK
                 val result = responseAs[UserDto]
                 val expected = TEST_USERS(1).copy(
-                  profiles = TEST_USERS(1).profiles.map((p) => {
-                      p.copy(
-                        emails = None,
-                        organization = None,
-                        permissions = None
-                      )
-                  })
+                  profiles = TEST_USERS(1).profiles match {
+                      case Some(profiles) =>
+                          Some(profiles.map((p) => {
+                              p.copy(
+                                emails = None,
+                                organization = None,
+                                permissions = None
+                              )
+                          }))
+                      case None => None
+                  }
                 )
                 result should be(expected)
             }
@@ -187,13 +255,17 @@ class UserRoutesSpec
                 status shouldEqual StatusCodes.OK
                 val result = responseAs[UserDto]
                 val expected = TEST_USERS(0).copy(
-                  profiles = TEST_USERS(0).profiles.map((p) => {
-                      p.copy(
-                        emails = None,
-                        organization = None,
-                        permissions = None
-                      )
-                  })
+                  profiles = TEST_USERS(0).profiles match {
+                      case Some(profiles) =>
+                          Some(profiles.map((p) => {
+                              p.copy(
+                                emails = None,
+                                organization = None,
+                                permissions = None
+                              )
+                          }))
+                      case None => None
+                  }
                 )
                 result should be(expected)
             }
@@ -220,8 +292,14 @@ class UserRoutesSpec
               INPUT_TEST_USER
             ) ~> userRoutes.routes ~> check {
                 status shouldEqual StatusCodes.Created
-                header("Location") shouldNot be (None)
-                header("Location") should be (Some(Location(s"/api/v1/user/${OUTPUT_TEST_USER.id.get.toString}")))
+                header("Location") shouldNot be(None)
+                header("Location") should be(
+                  Some(
+                    Location(
+                      s"/api/v1/user/${OUTPUT_TEST_USER.id.get.toString}"
+                    )
+                  )
+                )
             }
         }
 
@@ -229,9 +307,11 @@ class UserRoutesSpec
             val expected = Future.successful(
               UserDataBehavior.SingleUserState(
                 "user-%s".format(OUTPUT_TEST_USER.id.get.toString),
-                Some(TEST_USERS(1).copy(
-                  username = INPUT_TEST_USER.username
-                )),
+                Some(
+                  TEST_USERS(1).copy(
+                    username = INPUT_TEST_USER.username
+                  )
+                ),
                 UserDataBehavior.Ok()
               )
             )
@@ -252,13 +332,17 @@ class UserRoutesSpec
                 val result = responseAs[UserDto]
                 val expected = TEST_USERS(1).copy(
                   username = INPUT_TEST_USER.username,
-                  profiles = TEST_USERS(1).profiles.map((p) => {
-                      p.copy(
-                        emails = None,
-                        organization = None,
-                        permissions = None
-                      )
-                  })
+                  profiles = TEST_USERS(1).profiles match {
+                      case Some(profiles) =>
+                          Some(profiles.map((p) => {
+                              p.copy(
+                                emails = None,
+                                organization = None,
+                                permissions = None
+                              )
+                          }))
+                      case None => None
+                  }
                 )
                 result should be(expected)
             }

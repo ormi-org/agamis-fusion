@@ -14,13 +14,15 @@
 		<property name="peerClassLoadingEnabled" value="true"/>
 		<!-- Set deployment mode. -->
 		<property name="deploymentMode" value="CONTINUOUS"/>
+		<property name="authenticationEnabled" value="true"/>
 		
 		<property name="dataStorageConfiguration">
 			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
 				<property name="defaultDataRegionConfiguration">
 					<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
 						<property name="name" value="DefaultRegion"/>
-						<property name="maxSize" value="#{10L * 1024 * 1024}"/>
+						<property name="maxSize" value="#{100L * 1024 * 1024}"/>
+						<property name="persistenceEnabled" value="true"/>
 					</bean>
 				</property>
 				<property name="dataRegionConfigurations">
@@ -49,6 +51,14 @@
 
         <property name="cacheConfiguration">
 			<list>
+				<bean abstract="true" class="org.apache.ignite.configuration.CacheConfiguration">
+				<!-- SQL cache template for tables -->
+					<property name="name" value="FusionSQL*"/>
+					<property name="sqlSchema" value="FUSION"/>
+					<property name="dataRegionName" value="Fusion"/>
+					<property name="cacheMode" value="REPLICATED"/>
+					<property name="atomicityMode" value="TRANSACTIONAL"/>
+				</bean>
 				<bean class="org.apache.ignite.configuration.CacheConfiguration">
 					<property name="name" value="FusionFS"/>
 					<property name="cacheMode" value="PARTITIONED"/>
