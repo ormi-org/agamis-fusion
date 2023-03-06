@@ -31,6 +31,7 @@ import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import io.agamis.fusion.core.services.UserService
 import akka.http.scaladsl.model.headers.Location
+import io.agamis.fusion.external.api.rest.common.marshalling.StringArrayUnmarshaller
 
 /** Class User Routes
   *
@@ -150,7 +151,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                     Field.CREATED_AT.as[List[(String, String)]].optional,
                     Field.UPDATED_AT.as[List[(String, String)]].optional,
                     Field.ORDER_BY.as[List[(String, Int)]].optional,
-                    Field.INCLUDE.as[String].repeated
+                    Field.INCLUDE.as(StringArrayUnmarshaller.commaSeparatedUnmarshaller)
                   ).as(UserQuery.apply _) { queryString =>
                       val query: UserDataBehavior.Query =
                           UserDataBehavior.Query(
