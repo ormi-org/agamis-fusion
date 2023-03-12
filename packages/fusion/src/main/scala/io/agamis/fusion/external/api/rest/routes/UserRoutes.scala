@@ -151,7 +151,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
                     Field.CREATED_AT.as[List[(String, String)]].optional,
                     Field.UPDATED_AT.as[List[(String, String)]].optional,
                     Field.ORDER_BY.as[List[(String, Int)]].optional,
-                    Field.INCLUDE.as(StringArrayUnmarshaller.commaSeparatedUnmarshaller)
+                    Field.INCLUDE.as(StringArrayUnmarshaller.commaSeparatedUnmarshaller).optional
                   ).as(UserQuery.apply _) { queryString =>
                       val query: UserDataBehavior.Query =
                           UserDataBehavior.Query(

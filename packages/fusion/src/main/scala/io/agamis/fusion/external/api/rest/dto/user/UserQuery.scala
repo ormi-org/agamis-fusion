@@ -23,7 +23,7 @@ object UserQuery {
     Option[List[(String, String)]],
     Option[List[(String, String)]],
     Option[List[(String, Int)]],
-    Iterable[String],
+    Option[Iterable[String]],
   )): UserQuery = {
     UserQuery(
       param._1.getOrElse(List()),
@@ -39,7 +39,7 @@ object UserQuery {
         case None => List()
       },
       param._7.getOrElse(List()),
-      param._8.toList
+      param._8.getOrElse(List()).toList
     )
   }
 }
