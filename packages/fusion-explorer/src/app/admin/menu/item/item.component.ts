@@ -7,7 +7,7 @@ import { Path } from '@shared/constants/paths';
   templateUrl: './item.component.html',
   styleUrls: ['./item.component.scss'],
 })
-export class ItemComponent implements OnInit, AfterViewInit {
+export class ItemComponent implements AfterViewInit {
   @Input() isActive: boolean = false;
   @Input() text: string = "undefined text";
   @Input() icon: {
@@ -18,7 +18,6 @@ export class ItemComponent implements OnInit, AfterViewInit {
     height: '16px',
   };
 
-  iconRelativePath!: string;
   isSelected: boolean = false;
 
   private nativeElement: HTMLElement;
@@ -30,15 +29,15 @@ export class ItemComponent implements OnInit, AfterViewInit {
   @ViewChild('icon')
   iconInstance!: ElementRef<HTMLElement>;
 
-  ngOnInit(): void {
-    this.iconRelativePath = [Path.ASSETS, Path.ICONS, this.icon.key].join('/');
-  }
-
   ngAfterViewInit(): void {
     this.iconInstance.nativeElement.style.height = this.icon.height;
   }
 
   getHeight(): number {
     return this.nativeElement.offsetHeight;
+  }
+
+  protected getIcon(): Icon {
+    return this.icon.key;
   }
 }

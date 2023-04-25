@@ -11,8 +11,8 @@ import { startWith } from 'rxjs';
 })
 export class MenuComponent implements AfterViewInit {
   icons: typeof Icon = Icon;
-  iconRelativePath: string = [Path.ASSETS, Path.ICONS, Icon.USER_LOCK].join('/');
-  tailIconRelativePath: string = [Path.ASSETS, Path.ICONS, Icon.ARROW].join('/');
+  icon: Icon = Icon.USER_LOCK;
+  tailIcon: Icon = Icon.ARROW;
 
   @Input() text: string = "Undefined text";
 

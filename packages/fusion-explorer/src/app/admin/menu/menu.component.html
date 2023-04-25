@@ -1,10 +1,10 @@
 <div [ngClass]="{'menu-container': true,'collapsed': isCollapsed}">
     <div [ngClass]="{'menu-header': true}" (click)="toggleCollapse()">
         <span [ngClass]="{'header-title': true}">
-            <img src="{{iconRelativePath}}" alt="administration menu header icon">
+            <img src="{{icon | iconify}}" alt="administration menu header icon">
             {{text | capitalizeFirst}}
         </span>
-        <img [ngClass]="{'tail-icon': true}" src="{{tailIconRelativePath}}" alt="administration menu header icon">
+        <img [ngClass]="{'tail-icon': true}" src="{{tailIcon | iconify}}" alt="administration menu header icon">
     </div>
     <div [ngClass]="{'menu-body': true}" #menuBody>
         <admin-menu-item #menuItem [icon]="{key: icons.USER, height: '16px'}" text="users"></admin-menu-item>
