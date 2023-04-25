@@ -20,7 +20,12 @@
           "packages/fusion-explorer/src/assets"
         ],
         "styles": ["packages/fusion-explorer/src/styles.css"],
-        "scripts": []
+        "scripts": [],
+        "stylePreprocessorOptions": {
+          "includePaths": [
+            "packages/fusion-explorer/src/styles"
+          ]
+        }
       },
       "configurations": {
         "production": {
@@ -95,6 +100,47 @@
       "executor": "@nrwl/web:file-server",
       "options": {
         "buildTarget": "fusion-explorer:build"
+      }
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "packages/fusion-explorer/.storybook",
+        "browserTarget": "fusion-explorer:build",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/fusion-explorer",
+        "configDir": "packages/fusion-explorer/.storybook",
+        "browserTarget": "fusion-explorer:build",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "static-storybook": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "fusion-explorer:build-storybook",
+        "staticFilePath": "dist/storybook/fusion-explorer"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "fusion-explorer:build-storybook:ci"
+        }
       }
     }
   }
