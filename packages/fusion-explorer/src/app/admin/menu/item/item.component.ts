@@ -20,6 +20,13 @@ export class ItemComponent implements OnInit, AfterViewInit {
 
   iconRelativePath!: string;
   isSelected: boolean = false;
+
+  private nativeElement: HTMLElement;
+
+  constructor(element: ElementRef) {
+    this.nativeElement = element.nativeElement;
+  }
+
   @ViewChild('icon')
   iconInstance!: ElementRef<HTMLElement>;
 
@@ -29,5 +36,9 @@ export class ItemComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.iconInstance.nativeElement.style.height = this.icon.height;
+  }
+
+  getHeight(): number {
+    return this.nativeElement.offsetHeight;
   }
 }

@@ -1,4 +1,4 @@
-<div [ngClass]="{'collapsed': isCollapsed}">
+<div [ngClass]="{'menu-container': true,'collapsed': isCollapsed}">
     <div [ngClass]="{'menu-header': true}" (click)="toggleCollapse()">
         <span [ngClass]="{'header-title': true}">
             <img src="{{iconRelativePath}}" alt="administration menu header icon">
@@ -6,10 +6,10 @@
         </span>
         <img [ngClass]="{'tail-icon': true}" src="{{tailIconRelativePath}}" alt="administration menu header icon">
     </div>
-    <div [ngClass]="{'menu-body': true}">
-        <admin-menu-item [icon]="{key: icons.USER, height: '16px'}" text="users"></admin-menu-item>
-        <admin-menu-item [icon]="{key: icons.GROUP, height: '14px'}" text="groups"></admin-menu-item>
-        <admin-menu-item [icon]="{key: icons.KEY, height: '14px'}" text="permissions"></admin-menu-item>
-        <admin-menu-item [icon]="{key: icons.BUILDING_GROUP, height: '16px'}" text="organization"></admin-menu-item>
+    <div [ngClass]="{'menu-body': true}" #menuBody>
+        <admin-menu-item #menuItem [icon]="{key: icons.USER, height: '16px'}" text="users"></admin-menu-item>
+        <admin-menu-item #menuItem [icon]="{key: icons.GROUP, height: '14px'}" text="groups"></admin-menu-item>
+        <admin-menu-item #menuItem [icon]="{key: icons.KEY, height: '14px'}" text="permissions"></admin-menu-item>
+        <admin-menu-item #menuItem [icon]="{key: icons.BUILDING_GROUP, height: '16px'}" text="organization"></admin-menu-item>
     </div>
 </div>

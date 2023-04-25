@@ -33,3 +33,13 @@ export const Default = {
     text: "administration"
   }
 };
+
+export const Expanded = {
+  render: (args: MenuComponent) => ({
+    props: args,
+  }),
+  args: {
+    text: "administration",
+    isCollapsed: false
+  }
+};

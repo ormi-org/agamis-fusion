@@ -1,16 +1,21 @@
 @import "constants/variables";
 @import "base";
 
+div.menu-container {
+    display: flex;
+    flex-direction: column;
+}
+
 div.menu-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    & .header-title {
+    > .header-title {
         display: flex;
         align-items: center;
         gap: 7px;
     }
-    & img {
+    > img {
         height: 16px;
         &.tail-icon {
             transition: transform .1s linear;
@@ -25,7 +30,6 @@ div.menu-header {
 div.menu-body {
     overflow: hidden;
     transition: max-height .2s linear;
-    max-height: 430px;
 }
 
 div.collapsed {
@@ -33,6 +37,6 @@ div.collapsed {
         transform: rotate(-90deg);
     }
     > div.menu-body {
-        max-height: 0px;
+        max-height: 0 !important;
     }
 }

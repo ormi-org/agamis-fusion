@@ -1,12 +1,22 @@
 @import "constants/variables";
 @import "base";
 
+$gap: 9px;
+
 a.menu-link {
     display: flex;
     align-items: center;
-    gap: 9px;
-    & img {
+    // adding +5px which is half of the icons mean width
+    gap: calc($gap + 5px);
+    padding: 6px 23px 6px calc(23px + 5px);
+    > div {
         height: 16px;
+        width: 1px;
+        display: flex;
+        justify-content: center;
+        > img {
+            height: 16px;
+        }
     }
     &.disabled {
         cursor: default;
@@ -15,5 +25,4 @@ a.menu-link {
         @include setBgColor(secondary-two);
     }
     cursor: pointer;
-    padding: 6px 23px 6px 23px;
 }
