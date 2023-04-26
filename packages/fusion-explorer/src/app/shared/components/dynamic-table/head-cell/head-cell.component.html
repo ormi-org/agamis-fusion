@@ -1,0 +1,16 @@
+<div [ngClass]="{ 'head-cell': true}"
+    (click)="switchOrdering()"
+>
+  <span>
+    {{ value.getValue() | capitalizeFirst }}
+  </span>
+  <img
+    [ngClass]="{
+        'tail-icon': true,
+        'asc': (ordering === orderingEnum.ASC),
+        'desc': (ordering === orderingEnum.DESC),
+    }"
+    src="{{ orderingIcon | iconify }}"
+    alt="head cell ordering icon"
+  />
+</div>

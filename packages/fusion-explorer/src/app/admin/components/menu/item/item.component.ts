@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { Icon } from '@shared/constants/assets';
-import { Path } from '@shared/constants/paths';
 
 @Component({
   selector: 'admin-menu-item',
@@ -17,8 +16,6 @@ export class ItemComponent implements AfterViewInit {
     key: Icon.QUESTION_LINE,
     height: '16px',
   };
-
-  isSelected: boolean = false;
 
   private nativeElement: HTMLElement;
 

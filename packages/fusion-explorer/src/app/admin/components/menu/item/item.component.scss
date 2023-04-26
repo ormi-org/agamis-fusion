@@ -9,6 +9,7 @@ a.menu-link {
     // adding +5px which is half of the icons mean width
     gap: calc($gap + 5px);
     padding: 6px 23px 6px calc(23px + 5px);
+    font-size: 12px;
     > div {
         height: 16px;
         width: 1px;
@@ -21,7 +22,7 @@ a.menu-link {
     &.disabled {
         cursor: default;
     }
-    &.active {
+    &.active, &:hover {
         @include setBgColor(secondary-two);
     }
     cursor: pointer;

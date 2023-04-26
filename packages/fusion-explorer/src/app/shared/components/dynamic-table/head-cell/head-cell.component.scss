@@ -1,0 +1,26 @@
+@import "constants/variables";
+@import "base";
+
+div.head-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 20px 10px 20px;
+    font-size: 14px;
+
+    > img {
+        display: none;
+        &.asc, &.desc {
+            display: block;
+        }
+        &.asc {
+            transform: rotate(-180deg);
+        }
+    }
+
+    &:hover {
+        @include setBgColor(secondary-two);
+    }
+    cursor: pointer;
+}

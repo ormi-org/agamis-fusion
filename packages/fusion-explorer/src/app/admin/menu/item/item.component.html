@@ -1,5 +1,0 @@
-<a (mouseover)="isSelected=true" (mouseout)="isSelected=false"
-   [ngClass]="{'menu-link': true, 'active': isSelected || isActive, 'disabled': isActive}">
-   <div><img src="{{getIcon() | iconify}}" alt="{{text}}'s icon" #icon></div>
-   {{text | capitalizeFirst}}
-</a>
