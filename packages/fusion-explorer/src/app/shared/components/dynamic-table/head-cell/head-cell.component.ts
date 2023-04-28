@@ -29,7 +29,7 @@ export class HeadCellComponent implements HeadCellDefinition {
     });
   }
 
-  switchOrdering(): void {
+  protected switchOrdering(): void {
     this.orderingSubject.next(
       (() => {
         switch (this.ordering) {
@@ -42,15 +42,19 @@ export class HeadCellComponent implements HeadCellDefinition {
     );
   }
 
-  getValue(): string {
-    return this.value;
-  };
-
-  isResizable(): boolean {
-      return this.resizable;
+  protected isResizable(): boolean {
+    return this.resizable;
   }
 
-  getOrdering(): Observable<Ordering> {
+  protected getValue(): string {
+    return this.value;
+  }
+
+  public getOrdering(): Observable<Ordering> {
     return this.orderingSubject.asObservable();
+  }
+
+  public clearOrdering(): void {
+    this.orderingSubject.next(Ordering.NONE);
   }
 }

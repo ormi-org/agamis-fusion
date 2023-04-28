@@ -3,6 +3,7 @@ import { RowDefinition } from '../typed/row-definition.interface';
 import { Observable, Subject } from 'rxjs';
 import { CellComponent } from '../cell/cell.component';
 import { Cell, trackByUqId } from '../models/cell.model';
+import { CellDefinition } from '../typed/cell-definition.interface';
 
 @Component({
   selector: 'shared-dyntable-row',
@@ -20,7 +21,7 @@ export class RowComponent<T extends Object> implements RowDefinition<T>, AfterVi
   cellsTracking = trackByUqId;
 
   @ContentChildren(CellComponent)
-  cellsElements!: QueryList<CellComponent>;
+  cellsElements!: QueryList<CellDefinition>;
 
   protected selected: boolean = false;
   private selectedSubject: Subject<boolean> = new Subject();

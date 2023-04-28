@@ -3,10 +3,21 @@ import { DynamicTableComponent } from './dynamic-table.component';
 import { Column } from './models/column.model';
 import { DummyDatasource } from './.storybook/.model';
 import { SharedModule } from '@shared/shared.module';
+import { customViewport } from './.storybook';
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 
 export default {
   title: 'Shared/DynamicTable',
   component: DynamicTableComponent,
+  parameters: {
+    viewport: {
+      viewports: {
+        ...customViewport,
+        ...MINIMAL_VIEWPORTS
+      },
+      defaultViewport: 'shared-dyntable-default'
+    }
+  },
   decorators: [
     moduleMetadata({
       imports: [SharedModule]

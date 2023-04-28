@@ -3,10 +3,21 @@ import { RowComponent } from './row.component';
 import { DUMMIES } from '../.storybook/.model';
 import { SharedModule } from '@shared/shared.module';
 import { CellComponent } from '../cell/cell.component';
+import { customViewport } from '../.storybook';
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 
 export default {
   title: 'Shared/DynamicTable/Row',
   component: RowComponent,
+  parameters: {
+    viewport: {
+      viewports: {
+        ...customViewport,
+        ...MINIMAL_VIEWPORTS
+      },
+      defaultViewport: 'shared-dyntable-subs'
+    }
+  },
   decorators: [
     moduleMetadata({
       imports: [SharedModule]
@@ -14,7 +25,7 @@ export default {
   ]
 } as Meta<RowComponent<any>>;
 
-export const Empty = {
+export const Default = {
   render: (args: RowComponent<any>) => ({
     props: args,
   }),
@@ -24,7 +35,7 @@ export const Empty = {
   },
 };
 
-export const EmptySelected = {
+export const DefaultSelected = {
   render: (args: RowComponent<any>) => ({
     props: args,
   }),

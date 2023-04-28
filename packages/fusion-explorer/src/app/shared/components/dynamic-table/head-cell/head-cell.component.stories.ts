@@ -15,7 +15,7 @@ export default {
         ...customViewport,
         ...MINIMAL_VIEWPORTS
       },
-      defaultViewport: 'shared-dyntable-default'
+      defaultViewport: 'shared-dyntable-subs'
     }
   },
   decorators: [
