@@ -6,7 +6,7 @@ import { SharedModule } from '@shared/shared.module';
 import { ItemComponent } from './item/item.component';
 
 export default {
-  title: 'MenuComponent',
+  title: 'Admin/Menu',
   component: MenuComponent,
   parameters: {
     viewport: {

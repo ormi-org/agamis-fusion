@@ -7,15 +7,18 @@ import { Icon } from '@shared/constants/assets';
   styleUrls: ['./item.component.scss'],
 })
 export class ItemComponent implements AfterViewInit {
-  @Input() isActive: boolean = false;
-  @Input() text: string = "undefined text";
-  @Input() icon: {
+  @Input()
+  protected text: string = "undefined text";
+  @Input()
+  protected icon: {
     key: Icon,
     height: string
   } = {
     key: Icon.QUESTION_LINE,
     height: '16px',
   };
+
+  protected isActive: boolean = false;
 
   private nativeElement: HTMLElement;
 

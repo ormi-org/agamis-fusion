@@ -7,13 +7,23 @@ import { HeadCellComponent } from './components/dynamic-table/head-cell/head-cel
 import { CellComponent } from './components/dynamic-table/cell/cell.component';
 import { RowComponent } from './components/dynamic-table/row/row.component';
 
-
-
 @NgModule({
-  declarations: [CapitalizeFirstPipe, IconifyPipe, DynamicTableComponent, HeadCellComponent, CellComponent, RowComponent],
-  imports: [
-    CommonModule
+  declarations: [
+    CapitalizeFirstPipe,
+    IconifyPipe,
+    DynamicTableComponent,
+    HeadCellComponent,
+    CellComponent,
+    RowComponent,
   ],
-  exports: [CapitalizeFirstPipe, IconifyPipe, DynamicTableComponent, HeadCellComponent]
+  imports: [CommonModule],
+  exports: [
+    CapitalizeFirstPipe,
+    IconifyPipe,
+    DynamicTableComponent,
+    HeadCellComponent,
+    CellComponent,
+    RowComponent,
+  ],
 })
-export class SharedModule { }
+export class SharedModule {}

@@ -1,0 +1,17 @@
+@import "constants/variables";
+@import "base";
+
+div.table {
+    > div.table-head {
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+        > * {
+            flex: 1;
+            &.resizable {
+                border-right: 1px solid;
+                border-right-color: map-get($colors, secondary-one);
+            }
+        }
+    }
+}

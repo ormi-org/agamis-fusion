@@ -1,1 +1,5 @@
-<p>cell works!</p>
+<div [ngClass]="{'cell': true}">
+  <span>
+    {{ getValue() | capitalizeFirst }}
+  </span>
+</div>

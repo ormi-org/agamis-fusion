@@ -1,14 +1,35 @@
-import { Meta } from '@storybook/angular';
+import { Meta, moduleMetadata } from '@storybook/angular';
 import { CellComponent } from './cell.component';
+import { customViewport } from '../.storybook';
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
+import { SharedModule } from '@shared/shared.module';
+import { Observable } from 'rxjs';
+import { CellDefinition } from '../typed/cell-definition.interface';
 
 export default {
-  title: 'CellComponent',
+  title: 'Shared/DynamicTable/Cell',
   component: CellComponent,
+  parameters: {
+    viewport: {
+      viewports: {
+        ...customViewport,
+        ...MINIMAL_VIEWPORTS
+      },
+      defaultViewport: 'shared-dyntable-default'
+    }
+  },
+  decorators: [
+    moduleMetadata({
+      imports: [SharedModule]
+    })
+  ]
 } as Meta<CellComponent>;
 
-export const Primary = {
+export const Default = {
   render: (args: CellComponent) => ({
     props: args,
   }),
-  args: {},
+  args: {
+    value: "a default test cell"
+  },
 };

@@ -5,7 +5,7 @@ import { customViewport } from '../.storybook';
 import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 
 export default {
-  title: 'ItemComponent',
+  title: 'Admin/Menu/Item',
   component: ItemComponent,
   parameters: {
     viewport: {

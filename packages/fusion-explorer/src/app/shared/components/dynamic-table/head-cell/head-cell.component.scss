@@ -2,20 +2,36 @@
 @import "base";
 
 div.head-cell {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    height: calc(100% - 20px);
     padding: 10px 20px 10px 20px;
     font-size: 14px;
 
     > img {
         display: none;
+        height: 8px;
         &.asc, &.desc {
             display: block;
         }
         &.asc {
             transform: rotate(-180deg);
+        }
+    }
+
+    > div.resize-box {
+        position: absolute;
+        display: none;
+        right: -5px;
+        cursor: ew-resize;
+        width: 10px;
+        height: 100%;
+        z-index: 2;
+
+        &.active {
+            display: block;
         }
     }
 

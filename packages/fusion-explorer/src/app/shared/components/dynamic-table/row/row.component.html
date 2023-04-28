@@ -1,1 +1,7 @@
-<p>row works!</p>
+<div [ngClass]="{'row': true, 'selected': selected}">
+    <shared-dyntable-cell *ngFor="let cell of cells; index as i; trackBy: trackByUqId"
+        [index]="i"
+        [value]="cell.value">
+    </shared-dyntable-cell>
+</div>
+  

@@ -1,41 +1,32 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { Observable, Subject, Subscription, startWith } from 'rxjs';
-import { HeadCellDefinition } from '../models/head-cell-definition.model';
+import { Component, Input } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
+import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { Icon } from '@shared/constants/assets';
 import { Ordering } from '@shared/constants/utils/ordering';
 
 @Component({
-  selector: 'admin-dyntable-head-cell',
+  selector: 'shared-dyntable-head-cell',
   templateUrl: './head-cell.component.html',
   styleUrls: ['./head-cell.component.scss']
 })
-export class HeadCellComponent implements OnInit {
+export class HeadCellComponent implements HeadCellDefinition {
   protected orderingEnum: typeof Ordering = Ordering;
   protected orderingIcon: Icon = Icon.ARROW;
-  protected value!: HeadCellDefinition;
   // Init default ordering to NONE
   protected ordering: Ordering = Ordering.NONE;
   private orderingSubject: Subject<Ordering> = new Subject();
 
-  constructor() {
-    // Init ordering subject value and reverse subscription
-    this.orderingSubject.next(this.ordering);
-    this.orderingSubject.subscribe((newVal) => {
-      this.ordering = newVal;
-    });
-  }
-  
   @Input()
-  def!: Observable<HeadCellDefinition>;
+  value: string = "undefined text";
+  @Input()
+  resizable: boolean = false;
 
-  ngOnInit() {
-    this.def
-    .pipe(startWith(new HeadCellDefinition(
-      "undefined text"
-    )))
-    .subscribe((updatedVal) => {
-      this.value = updatedVal;
-    })
+  constructor() {
+    // Init ordering subject value and reversed subscription
+    this.orderingSubject.next(this.ordering);
+    this.orderingSubject.subscribe((updatedVal) => {
+      this.ordering = updatedVal;
+    });
   }
 
   switchOrdering(): void {
@@ -51,7 +42,15 @@ export class HeadCellComponent implements OnInit {
     );
   }
 
-  getOrdering(): Subject<Ordering> {
-    return this.orderingSubject;
+  getValue(): string {
+    return this.value;
+  };
+
+  isResizable(): boolean {
+      return this.resizable;
+  }
+
+  getOrdering(): Observable<Ordering> {
+    return this.orderingSubject.asObservable();
   }
 }

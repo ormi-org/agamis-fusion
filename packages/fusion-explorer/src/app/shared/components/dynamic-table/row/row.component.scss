@@ -1,0 +1,20 @@
+@import "constants/variables";
+@import "base";
+
+div.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1px;
+    min-height: 28px;
+
+    > * {
+        flex: 1;
+        margin-left: 12px;
+    }
+
+    &:hover, &.selected {
+        @include setBgColor(secondary-two);
+    }
+    cursor: pointer;
+}

@@ -1,0 +1,9 @@
+@import "constants/variables";
+@import "base";
+
+div.cell {
+    display: flex;
+    align-items: center;
+    padding: 9px 8px 9px 8px;
+    font-size: 12px;
+}

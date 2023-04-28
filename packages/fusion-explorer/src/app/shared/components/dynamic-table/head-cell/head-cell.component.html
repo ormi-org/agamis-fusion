@@ -1,8 +1,8 @@
-<div [ngClass]="{ 'head-cell': true}"
+<div [ngClass]="{'head-cell': true}"
     (click)="switchOrdering()"
 >
   <span>
-    {{ value.getValue() | capitalizeFirst }}
+    {{ getValue() | capitalizeFirst }}
   </span>
   <img
     [ngClass]="{
@@ -13,4 +13,6 @@
     src="{{ orderingIcon | iconify }}"
     alt="head cell ordering icon"
   />
+  <div [ngClass]="{'resize-box': true, 'active': resizable}">
+  </div>
 </div>
