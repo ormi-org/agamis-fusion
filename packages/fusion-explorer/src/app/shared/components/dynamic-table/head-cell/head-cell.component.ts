@@ -10,16 +10,17 @@ import { Ordering } from '@shared/constants/utils/ordering';
   styleUrls: ['./head-cell.component.scss']
 })
 export class HeadCellComponent implements HeadCellDefinition {
-  protected orderingEnum: typeof Ordering = Ordering;
-  protected orderingIcon: Icon = Icon.ARROW;
-  // Init default ordering to NONE
-  protected ordering: Ordering = Ordering.NONE;
-  private orderingSubject: Subject<Ordering> = new Subject();
-
   @Input()
   value: string = "undefined text";
   @Input()
   resizable: boolean = false;
+  @Input()
+  ordering: Ordering = Ordering.NONE;
+
+  protected orderingEnum: typeof Ordering = Ordering;
+  protected orderingIcon: Icon = Icon.ARROW;
+  // Init default ordering to NONE
+  private orderingSubject: Subject<Ordering> = new Subject();
 
   constructor() {
     // Init ordering subject value and reversed subscription

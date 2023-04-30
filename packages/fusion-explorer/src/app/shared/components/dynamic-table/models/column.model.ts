@@ -1,6 +1,10 @@
+import { Ordering } from "@shared/constants/utils/ordering";
+
 export class Column {
     constructor(
+        public key: string,
         public value: string,
-        public resizable: boolean
+        public resizable: boolean,
+        public initOrder: Ordering = Ordering.NONE
     ) {}
 }

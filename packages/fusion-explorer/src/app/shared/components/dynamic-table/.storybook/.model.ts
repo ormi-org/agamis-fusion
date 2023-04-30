@@ -1,5 +1,5 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { DataSource } from '../typed/data-source.interface';
+import { BehaviorSubject, Observable, startWith } from 'rxjs';
+import { DataSource } from '../typed/data-source/data-source.interface';
 
 interface Dummy {
   first: number;
@@ -23,16 +23,29 @@ export const DUMMIES: Dummy[] = [
   },
 ];
 
-export class DummyDatasource implements DataSource<Dummy> {
-  private dummiesSubject = new BehaviorSubject<Dummy[]>(DUMMIES);
+export class DummyDatasource<T> implements DataSource<T> {
+  load(): void {
+    this.dummiesSubject.next(this.dummies);
+  }
+  private dummies: T[] = [];
+  private dummiesSubject = new BehaviorSubject<T[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
   public $loading: Observable<boolean> = this.loadingSubject.asObservable();
 
-  connect(): Observable<Dummy[]> {
+  // static factory
+  static asSourceOf<T>(sourceData: T[]): DummyDatasource<T> {
+    let ds = new DummyDatasource<T>();
+    ds.dummies = sourceData;
+    return ds;
+  }
+
+  public connect(): Observable<T[]> {
     return this.dummiesSubject.asObservable();
   }
-  disconnect(): void {
+
+  public disconnect(): void {
+    // storybook need to keep subjects in case of reload
     // this.dummiesSubject.complete();
     // this.loadingSubject.complete();
   }

@@ -2,7 +2,6 @@ import { Meta, moduleMetadata } from '@storybook/angular';
 import { RowComponent } from './row.component';
 import { DUMMIES } from '../.storybook/.model';
 import { SharedModule } from '@shared/shared.module';
-import { CellComponent } from '../cell/cell.component';
 import { customViewport } from '../.storybook';
 import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 

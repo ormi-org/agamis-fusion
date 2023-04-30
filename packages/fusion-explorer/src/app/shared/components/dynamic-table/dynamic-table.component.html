@@ -2,7 +2,8 @@
     <div [ngClass]="{'table-head': true}">
         <shared-dyntable-head-cell [ngClass]="{'resizable': col.resizable}" *ngFor="let col of columns"
             [value]="col.value"
-            [resizable]="col.resizable"/>
+            [resizable]="col.resizable"
+            [ordering]="col.initOrder"/>
     </div>
     <div [ngClass]="{'table-body': true}">
         <shared-dyntable-row *ngFor="let row of rows"
