@@ -7,12 +7,12 @@
   <img
     [ngClass]="{
         'tail-icon': true,
-        'asc': (ordering === orderingEnum.ASC),
-        'desc': (ordering === orderingEnum.DESC),
+        'asc': (associatedColumn.ordering === orderingEnum.ASC),
+        'desc': (associatedColumn.ordering === orderingEnum.DESC),
     }"
     src="{{ orderingIcon | iconify }}"
     alt="head cell ordering icon"
   />
-  <div [ngClass]="{'resize-box': true, 'active': resizable}">
+  <div [ngClass]="{'resize-box': true, 'active': associatedColumn.resizable}">
   </div>
 </div>

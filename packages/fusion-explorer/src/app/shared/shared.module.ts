@@ -6,7 +6,7 @@ import { DynamicTableComponent } from './components/dynamic-table/dynamic-table.
 import { HeadCellComponent } from './components/dynamic-table/head-cell/head-cell.component';
 import { CellComponent } from './components/dynamic-table/cell/cell.component';
 import { RowComponent } from './components/dynamic-table/row/row.component';
-import { ColumnComponent } from './components/dynamic-table/meta/column/column/column.component';
+import { ColumnDirective } from './components/dynamic-table/meta/column/column.directive';
 
 @NgModule({
   declarations: [
@@ -16,7 +16,7 @@ import { ColumnComponent } from './components/dynamic-table/meta/column/column/c
     HeadCellComponent,
     CellComponent,
     RowComponent,
-    ColumnComponent,
+    ColumnDirective,
   ],
   imports: [CommonModule],
   exports: [
@@ -26,7 +26,7 @@ import { ColumnComponent } from './components/dynamic-table/meta/column/column/c
     HeadCellComponent,
     CellComponent,
     RowComponent,
-    ColumnComponent,
+    ColumnDirective,
   ],
 })
 export class SharedModule {}

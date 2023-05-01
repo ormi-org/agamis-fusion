@@ -5,6 +5,6 @@ export class Column {
         public key: string,
         public value: string,
         public resizable: boolean,
-        public initOrder: Ordering = Ordering.NONE
+        public ordering: Ordering = Ordering.NONE
     ) {}
 }

@@ -14,4 +14,13 @@ div.table {
             }
         }
     }
+    > div.empty-hint {
+        padding-top: 10px;
+        height: 28px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        color: map-get($colors, secondary-one);
+    }
 }

@@ -1,11 +1,10 @@
-import { Component, Input } from '@angular/core';
+import { Directive, Input } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 
-@Component({
-  selector: 'shared-dyntable-column',
-  templateUrl: './column.component.html'
+@Directive({
+  selector: 'shared-dyntable-column'
 })
-export class ColumnComponent {
+export class ColumnDirective {
   @Input()
   private key!: string;
   @Input()

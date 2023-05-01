@@ -1,13 +1,17 @@
 <div [ngClass]="{'table': true}">
     <div [ngClass]="{'table-head': true}">
         <shared-dyntable-head-cell [ngClass]="{'resizable': col.resizable}" *ngFor="let col of columns"
-            [value]="col.value"
-            [resizable]="col.resizable"
-            [ordering]="col.initOrder"/>
+            [associatedColumn]="col"/>
     </div>
-    <div [ngClass]="{'table-body': true}">
+    <div *ngIf="rows.length > 0; else elseBlock" [ngClass]="{'table-body': true}">
         <shared-dyntable-row *ngFor="let row of rows"
             [index]="row.index"
+            [keys]="row.keys"
             [model]="row.value"/>
     </div>
+    <ng-template #elseBlock>
+        <div [ngClass]="{'empty-hint': true}">
+            {{ emptyHint }}
+        </div>
+    </ng-template>
 </div>

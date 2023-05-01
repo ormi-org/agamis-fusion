@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { Icon } from '@shared/constants/assets';
 import { Ordering } from '@shared/constants/utils/ordering';
+import { Column } from '../models/column.model';
 
 @Component({
   selector: 'shared-dyntable-head-cell',
@@ -11,11 +12,12 @@ import { Ordering } from '@shared/constants/utils/ordering';
 })
 export class HeadCellComponent implements HeadCellDefinition {
   @Input()
-  value: string = "undefined text";
-  @Input()
-  resizable: boolean = false;
-  @Input()
-  ordering: Ordering = Ordering.NONE;
+  associatedColumn: Column = {
+    key: "undefined",
+    resizable: false,
+    value: "undefined text",
+    ordering: Ordering.NONE
+  };
 
   protected orderingEnum: typeof Ordering = Ordering;
   protected orderingIcon: Icon = Icon.ARROW;
@@ -24,16 +26,16 @@ export class HeadCellComponent implements HeadCellDefinition {
 
   constructor() {
     // Init ordering subject value and reversed subscription
-    this.orderingSubject.next(this.ordering);
+    this.orderingSubject.next(this.associatedColumn.ordering);
     this.orderingSubject.subscribe((updatedVal) => {
-      this.ordering = updatedVal;
+      this.associatedColumn.ordering = updatedVal;
     });
   }
 
   protected switchOrdering(): void {
     this.orderingSubject.next(
       (() => {
-        switch (this.ordering) {
+        switch (this.associatedColumn.ordering) {
           case Ordering.ASC:
             return Ordering.DESC;
           default:
@@ -44,11 +46,11 @@ export class HeadCellComponent implements HeadCellDefinition {
   }
 
   protected isResizable(): boolean {
-    return this.resizable;
+    return this.associatedColumn.resizable;
   }
 
   protected getValue(): string {
-    return this.value;
+    return this.associatedColumn.value;
   }
 
   public getOrdering(): Observable<Ordering> {

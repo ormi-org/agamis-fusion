@@ -30,6 +30,7 @@ export const Default = {
   }),
   args: {
     index: 0,
+    keys: ["first", "second", "third", "fourth"],
     model: DUMMIES[1]
   },
 };
@@ -41,6 +42,7 @@ export const DefaultSelected = {
   args: {
     selected: true,
     index: 0,
+    keys: ["first", "second", "third", "fourth"],
     model: DUMMIES[1]
   },
 };

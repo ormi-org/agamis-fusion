@@ -10,18 +10,17 @@ import { CellDefinition } from '../typed/cell-definition.interface';
   templateUrl: './row.component.html',
   styleUrls: ['./row.component.scss']
 })
-export class RowComponent<T extends Object> implements RowDefinition<T>, AfterViewInit {
+export class RowComponent<T extends Object> implements RowDefinition<T>, OnInit {
   @Input()
-  index!: number;
+  protected index!: number;
   @Input()
-  model!: T;
+  protected keys!: string[];
+  @Input()
+  protected model!: T;
 
   protected cells!: Cell[];
 
   cellsTracking = trackByUqId;
-
-  @ContentChildren(CellComponent)
-  cellsElements!: QueryList<CellDefinition>;
 
   protected selected: boolean = false;
   private selectedSubject: Subject<boolean> = new Subject();
@@ -34,10 +33,13 @@ export class RowComponent<T extends Object> implements RowDefinition<T>, AfterVi
     });
   }
 
-  ngAfterViewInit(): void {
-    this.cells = Object.entries(this.model).map((field, i) => {
-      return new Cell(i.toString(), i, field[1].toString());
-    });
+  ngOnInit(): void {
+    // populate cells;
+    // remove unused cells
+    this.cells = Object.entries(this.model).reduce((acc, field, i) => {
+      if (this.keys.includes(field[0])) acc.push(new Cell(i.toString(), i, field[1].toString()));
+      return acc;
+    }, <Cell[]>[]);
   }
 
   protected select(): void {

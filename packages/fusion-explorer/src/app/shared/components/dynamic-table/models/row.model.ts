@@ -2,6 +2,7 @@ export class Row<T> {
     constructor(
         public uqId: string,
         public index: number,
+        public keys: string[],
         public value: T,
     ) {}
 }
