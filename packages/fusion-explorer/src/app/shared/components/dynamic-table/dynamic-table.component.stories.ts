@@ -34,17 +34,20 @@ export const Default = {
           key="first"
           [title]="'a first column'"
           [resizable]="true"
-          [initOrder]="initOrder">
+          [initOrder]="initOrder"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="second"
           [title]="'a second column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=140>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
           [title]="'a third column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="fourth"
@@ -56,6 +59,45 @@ export const Default = {
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
+    initOrder: Ordering.ASC,
+  },
+};
+
+export const OrderedBySecondColumn = {
+  render: (args: DynamicTableComponent<any>) => ({
+    props: args,
+    template: `
+      <shared-dyntable [datasource]="datasource">
+        <shared-dyntable-column
+          key="first"
+          [title]="'a first column'"
+          [resizable]="true"
+          [width]=120>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="second"
+          [title]="'a second column'"
+          [resizable]="true"
+          [initOrder]="initOrder"
+          [width]=140>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="third"
+          [title]="'a third column'"
+          [resizable]="true"
+          [width]=120>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="fourth"
+          [title]="'a fourth column'"
+          [resizable]="false">
+        </shared-dyntable-column>
+      </shared-dyntable>
+    `
+  }),
+  args: {
+    datasource: DummyDatasource.asSourceOf(DUMMIES),
+    initOrder: Ordering.DESC,
   },
 };
 
@@ -69,17 +111,20 @@ export const Empty = {
           key="first"
           [title]="'a first column'"
           [resizable]="true"
-          [initOrder]="initOrder">
+          [initOrder]="initOrder"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="second"
           [title]="'a second column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=140>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
           [title]="'a third column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="fourth"
@@ -106,17 +151,20 @@ export const EmptyWithCustomHint = {
           key="first"
           [title]="'a first column'"
           [resizable]="true"
-          [initOrder]="initOrder">
+          [initOrder]="initOrder"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="second"
           [title]="'a second column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=140>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
           [title]="'a third column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="fourth"
@@ -141,12 +189,14 @@ export const MissingColumn = {
           key="first"
           [title]="'a first column'"
           [resizable]="true"
-          [initOrder]="initOrder">
+          [initOrder]="initOrder"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
           [title]="'a third column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="fourth"
@@ -171,17 +221,64 @@ export const FilteredColumn = {
           key="first"
           [title]="'a first column'"
           [resizable]="true"
-          [initOrder]="initOrder">
+          [initOrder]="initOrder"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="second"
           [title]="'a second column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
           [title]="'a third column'"
-          [resizable]="true">
+          [resizable]="true"
+          [width]=120>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="fourth"
+          [title]="'a fourth column'"
+          [resizable]="false">
+        </shared-dyntable-column>
+      </shared-dyntable>
+    `
+  }),
+  args: {
+    datasource: DummyDatasource.asSourceOf(DUMMIES),
+    initOrder: Ordering.ASC,
+    filters: [
+      {
+        field: 'first',
+        value: '0'
+      }
+    ]
+  },
+};
+
+export const EllipsedText = {
+  render: (args: DynamicTableComponent<any>) => ({
+    props: args,
+    template: `
+      <shared-dyntable [datasource]="datasource" [filters]="filters">
+        <shared-dyntable-column
+          key="first"
+          [title]="'a first column'"
+          [resizable]="true"
+          [initOrder]="initOrder"
+          [width]=130>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="second"
+          [title]="'a second column'"
+          [resizable]="true"
+          [width]=30>
+        </shared-dyntable-column>
+        <shared-dyntable-column
+          key="third"
+          [title]="'a third column'"
+          [resizable]="true"
+          [width]=80>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="fourth"

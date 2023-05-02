@@ -18,9 +18,9 @@ export const DUMMIES: Dummy[] = [
     fourth: 'This is a test',
   },
   {
-    first: 1,
-    second: 'The row 1',
-    third: 'A dummy for row 1',
+    first: 10,
+    second: 'The row 10',
+    third: 'A dummy for row 10',
     fourth: 'This is a test',
   },
   {

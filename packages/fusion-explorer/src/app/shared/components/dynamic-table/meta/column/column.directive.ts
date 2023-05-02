@@ -13,6 +13,8 @@ export class ColumnDirective {
   private resizable!: boolean;
   @Input()
   private initOrder: Ordering = Ordering.NONE;
+  @Input()
+  private width: number = 0;
 
   getKey(): string {
     return this.key;
@@ -28,5 +30,9 @@ export class ColumnDirective {
 
   getOrder(): Ordering {
     return this.initOrder;
+  }
+
+  getWidth(): number {
+    return this.width;
   }
 }

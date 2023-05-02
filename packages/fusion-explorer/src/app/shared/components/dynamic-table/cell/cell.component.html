@@ -1,4 +1,6 @@
-<div [ngClass]="{'cell': true}">
+<div [ngClass]="{'cell': true}"
+     [ngStyle]="{'width': width != 0 ? width + 'px' : 'auto'}"
+  >
   <span>
     {{ getValue() | capitalizeFirst }}
   </span>

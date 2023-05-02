@@ -1,8 +1,11 @@
+import { BehaviorSubject } from "rxjs";
+
 export class Cell {
     constructor(
         public uqId: string,
         public index: number,
         public value: string,
+        public widthSubject: BehaviorSubject<number>
     ) {}
 }
 

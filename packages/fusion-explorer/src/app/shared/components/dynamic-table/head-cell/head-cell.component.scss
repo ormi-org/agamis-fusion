@@ -9,6 +9,13 @@ div.head-cell {
     height: calc(100% - 20px);
     padding: 10px 20px 10px 20px;
     font-size: 14px;
+    // region text overflow start
+    > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    // region text overflow end
 
     > img {
         display: none;

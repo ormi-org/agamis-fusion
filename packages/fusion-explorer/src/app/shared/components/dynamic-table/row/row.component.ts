@@ -1,35 +1,41 @@
-import { AfterViewInit, Component, ContentChildren, Directive, Input, OnInit, QueryList } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+} from '@angular/core';
 import { RowDefinition } from '../typed/row-definition.interface';
-import { Observable, Subject } from 'rxjs';
-import { CellComponent } from '../cell/cell.component';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Cell, trackByUqId } from '../models/cell.model';
-import { CellDefinition } from '../typed/cell-definition.interface';
 
 @Component({
   selector: 'shared-dyntable-row',
   templateUrl: './row.component.html',
-  styleUrls: ['./row.component.scss']
+  styleUrls: ['./row.component.scss'],
 })
-export class RowComponent<T extends Object> implements RowDefinition<T>, OnInit {
+export class RowComponent<T extends Object>
+  implements RowDefinition<T>, OnInit
+{
   @Input()
   protected index!: number;
   @Input()
   protected keys!: string[];
   @Input()
   protected model!: T;
+  @Input()
+  protected cellsWidths!: () => [string, BehaviorSubject<number>][];
 
   protected cells!: Cell[];
 
   cellsTracking = trackByUqId;
 
   protected selected: boolean = false;
-  private selectedSubject: Subject<boolean> = new Subject();
+  private selectedSubject: Subject<[boolean, T]> = new Subject();
 
   constructor() {
     // Init selected subject value and reversed subscription
-    this.selectedSubject.next(this.selected);
+    this.selectedSubject.next([this.selected, this.model]);
     this.selectedSubject.subscribe((updatedVal) => {
-      this.selected = updatedVal;
+      this.selected = updatedVal[0];
     });
   }
 
@@ -37,20 +43,29 @@ export class RowComponent<T extends Object> implements RowDefinition<T>, OnInit 
     // populate cells;
     // remove unused cells
     this.cells = Object.entries(this.model).reduce((acc, field, i) => {
-      if (this.keys.includes(field[0])) acc.push(new Cell(i.toString(), i, field[1].toString()));
+      if (this.keys.includes(field[0])) {
+        acc.push(
+          new Cell(
+            i.toString(),
+            i,
+            field[1].toString(),
+            this.cellsWidths().find(_ => _[0] === field[0])?.[1] || new BehaviorSubject(0)
+          )
+        );
+      }
       return acc;
     }, <Cell[]>[]);
   }
 
   protected select(): void {
-    this.selectedSubject.next(true);
+    this.selectedSubject.next([true, this.model]);
   }
 
   clearSelect(): void {
-    this.selectedSubject.next(false);
+    this.selectedSubject.next([false, this.model]);
   }
 
-  isSelected(): Observable<boolean> {
+  isSelected(): Observable<[boolean, T]> {
     return this.selectedSubject.asObservable();
   }
 

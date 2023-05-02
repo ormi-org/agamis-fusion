@@ -1,5 +1,6 @@
 <div [ngClass]="{'head-cell': true}"
     (click)="switchOrdering()"
+    [ngStyle]="{'width': colWidth != 0 ? colWidth + 'px' : 'auto'}"
 >
   <span>
     {{ getValue() | capitalizeFirst }}
@@ -13,6 +14,8 @@
     src="{{ orderingIcon | iconify }}"
     alt="head cell ordering icon"
   />
-  <div [ngClass]="{'resize-box': true, 'active': associatedColumn.resizable}">
+  <div [ngClass]="{'resize-box': true, 'active': associatedColumn.resizable}"
+       (mousedown)="onResizeBoxMousedown($event, i)"
+       (click)="$event.stopPropagation()">
   </div>
 </div>

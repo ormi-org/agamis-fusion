@@ -9,8 +9,11 @@ div.row {
     min-height: 28px;
 
     > * {
-        flex: 1;
+        &:last-child {
+            flex: 1;
+        }
         margin-left: 12px;
+        margin-right: 12px;
     }
 
     &:hover, &.selected {

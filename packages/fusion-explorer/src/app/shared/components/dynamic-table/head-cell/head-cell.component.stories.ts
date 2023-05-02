@@ -1,7 +1,5 @@
 import { Meta, moduleMetadata } from '@storybook/angular';
 import { HeadCellComponent } from './head-cell.component';
-import { Observable } from 'rxjs';
-import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 import { customViewport } from '../.storybook';
 import { SharedModule } from '@shared/shared.module';
