@@ -18,9 +18,9 @@ export class CellComponent implements CellDefinition, OnInit {
   protected width: number = 0;
 
   ngOnInit(): void {
-      this.widthSubject.subscribe((updateValue) => {
-        this.width = updateValue
-      });
+    this.widthSubject.subscribe((updatedValue) => {
+      this.width = updatedValue;
+    });
   }
 
   getValue(): string {

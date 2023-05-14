@@ -3,7 +3,7 @@ import { CellComponent } from './cell.component';
 import { customViewport } from '../.storybook';
 import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 import { SharedModule } from '@shared/shared.module';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { CellDefinition } from '../typed/cell-definition.interface';
 
 export default {
@@ -30,6 +30,7 @@ export const Default = {
     props: args,
   }),
   args: {
-    value: "a default test cell"
+    value: "a default test cell",
+    widthSubject: new BehaviorSubject(100)
   },
 };
