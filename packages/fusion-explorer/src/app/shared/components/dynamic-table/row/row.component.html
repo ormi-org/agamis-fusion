@@ -1,6 +1,6 @@
 <div [ngClass]="{'row': true, 'selected': selected}"
      (click)="select()">
-    <shared-dyntable-cell *ngFor="let cell of cells; index as i; trackBy: trackByUqId"
+    <shared-dyntable-cell *ngFor="let cell of cells; index as i; trackBy: cellsTracking"
         [index]="i"
         [value]="cell.value"
         [widthSubject]="cell.widthSubject">

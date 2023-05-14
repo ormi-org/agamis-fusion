@@ -8,9 +8,9 @@ import { Icon } from '@shared/constants/assets';
 })
 export class ItemComponent implements AfterViewInit {
   @Input()
-  protected text: string = "undefined text";
+  text: string = "undefined text";
   @Input()
-  protected icon: {
+  icon: {
     key: Icon,
     height: string
   } = {

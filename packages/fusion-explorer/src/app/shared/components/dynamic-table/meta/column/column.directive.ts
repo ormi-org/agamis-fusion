@@ -6,15 +6,15 @@ import { Ordering } from '@shared/constants/utils/ordering';
 })
 export class ColumnDirective {
   @Input()
-  private key!: string;
+  key!: string;
   @Input()
-  private title!: string;
+  title!: string;
   @Input()
-  private resizable!: boolean;
+  resizable!: boolean;
   @Input()
-  private initOrder: Ordering = Ordering.NONE;
+  initOrder: Ordering = Ordering.NONE;
   @Input()
-  private width: number = 0;
+  width: number = 0;
 
   getKey(): string {
     return this.key;

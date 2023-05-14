@@ -19,7 +19,7 @@ export class MenuComponent implements AfterViewInit {
   @ViewChild('menuBody')
   menuBody!: ElementRef<HTMLElement>;
 
-  @ViewChildren('menuItem')
+  @ViewChildren(ItemComponent)
   menuItems!: QueryList<ItemComponent>;
 
   ngAfterViewInit(): void {

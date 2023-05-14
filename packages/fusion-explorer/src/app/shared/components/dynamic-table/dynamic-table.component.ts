@@ -30,14 +30,15 @@ export class DynamicTableComponent<T extends Uniquely>
   implements OnDestroy, AfterViewInit, AfterContentInit
 {
   @Input()
-  private datasource!: DataSource<T>;
+  datasource!: DataSource<T>;
   @Input()
-  protected emptyHint: string = 'No data';
+  emptyHint: string = 'No data';
   @Input()
-  private filters: Filtering[] = [];
+  filters: Filtering[] = [];
 
   protected columns: Array<Column> = [];
-  protected getColumnsWidthsAsync = () => this.columns.map((col) => [col.key, col.widthSubject]);
+  protected getColumnsWidthsAsync: () => [string, BehaviorSubject<number>][] =
+    () => this.columns.map((col) => [col.key, col.widthSubject]);
   protected rows: Array<Row<T>> = [];
 
   private selectedEntitySubject: Subject<T> = new Subject();

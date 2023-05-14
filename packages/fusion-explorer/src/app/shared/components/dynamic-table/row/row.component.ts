@@ -16,17 +16,17 @@ export class RowComponent<T extends Object>
   implements RowDefinition<T>, OnInit
 {
   @Input()
-  protected index!: number;
+  index!: number;
   @Input()
-  protected keys!: string[];
+  keys!: string[];
   @Input()
-  protected model!: T;
+  model!: T;
   @Input()
-  protected cellsWidths!: () => [string, BehaviorSubject<number>][];
+  cellsWidths!: () => [string, BehaviorSubject<number>][];
 
   protected cells!: Cell[];
 
-  cellsTracking = trackByUqId;
+  protected cellsTracking = trackByUqId;
 
   protected selected: boolean = false;
   private selectedSubject: Subject<[boolean, T]> = new Subject();
