@@ -3,6 +3,7 @@ import {
   AfterViewInit,
   Component,
   ContentChildren,
+  ElementRef,
   Input,
   OnDestroy,
   QueryList,
@@ -29,18 +30,25 @@ const DEFAULT_PAGING_SIZE = 10;
 export class DynamicTableComponent<T extends Uniquely>
   implements OnDestroy, AfterViewInit, AfterContentInit
 {
+  protected math = Math;
+
   @Input()
   datasource!: DataSource<T>;
   @Input()
   emptyHint: string = 'No data';
   @Input()
   filters: Filtering[] = [];
+  @Input()
+  startWidth!: number;
+  
+  protected width;
 
   protected columns: Array<Column> = [];
   protected getColumnsWidthsAsync: () => [string, BehaviorSubject<number>][] =
     () => this.columns.map((col) => [col.key, col.widthSubject]);
   protected rows: Array<Row<T>> = [];
 
+  private self: HTMLElement;
   private selectedEntitySubject: Subject<T> = new Subject();
 
   @ContentChildren(ColumnDirective)
@@ -51,6 +59,10 @@ export class DynamicTableComponent<T extends Uniquely>
 
   @ViewChildren(RowComponent)
   private rowElements!: QueryList<RowComponent<T>>;
+
+  constructor(el: ElementRef) {
+    this.self = el.nativeElement;
+  }
 
   ngAfterContentInit(): void {
     const colDefs = this.columnsDef.toArray();
@@ -95,6 +107,12 @@ export class DynamicTableComponent<T extends Uniquely>
   }
 
   ngAfterViewInit(): void {
+    // init startWidth with auto computed width if not set
+    if (this.startWidth === undefined) {
+      this.startWidth = this.self.offsetWidth;
+    }
+    // init width with startWidth
+    this.width = this.startWidth;
     // init elements reactivity and init again on element changes
     this.initHeadCellsReactivity();
     this.initRowsReactivity();
@@ -153,6 +171,8 @@ export class DynamicTableComponent<T extends Uniquely>
         this.columns
         .find(_ => _.key === updatedValue[0])
         ?.widthSubject.next(updatedValue[1]);
+        // update total width
+        this.width += updatedValue[2];
       })
     });
   }

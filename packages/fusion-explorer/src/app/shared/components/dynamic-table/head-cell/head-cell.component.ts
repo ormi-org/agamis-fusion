@@ -26,8 +26,8 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   protected orderingIcon: Icon = Icon.ARROW;
   // Init ordering subject
   private orderingSubject: Subject<Ordering> = new Subject();
-  // Init resizing subject
-  private resizingSubject: Subject<[string, number]> = new Subject();
+  // Init resizing subject (key, newWidth, moveDelta)
+  private resizingSubject: Subject<[string, number, number]> = new Subject();
   private resizing: boolean = false;
 
   constructor(private renderer: Renderer2) {
@@ -73,11 +73,13 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   }
 
   private toggleResizing(startX: number, startWidth: number): void {
+    let previousDelta = 0;
     let resizableMousemove = this.renderer.listen('document', 'mousemove', (event: MouseEvent) => {
       if (this.resizing) {
         const deltaX = event.pageX - startX;
         const newWidth = startWidth + deltaX;
-        this.resizingSubject.next([this.associatedColumn.key, newWidth]);
+        this.resizingSubject.next([this.associatedColumn.key, newWidth, - (previousDelta - deltaX)]);
+        previousDelta = deltaX;
       }
     });
     let resizableMouseup;
@@ -90,7 +92,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
     });
   }
 
-  public getResizing(): Observable<[string, number]> {
+  public getResizing(): Observable<[string, number, number]> {
     return this.resizingSubject.asObservable();
   }
 
