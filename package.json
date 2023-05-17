@@ -59,6 +59,7 @@
     "@angular/platform-browser": "~15.2.8",
     "@angular/platform-browser-dynamic": "~15.2.8",
     "@angular/router": "~15.2.8",
+    "@ngrx/store": "^15.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "rxjs": "~7.8.0",

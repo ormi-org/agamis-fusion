@@ -11,7 +11,8 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@shared/*": ["app/shared/*"]
+      "@shared/*": ["app/shared/*"],
+      "@core/*": ["app/core/*"]
     }
   },
   "files": [],
