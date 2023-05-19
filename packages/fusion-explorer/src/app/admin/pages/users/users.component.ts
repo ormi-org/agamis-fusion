@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { UserDatasource } from './datasources/user.datasource';
 import { UserService } from '@core/services/user/user.service';
+import { Ordering } from '@shared/constants/utils/ordering';
 
 @Component({
   selector: 'admin-page-users',
@@ -8,6 +9,8 @@ import { UserService } from '@core/services/user/user.service';
   styleUrls: ['./users.component.scss'],
 })
 export class UsersComponent {
+  protected Ordering = Ordering;
+  
   private userService: UserService;
   
   protected userDatasource: UserDatasource;

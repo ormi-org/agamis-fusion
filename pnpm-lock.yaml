@@ -47,7 +47,7 @@ dependencies:
 devDependencies:
   '@angular-devkit/build-angular':
     specifier: ~15.2.6
-    version: 15.2.6(@angular/compiler-cli@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
+    version: 15.2.6(@angular/compiler-cli@15.2.8)(@angular/localize@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
   '@angular-devkit/core':
     specifier: ~15.2.6
     version: 15.2.6(chokidar@3.5.3)
@@ -72,6 +72,9 @@ devDependencies:
   '@angular/language-service':
     specifier: ~15.2.8
     version: 15.2.8
+  '@angular/localize':
+    specifier: ~15.2.8
+    version: 15.2.8(@angular/compiler-cli@15.2.8)(@angular/compiler@15.2.8)
   '@nrwl/angular':
     specifier: 15.9.2
     version: 15.9.2(@angular-devkit/build-angular@15.2.6)(@angular-devkit/core@15.2.6)(@angular-devkit/schematics@15.2.6)(@babel/core@7.21.4)(@schematics/angular@15.2.6)(@types/node@16.11.7)(cypress@12.10.0)(eslint@8.15.0)(html-webpack-plugin@5.5.0)(nx@15.9.2)(rxjs@7.8.0)(typescript@4.9.5)
@@ -206,7 +209,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular@15.2.6(@angular/compiler-cli@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5):
+  /@angular-devkit/build-angular@15.2.6(@angular/compiler-cli@15.2.8)(@angular/localize@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5):
     resolution: {integrity: sha512-OmMcdXXUrAdZNxwxDE8SUx1FMcq9FyMnrSv1PmP9sHPBoxAdBVc/qNdGA9V7C5yHvWHGgzsx7ZK5TDuvifzS5g==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -240,6 +243,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1502.6(chokidar@3.5.3)(webpack-dev-server@4.11.1)(webpack@5.76.1)
       '@angular-devkit/core': 15.2.6(chokidar@3.5.3)
       '@angular/compiler-cli': 15.2.8(@angular/compiler@15.2.8)(typescript@4.9.5)
+      '@angular/localize': 15.2.8(@angular/compiler-cli@15.2.8)(@angular/compiler@15.2.8)
       '@babel/core': 7.20.12
       '@babel/generator': 7.20.14
       '@babel/helper-annotate-as-pure': 7.18.6
@@ -535,6 +539,23 @@ packages:
   /@angular/language-service@15.2.8:
     resolution: {integrity: sha512-3wlaJrpxe8ZLe7ZGIOs/Z++kgJMOHZCUvdXLyp/4t1ejULgUgW9yi7nGsemWnSzsUCjf7595BP1Cp1gA/J/1QQ==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
+    dev: true
+
+  /@angular/localize@15.2.8(@angular/compiler-cli@15.2.8)(@angular/compiler@15.2.8):
+    resolution: {integrity: sha512-wJLBp0MUnET9kHzBtqIlZ3RQ56JFItXSgmBXagQq+MU+uJZmGvuw6fez0i5wkgv9Rgnr25oCULVtpTF+T5RGYA==}
+    engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
+    hasBin: true
+    peerDependencies:
+      '@angular/compiler': 15.2.8
+      '@angular/compiler-cli': 15.2.8
+    dependencies:
+      '@angular/compiler': 15.2.8(@angular/core@15.2.8)
+      '@angular/compiler-cli': 15.2.8(@angular/compiler@15.2.8)(typescript@4.9.5)
+      '@babel/core': 7.19.3
+      glob: 8.1.0
+      yargs: 17.7.1
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /@angular/platform-browser-dynamic@15.2.8(@angular/common@15.2.8)(@angular/compiler@15.2.8)(@angular/core@15.2.8)(@angular/platform-browser@15.2.8):
@@ -4160,7 +4181,7 @@ packages:
       proc-log: 3.0.0
       promise-inflight: 1.0.1(bluebird@3.7.2)
       promise-retry: 2.0.1
-      semver: 7.3.8
+      semver: 7.5.0
       which: 3.0.0
     transitivePeerDependencies:
       - bluebird
@@ -4232,7 +4253,7 @@ packages:
       '@nguniversal/builders':
         optional: true
     dependencies:
-      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
+      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(@angular/localize@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
       '@angular-devkit/core': 15.2.6(chokidar@3.5.3)
       '@angular-devkit/schematics': 15.2.6
       '@nrwl/cypress': 15.9.2(cypress@12.10.0)(eslint@8.15.0)(nx@15.9.2)(typescript@4.9.5)
@@ -5187,7 +5208,7 @@ packages:
         optional: true
     dependencies:
       '@angular-devkit/architect': 0.1502.6(chokidar@3.5.3)
-      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
+      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(@angular/localize@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
       '@angular-devkit/core': 15.2.6(chokidar@3.5.3)
       '@angular/cli': 15.2.6
       '@angular/common': 15.2.8(@angular/core@15.2.8)(rxjs@7.8.0)
@@ -13820,7 +13841,7 @@ packages:
       jest: ^29.0.0
       typescript: '>=4.4'
     dependencies:
-      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
+      '@angular-devkit/build-angular': 15.2.6(@angular/compiler-cli@15.2.8)(@angular/localize@15.2.8)(html-webpack-plugin@5.5.0)(typescript@4.9.5)
       '@angular/compiler-cli': 15.2.8(@angular/compiler@15.2.8)(typescript@4.9.5)
       '@angular/core': 15.2.8(rxjs@7.8.0)(zone.js@0.11.8)
       '@angular/platform-browser-dynamic': 15.2.8(@angular/common@15.2.8)(@angular/compiler@15.2.8)(@angular/core@15.2.8)(@angular/platform-browser@15.2.8)
@@ -15550,7 +15571,7 @@ packages:
     resolution: {integrity: sha512-dH3GmQL4vsPtld59cOn8uY0iOqRmqKvV+DLGwNXV/Q7MDgD2QfOADWd/mFXcIE5LVhYYGjA3baz6W9JneqnuCw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /npm-normalize-package-bin@3.0.0:

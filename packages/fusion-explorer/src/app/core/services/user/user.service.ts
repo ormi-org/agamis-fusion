@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { CoreModule } from '@core/core.module';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: CoreModule
 })
 export class UserService {
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 }

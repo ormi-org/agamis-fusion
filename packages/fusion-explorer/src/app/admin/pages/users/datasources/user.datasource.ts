@@ -25,6 +25,6 @@ export class UserDatasource implements DataSource<User> {
         this.loadingSubject.complete();
     }
     load(filters: Filtering[], sorting: Sorting, pageIndex: number, pageSize: number): void {
-        throw new Error("Method not implemented.");
+        throw new Error("> UserDatasource#load >> Method not implemented.");
     }
 }

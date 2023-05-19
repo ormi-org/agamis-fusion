@@ -4,6 +4,12 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "packages/fusion-explorer/src",
+  "i18n": {
+    "sourceLocale": "en",
+    "locales": {
+      "fr": "packages/fusion-explorer/src/locale/messages.fr.xlf"
+    }
+  },
   "tags": [],
   "targets": {
     "build": {
@@ -25,7 +31,9 @@
           "includePaths": [
             "packages/fusion-explorer/src/styles"
           ]
-        }
+        },
+        "i18nMissingTranslation": "error",
+        "localize": ["fr"]
       },
       "configurations": {
         "production": {
@@ -42,6 +50,12 @@
             }
           ],
           "outputHashing": "all"
+        },
+        "en": {
+          "localize": ["en"]
+        },
+        "fr": {
+          "localize": ["fr"]
         },
         "development": {
           "buildOptimizer": false,
@@ -60,16 +74,20 @@
         "production": {
           "browserTarget": "fusion-explorer:build:production"
         },
-        "development": {
-          "browserTarget": "fusion-explorer:build:development"
+        "development.en": {
+          "browserTarget": "fusion-explorer:build:development,en"
+        },
+        "development.fr": {
+          "browserTarget": "fusion-explorer:build:development,fr"
         }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "development.en"
     },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "fusion-explorer:build"
+        "browserTarget": "fusion-explorer:build",
+        "outputPath": "packages/fusion-explorer/src/locale"
       }
     },
     "lint": {

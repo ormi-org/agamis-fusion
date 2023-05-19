@@ -15,7 +15,7 @@
     alt="head cell ordering icon"
   />
   <div [ngClass]="{'resize-box': true, 'active': associatedColumn.resizable}"
-       (mousedown)="onResizeBoxMousedown($event, i)"
+       (mousedown)="onResizeBoxMousedown($event)"
        (click)="$event.stopPropagation()">
   </div>
 </div>
