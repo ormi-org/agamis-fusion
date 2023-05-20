@@ -5,9 +5,9 @@
   "prefix": "app",
   "sourceRoot": "packages/fusion-explorer/src",
   "i18n": {
-    "sourceLocale": "en",
+    "sourceLocale": "en-US",
     "locales": {
-      "fr": "packages/fusion-explorer/src/locale/messages.fr.xlf"
+      "fr-FR": "packages/fusion-explorer/src/locales/messages.fr-FR.xlf"
     }
   },
   "tags": [],
@@ -33,7 +33,7 @@
           ]
         },
         "i18nMissingTranslation": "error",
-        "localize": ["fr"]
+        "localize": ["fr-FR"]
       },
       "configurations": {
         "production": {
@@ -52,10 +52,10 @@
           "outputHashing": "all"
         },
         "en": {
-          "localize": ["en"]
+          "localize": ["en-US"]
         },
         "fr": {
-          "localize": ["fr"]
+          "localize": ["fr-FR"]
         },
         "development": {
           "buildOptimizer": false,
@@ -87,7 +87,14 @@
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
         "browserTarget": "fusion-explorer:build",
-        "outputPath": "packages/fusion-explorer/src/locale"
+        "outputPath": "packages/fusion-explorer/src/locales"
+      }
+    },
+    "gen-i18n": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/fusion-explorer",
+        "command": "xliffmerge --profile xliffmerge.json fr-FR"
       }
     },
     "lint": {
