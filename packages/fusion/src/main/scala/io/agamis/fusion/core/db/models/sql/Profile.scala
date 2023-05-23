@@ -128,6 +128,12 @@ class Profile(implicit @transient protected val store: ProfileStore) extends Mod
     @QuerySqlField(name = "user_id", notNull = true)
     private var _userId: UUID = _
 
+    /** Profile property that reflects related user's id
+      *
+      * @return userId [[java.util.UUID]]
+      */
+    def userId: UUID = _userId
+
     @transient
     private var _relatedUser: Option[User] = None
 

@@ -12,8 +12,14 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@shared/*": ["app/shared/*"],
-      "@core/*": ["app/core/*"]
-    }
+      "@core/*": ["app/core/*"],
+      "@explorer/*": ["app/explorer/*"],
+      "@admin/*": ["app/admin/*"],
+      "@environments/*": ["environments/*"],
+      "@mocks/*": ["mocks/*"]
+    },
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   },
   "files": [],
   "include": [],

@@ -228,7 +228,7 @@ class UserRoutes()(implicit system: ActorSystem[_], userService: UserService)
               }
             )
           ),
-          pathPrefix("user")(
+          pathPrefix("users")(
             concat(
               // get by username
               get {

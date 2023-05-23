@@ -1,1 +1,5 @@
-<router-outlet></router-outlet>
+<div [ngClass]="{'global-container': true}">
+    <div [ngClass]="{'header': true}"></div>
+    <div *ngIf="$loading" [ngClass]="{'loading-splash': true}"></div>
+    <router-outlet *ngIf="!$loading"></router-outlet>
+</div>

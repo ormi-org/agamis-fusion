@@ -1,5 +1,5 @@
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
-import { User } from "@core/models/user.model";
+import { User } from "@core/models/data/user.model";
 import Filtering from "@shared/components/dynamic-table/typed/data-source/typed/filtering.interface";
 import Sorting from "@shared/components/dynamic-table/typed/data-source/typed/sorting.interface";
 import { BehaviorSubject, Observable } from "rxjs";

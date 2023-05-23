@@ -7,7 +7,7 @@ import { HeadCellComponent } from './components/dynamic-table/head-cell/head-cel
 import { CellComponent } from './components/dynamic-table/cell/cell.component';
 import { RowComponent } from './components/dynamic-table/row/row.component';
 import { ColumnDirective } from './components/dynamic-table/meta/column/column.directive';
-import { ErrorComponent } from './components/error/error.component';
+import { ErrorComponent } from './pages/error/error.component';
 
 @NgModule({
   declarations: [

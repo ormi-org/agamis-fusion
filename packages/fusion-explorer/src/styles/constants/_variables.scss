@@ -4,6 +4,7 @@ $colors: (
     primary-three: #F5F1E4,
     secondary-one: #C8C3B2,
     secondary-two: #C8C3B27B,
+    secondary-three: #505050,
 );
 
 @mixin setColor($colorName) {

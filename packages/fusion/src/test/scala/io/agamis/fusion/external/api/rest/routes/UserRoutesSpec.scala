@@ -61,7 +61,8 @@ class UserRoutesSpec
               None,
               None,
               Instant.parse("2023-02-14T23:31:54.081426541Z"),
-              Some("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3"),
+              "4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3",
+              None,
               Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
               Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
             )
@@ -87,7 +88,8 @@ class UserRoutesSpec
               None,
               None,
               Instant.parse("2023-02-20T19:07:23.081426541Z"),
-              Some("9ad0d0a3-e621-4a35-aaeb-38533ef090c4"),
+              "9ad0d0a3-e621-4a35-aaeb-38533ef090c4",
+              None,
               Some(Instant.parse("2023-02-20T19:07:23.081426541Z")),
               Some(Instant.parse("2023-02-20T19:07:23.081426541Z"))
             )

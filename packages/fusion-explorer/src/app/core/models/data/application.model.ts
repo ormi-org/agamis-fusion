@@ -1,5 +1,5 @@
-import { ApplicationStatus } from "./enums/application-status";
-import { OrganizationApplicationStatus } from "./enums/organization-application-status";
+import { ApplicationStatus } from "../enums/application-status";
+import { OrganizationApplicationStatus } from "../enums/organization-application-status";
 import { FileSystem } from "./file-system.model";
 import { Organization } from "./organization.model";
 import { Permission } from "./permission.model";

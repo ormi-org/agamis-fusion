@@ -1,0 +1,21 @@
+@import 'constants/variables';
+@import "base";
+
+.global-container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    width: 100%;
+    height: 36px;
+    @include setBgColor()
+}
+
+* {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    @include setColor(primary-one);
+}

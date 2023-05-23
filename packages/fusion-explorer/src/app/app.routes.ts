@@ -6,26 +6,7 @@ export const appRoutes: Route[] = [
         children: [
             {
                 path: 'explorer',
-                children: [
-                    {
-                        // Classic explorer
-                        path: '',
-                        children: [
-                            {
-                                path: 'admin',
-                                loadChildren: () => import('./admin/admin.module').then(module => module.AdminModule)
-                            }
-                        ]
-                    },
-                    // {
-                    //     // Save widget
-                    //     path: 'save'
-                    // },
-                    // {
-                    //     // Open widget
-                    //     path: 'open'
-                    // },
-                ],
+                loadChildren: () => import('./explorer/explorer.module').then(module => module.ExplorerModule)
             },
         ],
     }

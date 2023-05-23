@@ -14,26 +14,31 @@
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/packages/fusion-explorer",
         "index": "packages/fusion-explorer/src/index.html",
         "main": "packages/fusion-explorer/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [
+          "zone.js"
+        ],
         "tsConfig": "packages/fusion-explorer/tsconfig.app.json",
         "assets": [
           "packages/fusion-explorer/src/favicon.ico",
           "packages/fusion-explorer/src/assets"
         ],
-        "styles": ["packages/fusion-explorer/src/styles.css"],
+        "styles": [
+          "packages/fusion-explorer/src/styles.css"
+        ],
         "scripts": [],
         "stylePreprocessorOptions": {
           "includePaths": [
             "packages/fusion-explorer/src/styles"
           ]
         },
-        "i18nMissingTranslation": "error",
-        "localize": ["fr-FR"]
+        "i18nMissingTranslation": "error"
       },
       "configurations": {
         "production": {
@@ -49,13 +54,23 @@
               "maximumError": "4kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "packages/fusion-explorer/src/environments/environment.ts",
+              "with": "packages/fusion-explorer/src/environments/environment.prod.ts"
+            }
+          ]
         },
-        "en": {
-          "localize": ["en-US"]
+        "en-US": {
+          "localize": [
+            "en-US"
+          ]
         },
-        "fr": {
-          "localize": ["fr-FR"]
+        "fr-FR": {
+          "localize": [
+            "fr-FR"
+          ]
         },
         "development": {
           "buildOptimizer": false,
@@ -74,11 +89,11 @@
         "production": {
           "browserTarget": "fusion-explorer:build:production"
         },
-        "development.en": {
-          "browserTarget": "fusion-explorer:build:development,en"
+        "development.en-US": {
+          "browserTarget": "fusion-explorer:build:development,en-US"
         },
-        "development.fr": {
-          "browserTarget": "fusion-explorer:build:development,fr"
+        "development.fr-FR": {
+          "browserTarget": "fusion-explorer:build:development,fr-FR"
         }
       },
       "defaultConfiguration": "development.en"
@@ -99,7 +114,9 @@
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/fusion-explorer/**/*.ts",
@@ -109,7 +126,9 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "packages/fusion-explorer/jest.config.ts",
         "passWithNoTests": true
@@ -143,7 +162,9 @@
     },
     "build-storybook": {
       "executor": "@storybook/angular:build-storybook",
-      "outputs": ["{options.outputDir}"],
+      "outputs": [
+        "{options.outputDir}"
+      ],
       "options": {
         "outputDir": "dist/storybook/fusion-explorer",
         "configDir": "packages/fusion-explorer/.storybook",

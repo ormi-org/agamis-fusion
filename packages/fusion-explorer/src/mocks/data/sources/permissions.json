@@ -1,0 +1,13 @@
+[
+    "io.agamis.fusion.user:create",
+    "io.agamis.fusion.user:edit",
+    "io.agamis.fusion.user:delete",
+    "io.agamis.fusion.organization#edb1e146-eb53-4d17-983c-a07f7ed6543d.profile:edit",
+    "io.agamis.fusion.organization#edb1e146-eb53-4d17-983c-a07f7ed6543d.profile:create",
+    "io.agamis.fusion.organization#edb1e146-eb53-4d17-983c-a07f7ed6543d.profile:delete",
+    "io.agamis.fusion.organization:create",
+    "io.agamis.fusion.organization:edit",
+    "io.agamis.fusion.organization:delete",
+    "io.agamis.fusion.app#*:use",
+    "io.agamis.fusion.app#*:launch"
+]
