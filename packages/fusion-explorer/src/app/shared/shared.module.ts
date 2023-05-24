@@ -8,6 +8,8 @@ import { CellComponent } from './components/dynamic-table/cell/cell.component';
 import { RowComponent } from './components/dynamic-table/row/row.component';
 import { ColumnDirective } from './components/dynamic-table/meta/column/column.directive';
 import { ErrorComponent } from './pages/error/error.component';
+import { SplashComponent } from './components/splash/splash.component';
+import { LoadingBarComponent } from './components/loading-bar/loading-bar.component';
 
 @NgModule({
   declarations: [
@@ -19,6 +21,8 @@ import { ErrorComponent } from './pages/error/error.component';
     RowComponent,
     ColumnDirective,
     ErrorComponent,
+    SplashComponent,
+    LoadingBarComponent,
   ],
   imports: [CommonModule],
   exports: [
@@ -30,6 +34,8 @@ import { ErrorComponent } from './pages/error/error.component';
     RowComponent,
     ColumnDirective,
     ErrorComponent,
+    SplashComponent,
+    LoadingBarComponent,
   ],
 })
 export class SharedModule {}

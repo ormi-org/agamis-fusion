@@ -5,10 +5,11 @@ import { CoreModule } from '@core/core.module';
 import { AppState } from '@core/models/states/app-state.model';
 import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
 import { Store, StoreModule, combineReducers, select } from '@ngrx/store';
-import { filter } from 'rxjs';
+import { Observable, catchError, filter } from 'rxjs';
 import { ConfigService } from './config.service';
 import * as fromFeature from '@core/states/app-state/app-state.reducers';
 import { loadConfig } from '@core/states/app-state/app-state.actions';
+import { AppConfig } from '@core/models/app-config.model';
 
 describe('ConfigService', () => {
   let service: ConfigService;
@@ -36,21 +37,56 @@ describe('ConfigService', () => {
   });
 
   it('should load conf file to store when file is found', () => {
-    service.load().then(() => {
+    const expected: AppConfig = {
+      urls: {
+        rest: {
+          endpoints: {
+            AN_ENDPOINT: "/endpoint"
+          }
+        }
+      }
+    }
+    service.load().subscribe((_) => {
+      const storeSpy = spyOn(store, 'dispatch');
+      expect(storeSpy).toHaveBeenCalledWith(loadConfig({ config: expected }));
+
       store
       .pipe(
         select(selectAppConfig),
         filter(val => val !== undefined)
       )
       .subscribe((conf) => {
-        expect(conf).toBeTruthy();
-      })
-    }, (err) => {
-      console.log(err);
+        expect(conf).toBe(expected);
+      });
     });
     const mockRequest = httpMock.expectOne('./assets/config/dev.conf.json');
-    mockRequest.flush({});
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-    expect(dispatchSpy).toHaveBeenCalledWith(loadConfig);
+    mockRequest.flush(expected);
+  });
+
+  it('should load default conf to store when file is not found', () => {
+    const expected: AppConfig = {
+      urls: {
+        rest: {
+          endpoints: {
+            A_DEFAULT_ENDPOINT: "/default"
+          }
+        }
+      }
+    }
+    service.load().subscribe((_) => {
+      store
+      .pipe(
+        select(selectAppConfig),
+        filter(val => val !== undefined)
+      )
+      .subscribe((conf) => {
+        expect(conf).toBe(expected)
+      });
+    });
+    const mockRequest = httpMock.expectOne('./assets/config/dev.conf.json');
+    mockRequest.flush({}, {
+      status: 404,
+      statusText: "Not Found"
+    });
   });
 });

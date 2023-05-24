@@ -1,9 +1,9 @@
 import { Application } from "./application.model";
-import { OrganizationApplicationStatus } from "./enums/organization-application-status";
+import { OrganizationApplicationStatus } from "../enums/organization-application-status";
 import { FileSystem } from "./file-system.model";
 import { Profile } from "./profile.model";
-import { LocalizedText } from "./typed/localized-text";
-import TimeTracked from "./typed/time-tracked";
+import { LocalizedText } from "../typed/localized-text";
+import TimeTracked from "../typed/time-tracked";
 
 export interface Organization extends TimeTracked {
     id: string,

@@ -8,6 +8,6 @@ export const appStateCoreFeatureKey = 'app';
 
 export const appStateReducer = createReducer(
     initialState,
-    on(AppStateActions.setOrganizationId, (state, action) => ({ ...state, organizationId: action.organizationId })),
+    on(AppStateActions.setOrganization, (state, action) => ({ ...state, organization: action.organization })),
     on(AppStateActions.loadConfig, (state, action) => ({ ...state, config: action.config}))
 )

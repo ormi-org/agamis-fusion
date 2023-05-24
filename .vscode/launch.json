@@ -82,6 +82,16 @@
             ],
             "env": {
             }
+        },
+        {
+            "type": "node-terminal",
+            "name": "fusion-explorer dev -- debug",
+            "cwd": "${workspaceFolder}",
+            "command": "pnpm nx run fusion-explorer:serve --configuration=development.fr-FR",
+            "request": "launch",
+            "serverReadyAction": {
+                "action": "debugWithChrome"
+            }
         }
     ]
 }

@@ -4,8 +4,8 @@ import profilesRoutes from './routes/profiles';
 export function v1() {
     createServer({
         logging: true,
-        namespace: '/api/v1',
         routes() {
+            this.passthrough("/app/native/fusion-explorer/assets/**"),
             profilesRoutes(this)
         }
     });

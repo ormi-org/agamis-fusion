@@ -6,7 +6,7 @@ import { selectOrganization } from '@core/states/app-state/app-state.selectors';
 import { environment } from '@environments/environment';
 import { v1 as mockRestServerV1 } from '@mocks/server/rest';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -80,16 +80,18 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       ])
     });
-    this.configService.load().then(
-      () => {
-        // nav to original ui; after successful config retrieval
-        this.router.navigate([originalRoute]);
-      },
-      (err: Error) => {
+    this.configService.load()
+    .pipe(
+      catchError((err) => {
         // nav to error page
         this.router.navigate(['/error']);
-      }
-    );
+        return err;
+      })
+    )
+    .subscribe((_) => {
+      // nav to original ui; after successful config retrieval
+      this.router.navigate([originalRoute]);
+    });
   }
 
   ngOnDestroy(): void {
