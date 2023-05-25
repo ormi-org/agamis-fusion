@@ -21,6 +21,6 @@ describe('AppComponent', () => {
   it(`should have as title 'fusion-explorer'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('fusion-explorer');
+    expect(app.title).toEqual('Fusion explorer');
   });
 });

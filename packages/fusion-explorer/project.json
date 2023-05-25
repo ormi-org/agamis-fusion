@@ -98,6 +98,31 @@
       },
       "defaultConfiguration": "development.en"
     },
+    "gen-data": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "",
+      "options": {
+        "cwd": "packages/fusion-explorer/src/mocks/data"
+      },
+      "configurations": {
+        "all": {
+          "commands": [
+            "nx run fusion-explorer:gen-data:organizations",
+            "nx run fusion-explorer:gen-data:profiles",
+            "nx run fusion-explorer:gen-data:users"
+          ]
+        },
+        "organizations": {
+          "command": "synth generate collections/organizations | jq > dist/organizations.json"
+        },
+        "profiles": {
+          "command": "synth generate collections/profiles | jq > dist/profiles.json"
+        },
+        "users": {
+          "command": "synth generate collections/users | jq > dist/users.json"
+        }
+      }
+    },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {

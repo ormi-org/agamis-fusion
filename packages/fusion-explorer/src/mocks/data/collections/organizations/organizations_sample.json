@@ -1,0 +1,21 @@
+{
+    "type": "array",
+    "length": {
+        "type": "number",
+        "subtype": "u64",
+        "constant": 10
+    },
+    "content": {
+        "type": "object",
+        "id": {
+            "type": "string",
+            "uuid": {}
+        },
+        "label": {
+            "type": "string",
+            "faker": {
+                "generator": "company_name"
+            }
+        }
+    }
+}

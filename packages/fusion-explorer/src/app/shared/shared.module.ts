@@ -10,6 +10,7 @@ import { ColumnDirective } from './components/dynamic-table/meta/column/column.d
 import { ErrorComponent } from './pages/error/error.component';
 import { SplashComponent } from './components/splash/splash.component';
 import { LoadingBarComponent } from './components/loading-bar/loading-bar.component';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,7 @@ import { LoadingBarComponent } from './components/loading-bar/loading-bar.compon
     SplashComponent,
     LoadingBarComponent,
   ],
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   exports: [
     CapitalizeFirstPipe,
     IconifyPipe,

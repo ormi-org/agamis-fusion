@@ -1,7 +1,7 @@
 <div [ngClass]="{'global-container': true}">
-    <div [ngClass]="{'header': true}"></div>
+    <!-- <div [ngClass]="{'header': true}"></div> -->
     <div [ngClass]="{'view-container': true}">
-        <shared-splash *ngIf="$loading"/>
-        <router-outlet *ngIf="!$loading"/>
+        <!-- <shared-splash *ngIf="$loading" [nextStageSignalSubject]="lbNextStageSubject"/> -->
+        <router-outlet/>
     </div>
 </div>

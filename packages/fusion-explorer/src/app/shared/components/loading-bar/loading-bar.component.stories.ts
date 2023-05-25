@@ -175,3 +175,118 @@ export const AutoNextTenStagesVariableFillDurationsVariantA = {
     ]
   },
 };
+
+export const SplashDefault = {
+  render: (args: LoadingBarComponent) => ({
+    props: args,
+  }),
+  args: {
+    height: 5,
+    width: 240,
+    nextStageSignalSubject: new BehaviorSubject<void>(undefined),
+    stages: [
+      {
+        fill: 0,
+        autoNext: 500
+      },
+      {
+        fill: 13,
+        fillDuration: 100,
+        autoNext: 400
+      },
+      {
+        fill: 87,
+        fillDuration: 10000,
+        autoNext: 10000
+      },
+      {
+        fill: 100,
+        fillDuration: 300
+      }
+    ]
+  },
+};
+
+export const SplashDefaultCut = {
+  render: (args: LoadingBarComponent) => ({
+    props: args,
+  }),
+  args: {
+    height: 5,
+    width: 240,
+    nextStageSignalSubject: new BehaviorSubject<void>(undefined),
+    stages: [
+      {
+        fill: 0,
+        autoNext: 500
+      },
+      {
+        fill: 13,
+        fillDuration: 100,
+        autoNext: 400
+      },
+      {
+        fill: 87,
+        fillDuration: 10000,
+        autoNext: 2000
+      },
+      {
+        fill: 100,
+        fillDuration: 300
+      }
+    ]
+  },
+};
+
+export const SplashDefaultTimeout = {
+  render: (args: LoadingBarComponent) => ({
+    props: args,
+  }),
+  args: {
+    height: 5,
+    width: 240,
+    nextStageSignalSubject: new BehaviorSubject<void>(undefined),
+    stages: [
+      {
+        fill: 0,
+        autoNext: 500
+      },
+      {
+        fill: 13,
+        fillDuration: 100,
+        autoNext: 400
+      },
+      {
+        fill: 87,
+        fillDuration: 10000,
+        // No autoNext to simulate timeout
+      },
+      {
+        fill: 100,
+        fillDuration: 300
+      }
+    ]
+  },
+};
+
+export const AlternativeColors = {
+  render: (args: LoadingBarComponent) => ({
+    props: args,
+  }),
+  args: {
+    height: 5,
+    width: 240,
+    nextStageSignalSubject: new BehaviorSubject<void>(undefined),
+    stages: [
+      {
+        fill: 0,
+        autoNext: 100,
+      },
+      {
+        fill: 100
+      }
+    ],
+    bgColor: '30f251',
+    fillColor: 'fa84d3'
+  },
+};

@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, Input, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, DoCheck, Input, OnInit } from '@angular/core';
 import { Color } from '@shared/constants/assets';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, switchMap } from 'rxjs';
 import { Stage } from './models/stage.model';
 
 const DEFAULT_STAGES: Stage[] = [
@@ -30,7 +30,7 @@ export class LoadingBarComponent implements AfterViewInit {
   @Input()
   width!: number;
   @Input()
-  nextStageSignalSubject!: BehaviorSubject<void>;
+  nextStageSignalSubject!: Subject<void>;
   @Input()
   stages: Stage[] = DEFAULT_STAGES;
   private currentStage: number = -1;
@@ -41,17 +41,28 @@ export class LoadingBarComponent implements AfterViewInit {
   @Input()
   bgColor: string = Color.PRIMARY_ONE;
 
+  constructor(private cd: ChangeDetectorRef) {}
+
   ngAfterViewInit(): void {
-    this.nextStageSignalSubject.subscribe(() => {
-      this.currentStage += 1;
-      const nextStage = this.stages[this.currentStage];
-      if (nextStage !== undefined) {
-        this.fill = nextStage.fill;
-        this.fillDuration = nextStage.fillDuration || 200;
-        if (nextStage.autoNext) {
-          setTimeout(() => this.nextStageSignalSubject.next(), nextStage.autoNext);
-        }
-      }
+    this.triggerNextStage();
+    this.nextStageSignalSubject
+    .subscribe(() => {
+      this.triggerNextStage();
     });
+  }
+
+  private triggerNextStage(): void {
+    this.currentStage += 1;
+    const nextStage = this.stages[this.currentStage];
+    if (nextStage !== undefined) {
+      this.fill = nextStage.fill;
+      this.fillDuration = nextStage.fillDuration || 200;
+      this.cd.detectChanges();
+      if (nextStage.autoNext !== undefined) {
+        setTimeout(() => {
+          this.nextStageSignalSubject.next();
+        }, nextStage.autoNext);
+      }
+    }
   }
 }

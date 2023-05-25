@@ -12,17 +12,13 @@ import { SharedModule } from '@shared/shared.module';
   declarations: [AppComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-    StoreModule.forRoot({}),
-    CoreModule,
-    SharedModule
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })
   ],
   providers: [
     {
       provide: APP_BASE_HREF,
       useValue: '/app/native/fusion-explorer'
-    },
-    // provideStore({})
+    }
   ],
   bootstrap: [AppComponent],
 })

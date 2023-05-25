@@ -1,16 +1,21 @@
 import { Route } from '@angular/router';
+import { ExplorerComponent } from './explorer.component';
 
 export const explorerRoutes: Route[] = [
   {
-    path: 'admin',
-    loadChildren: () => import('@admin/admin.module').then((module) => module.AdminModule),
+    path: '',
+    component: ExplorerComponent
   },
-  {
-    // Save widget
-    path: 'save',
-  },
-  {
-    // Open widget
-    path: 'open',
-  },
+  // {
+  //   path: 'admin',
+  //   loadChildren: () => import('@admin/admin.module').then((module) => module.AdminModule),
+  // },
+  // {
+  // Save widget
+  // path: 'save',
+  // },
+  // {
+  //   // Open widget
+  //   // path: 'open',
+  // },
 ];

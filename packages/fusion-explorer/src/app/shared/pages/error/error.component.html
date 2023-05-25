@@ -1,1 +1,10 @@
-<p>error works!</p>
+<div [ngClass]="{'main-container': true}">
+    <div [ngClass]="{'error-container': true}">
+        <img src="{{fusionIcon | iconify}}" alt="fusion logo" draggable="false"/>
+        <span>fusion</span>
+    </div>
+    <div ngClass="error-meta">
+        <span ngClass="title">{{ code ? code + " - " : "" }}{{ title | capitalizeFirst }}</span>
+        <span ngClass="text">{{ text | capitalizeFirst }}</span>
+    </div>
+</div>

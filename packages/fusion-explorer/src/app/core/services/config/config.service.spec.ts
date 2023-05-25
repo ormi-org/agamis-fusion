@@ -11,11 +11,17 @@ import * as fromFeature from '@core/states/app-state/app-state.reducers';
 import { loadConfig } from '@core/states/app-state/app-state.actions';
 import { AppConfig } from '@core/models/app-config.model';
 
+const DEFAULT_ENDPOINTS = {
+  AUTH: '/auth',
+  ORGANIZATIONS: '',
+  PROFILES: '',
+  USERS: '',
+}
+
 describe('ConfigService', () => {
   let service: ConfigService;
   let store: Store<AppState>;
   let httpMock: HttpTestingController;
-  const initialState: AppState = {}
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -41,6 +47,7 @@ describe('ConfigService', () => {
       urls: {
         rest: {
           endpoints: {
+            ...DEFAULT_ENDPOINTS,
             AN_ENDPOINT: "/endpoint"
           }
         }
@@ -68,6 +75,7 @@ describe('ConfigService', () => {
       urls: {
         rest: {
           endpoints: {
+            ...DEFAULT_ENDPOINTS,
             A_DEFAULT_ENDPOINT: "/default"
           }
         }

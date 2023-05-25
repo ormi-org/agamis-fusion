@@ -26,18 +26,18 @@ export class ConfigService {
     }
     return this.http.get<AppConfig>('./assets/config/' + env + '.conf.json')
     .pipe(
-      retry(3),
+      retry(2),
       catchError((error) => {
         if (error.status === 0) {
-          console.error('> ConfigService#load(AppConfig) >> an error occured on http request:', error.error);
+          console.warn('> ConfigService#load(AppConfig) >> an error occured on http request:', error.error);
         } else {
-          console.error('> ConfigService#load(AppConfig) >> server returned code %d with body:', error.status, error.error)
+          console.warn('> ConfigService#load(AppConfig) >> server returned code %d with body:', error.status, error.error)
         }
         // load default config, if provided
-        const err = new Error('An error occured while loading application local configuration')
         if (defaults !== undefined) {
           return of(defaults);
         }
+        const err = new Error('An error occured while loading application local configuration');
         return throwError(() => err)
       }),
       tap((fetchedConfig) => {
