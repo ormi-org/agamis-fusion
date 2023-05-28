@@ -90,7 +90,8 @@
             "command": "pnpm nx run fusion-explorer:serve --configuration=development.fr-FR",
             "request": "launch",
             "serverReadyAction": {
-                "action": "debugWithChrome"
+                "action": "debugWithChrome",
+                "killOnServerStop": true
             }
         }
     ]

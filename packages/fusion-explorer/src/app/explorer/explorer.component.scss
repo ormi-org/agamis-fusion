@@ -1,0 +1,29 @@
+@import 'constants/variables';
+@import 'base';
+
+:host {
+    height: 100%;
+}
+
+.explorer-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+$header-size: 36px;
+
+.header {
+    width: 100%;
+    height: $header-size;
+    @include setBgColor(secondary-three);
+    display: flex;
+    align-items: center;
+}
+
+.view-container {
+    height: calc(100% - $header-size);
+    > *:nth-child(1) {
+        height: 100%;
+    }
+}

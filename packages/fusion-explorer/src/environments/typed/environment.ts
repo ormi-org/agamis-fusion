@@ -1,4 +1,5 @@
 export interface Env {
-    production: boolean,
+    production: boolean
     enableMock: boolean
+    baseUrl: string
 }

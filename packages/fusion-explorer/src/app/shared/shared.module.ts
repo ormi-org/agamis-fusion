@@ -11,6 +11,8 @@ import { ErrorComponent } from './pages/error/error.component';
 import { SplashComponent } from './components/splash/splash.component';
 import { LoadingBarComponent } from './components/loading-bar/loading-bar.component';
 import { RouterModule } from '@angular/router';
+import { HeaderComponent } from './components/header/header.component';
+import { SeparatorComponent } from './components/separator/separator.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +26,8 @@ import { RouterModule } from '@angular/router';
     ErrorComponent,
     SplashComponent,
     LoadingBarComponent,
+    HeaderComponent,
+    SeparatorComponent,
   ],
   imports: [CommonModule, RouterModule],
   exports: [
@@ -37,6 +41,8 @@ import { RouterModule } from '@angular/router';
     ErrorComponent,
     SplashComponent,
     LoadingBarComponent,
+    HeaderComponent,
+    SeparatorComponent,
   ],
 })
 export class SharedModule {}

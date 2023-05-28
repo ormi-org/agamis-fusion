@@ -11,7 +11,10 @@ import { appStateCoreFeatureKey, appStateReducer } from './states/app-state/app-
     CommonModule,
     HttpClientModule,
     SharedModule,
-    StoreModule.forFeature(appStateCoreFeatureKey, appStateReducer)
+    StoreModule.forFeature(
+      appStateCoreFeatureKey,
+      appStateReducer
+    )
   ]
 })
 export class CoreModule { }

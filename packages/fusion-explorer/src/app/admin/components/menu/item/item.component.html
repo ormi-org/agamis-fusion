@@ -1,4 +1,4 @@
-<a
+<a [routerLink]="link"
    [ngClass]="{'menu-link': true, 'active': isActive, 'disabled': isActive}">
    <div><img src="{{getIcon() | iconify}}" alt="{{text}}'s icon" #icon></div>
    {{text | capitalizeFirst}}

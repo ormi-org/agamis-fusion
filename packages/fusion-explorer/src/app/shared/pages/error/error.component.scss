@@ -2,7 +2,7 @@
 @import 'base';
 
 .main-container {
-    height: 100%;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,7 +37,7 @@
             font-family: 'Noto Sans', sans-serif;
             font-weight: 800;
             line-height: 62px;
-            @include setColor(secondary-one);
+            @include setColor(primary-one);
         }
 
         > .title {

@@ -8,17 +8,8 @@
     @include setBgColor(primary-three);
 }
 
-$header-size: 36px;
-
-.header {
-    width: 100%;
-    height: $header-size;
-    @include setBgColor(secondary-three);
-}
-
-.view-container {
-    height: calc(100% - $header-size);
-    > *:nth-child(1) {
-        height: 100%;
-    }
+* {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 400;
+    @include setColor(primary-one);
 }

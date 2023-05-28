@@ -16,13 +16,12 @@
 
 @font-face {
     font-family: 'Poppins';
-    font-weight: 800;
-    src: url('../assets/fonts/Poppins-ExtraBold.ttf');
+    font-weight: 600;
+    src: url('../assets/fonts/Poppins-SemiBold.ttf');
 }
 
-
-* {
-    font-family: 'Noto Sans', sans-serif;
-    font-weight: 400;
-    @include setColor(primary-one);
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 800;
+    src: url('../assets/fonts/Poppins-ExtraBold.ttf');
 }

@@ -3,11 +3,17 @@ import { ErrorComponent } from '@shared/pages/error/error.component';
 
 export const appRoutes: Route[] = [
     {
+        path: '',
+        redirectTo: 'explorer',
+        pathMatch: 'full'
+    },
+    {
         path: 'explorer',
         loadChildren: () => import('./explorer/explorer.module').then(module => module.ExplorerModule)
     },
     {
         path: 'error',
+        pathMatch: 'full',
         component: ErrorComponent,
         title: 'Error'
     },

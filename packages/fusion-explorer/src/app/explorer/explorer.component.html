@@ -1,1 +1,9 @@
-<p>explorer works!</p>
+<div [ngClass]="{'explorer-container': true}">
+    <div [ngClass]="{'header': true}">
+        <shared-header/>
+    </div>
+    <div [ngClass]="{'view-container': true}">
+        <shared-splash *ngIf="$loading" [nextStageSignalSubject]="lbNextStageSubject"/>
+        <router-outlet/>
+    </div>
+</div>

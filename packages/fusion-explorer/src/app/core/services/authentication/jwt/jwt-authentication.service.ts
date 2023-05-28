@@ -2,10 +2,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { CoreModule } from '@core/core.module';
 import { UserInfo } from '@core/models/user-info.model';
-import { loadUserInfo } from '@core/states/app-state/app-state.actions';
 import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
 import { Store } from '@ngrx/store';
-import { Observable, catchError, retry, tap, throwError } from 'rxjs';
+import { Observable, catchError, retry, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: CoreModule
@@ -19,7 +18,7 @@ export class JwtAuthenticationService {
     private readonly store: Store,
   ) {
     this.store.select(selectAppConfig).subscribe((conf) => {
-      this.baseUrl = '/'+(conf?.urls.rest.endpoints.AUTH || '');
+      this.baseUrl = '/'+(conf?.urls.rest.endpoints.AUTH);
     });
   }
 
@@ -35,9 +34,6 @@ export class JwtAuthenticationService {
         }
         const err = new Error('An error occured while verifying token');
         return throwError(() => err);
-      }),
-      tap((userInfo) => {
-        this.store.dispatch(loadUserInfo({ userInfo: userInfo }))
       })
     )
   }

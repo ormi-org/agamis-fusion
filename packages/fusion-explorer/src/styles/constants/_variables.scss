@@ -11,6 +11,10 @@ $colors: (
     color: map-get($colors, $colorName);
 }
 
+@mixin setDecorationColor($colorName) {
+    text-decoration-color: map-get($colors, $colorName);
+}
+
 @mixin setBgColor($colorName) {
     background-color: map-get($colors, $colorName);
 }

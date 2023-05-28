@@ -1,6 +1,6 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
-import { ApplicationRef, isDevMode } from '@angular/core';
+import { ApplicationRef } from '@angular/core';
 import { environment } from '@environments/environment';
 import { enableDebugTools } from '@angular/platform-browser';
 

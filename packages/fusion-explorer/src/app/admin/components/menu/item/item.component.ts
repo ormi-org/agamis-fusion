@@ -17,6 +17,8 @@ export class ItemComponent implements AfterViewInit {
     key: Icon.QUESTION_LINE,
     height: '16px',
   };
+  @Input()
+  link?: string[];
 
   protected isActive: boolean = false;
 

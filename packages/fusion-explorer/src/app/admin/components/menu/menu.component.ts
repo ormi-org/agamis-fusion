@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostBinding, Input, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { Icon } from '@shared/constants/assets';
 import { ItemComponent } from './item/item.component';
 
@@ -16,6 +16,9 @@ export class MenuComponent implements AfterViewInit {
 
   @Input() isCollapsed?: boolean = true;
 
+  @Input()
+  height: number = 0;
+
   @ViewChild('menuBody')
   menuBody!: ElementRef<HTMLElement>;
 
@@ -23,7 +26,8 @@ export class MenuComponent implements AfterViewInit {
   menuItems!: QueryList<ItemComponent>;
 
   ngAfterViewInit(): void {
-    this.menuBody.nativeElement.style.maxHeight = this.menuItems.toArray().reduce((acc, i) => acc + i.getHeight(), 0) + 'px';
+    this.menuBody.nativeElement.style.maxHeight = 
+      this.menuItems.toArray().reduce((acc, i) => acc + i.getHeight(), 0) + this.height + 'px';
   }
 
   protected toggleCollapse(): void {

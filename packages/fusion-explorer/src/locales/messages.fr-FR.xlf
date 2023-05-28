@@ -2,7 +2,31 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="fr-FR">
     <body>
-      <trans-unit id="ui.classic.admin.pages.users.table.col.username" datatype="html">
+      <trans-unit id="ui.classic.admin.menu.users" datatype="html">
+        <source>users</source><target state="new">utilisateurs</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.menu.groups" datatype="html">
+        <source>groups</source><target state="new">groupes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.menu.permissions" datatype="html">
+        <source>permissions</source><target state="new">permissions</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.menu.organization" datatype="html">
+        <source>organization</source><target state="new">organisation</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.pages.users.table.col.username" datatype="html">
         <source>username</source><target state="new">nom d'utilisateur</target>
         <context-group purpose="location">
           <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context>
@@ -49,6 +73,15 @@
         <context-group purpose="location">
           <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context>
           <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.explorer.browser.admin-menu.title" datatype="html">
+        <source>administration</source><target state="new">administration</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/explorer/components/browser/browser.component.html</context><context context-type="linenumber">11</context></context-group></trans-unit><trans-unit id="ui.classic.shared.dynamic-table.empty-hint.default" datatype="html">
+        <source>No data</source><target state="new">Aucune donnée</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/components/dynamic-table/dynamic-table.component.ts</context>
+          <context context-type="linenumber">39</context>
         </context-group>
       </trans-unit>
     </body>

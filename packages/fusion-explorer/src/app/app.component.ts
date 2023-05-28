@@ -8,7 +8,6 @@ import { v1 as mockRestServerV1 } from '@mocks/server/rest';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  title = 'Fusion explorer';
 
   ngOnInit(): void {
     if (environment.production === true) {

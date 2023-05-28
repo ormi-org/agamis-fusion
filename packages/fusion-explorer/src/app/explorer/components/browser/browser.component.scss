@@ -1,0 +1,79 @@
+@import "constants/variables";
+@import 'base';
+
+:host {
+    height: 100%;
+}
+
+.browser-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    > .heading-bar-container {
+        height: 38px;
+    }
+
+    > .content-container {
+        display: flex;
+        flex-grow: 1;
+        justify-content: space-between;
+
+        > .left-view {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            flex-shrink: 0;
+            // TODO dyn width
+            width: 507px;
+
+            > .admin-menu-container {
+                max-height: 430px;
+                > admin-menu {
+                    flex-grow: 0;
+                    justify-self: self-end;
+                }
+            }
+        }
+
+        > .mid-view {
+            flex-grow: 1;
+            overflow-x: auto;
+            margin-top: 5px;
+            margin-bottom: 5px;
+
+            .splash {
+                opacity: 20%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                > img {
+                    width: 163px;
+                    height: 201px;
+                    user-select: none;
+                }
+
+                > span {
+                    font-size: 62px;
+                    font-family: 'Poppins', sans-serif;
+                    font-weight: 800;
+                    line-height: 62px;
+                    height: 62px;
+                    margin-top: 6px;
+                    height: fit-content;
+                    @include setColor(primary-one);
+                    user-select: none;
+                }
+            }
+        }
+    }
+
+    > .footer-container {
+        height: 22px;
+    }
+}

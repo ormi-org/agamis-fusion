@@ -3,5 +3,6 @@ import { Env } from "./typed/environment";
 
 export const environment: Env = {
     ...baseEnvironment,
-    production: true
+    production: true,
+    baseUrl: '/app/native/fusion'
 };

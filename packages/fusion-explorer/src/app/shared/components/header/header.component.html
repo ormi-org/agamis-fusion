@@ -1,0 +1,20 @@
+<div ngClass="header-container">
+    <img ngClass="fusion-icon" [src]="fusionIcon | iconify" />
+    <div ngClass="title-container">
+        <div *ngFor="let part of title" ngClass="title-item">
+            <img *ngIf="part.icon"
+                ngClass="item-icon"
+                [src]="part.icon.value | iconify"
+                [ngStyle]="{
+                    'background-color': '#' + part.icon.backgroundColor
+                }">
+            <span ngClass="item-text"
+                [ngStyle]="{
+                    'font-weight': part.style.weight,
+                    'font-style': part.style.emphasis
+                }">
+                {{ part.text }}
+            </span>
+        </div>
+    </div>
+</div>

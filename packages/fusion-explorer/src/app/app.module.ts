@@ -3,21 +3,21 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
 import { appRoutes } from './app.routes';
-import { CoreModule } from '@core/core.module';
-import { StoreModule, provideStore } from '@ngrx/store';
 import { APP_BASE_HREF } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
+import { StoreModule } from '@ngrx/store';
+import { environment } from '@environments/environment';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot({})
   ],
   providers: [
     {
       provide: APP_BASE_HREF,
-      useValue: '/app/native/fusion-explorer'
+      useValue: environment.baseUrl
     }
   ],
   bootstrap: [AppComponent],

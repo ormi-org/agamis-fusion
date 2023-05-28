@@ -1,0 +1,35 @@
+<div ngClass="browser-container">
+    <div ngClass="heading-bar-container">
+        <!-- TODO: heading bar Component -->
+        heading-bar here!
+    </div>
+    <div ngClass="content-container">
+        <div ngClass="left-view">
+            <!-- TODO: filesystem View -->
+            <div></div>
+            <div ngClass="admin-menu-container">
+                <admin-menu text="administration"
+                    i18n-text="@@ui.classic.explorer.browser.admin-menu.title"
+                    [height]="430"
+                    />
+            </div>
+        </div>
+        <shared-separator [direction]="Direction.VERTICAL"
+            [bordering]="5"
+            [color]="'#' + Color.SECONDARY_ONE"
+            [thickness]="1"
+        />
+        <div ngClass="mid-view">
+            <router-outlet #browserContent="outlet"/>
+            <div ngClass="splash" *ngIf="!browserContent.isActivated">
+                <!-- Splash to display for initial loading -->
+                <img src="{{fusionIcon | iconify}}" alt="fusion logo" draggable="false"/>
+                <span>fusion</span>
+            </div>
+        </div>
+    </div>
+    <div ngClass="footer-container">
+        <!-- TODO: footer component -->
+        footer here!
+    </div>
+</div>

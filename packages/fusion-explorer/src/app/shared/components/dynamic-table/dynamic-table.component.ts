@@ -6,9 +6,11 @@ import {
   ElementRef,
   Input,
   OnDestroy,
+  OnInit,
   QueryList,
   ViewChildren,
 } from '@angular/core';
+import '@angular/localize/init';
 import { Column } from './models/column.model';
 import { Row } from './models/row.model';
 import DataSource from './typed/data-source/data-source.interface';
@@ -28,14 +30,14 @@ const DEFAULT_PAGING_SIZE = 10;
   styleUrls: ['./dynamic-table.component.scss'],
 })
 export class DynamicTableComponent<T extends Uniquely>
-  implements OnDestroy, AfterViewInit, AfterContentInit
+  implements OnInit, OnDestroy, AfterViewInit, AfterContentInit
 {
   protected math = Math;
 
   @Input()
   datasource!: DataSource<T>;
   @Input()
-  emptyHint: string = 'No data';
+  emptyHint: string = $localize`:@@ui.classic.shared.dynamic-table.empty-hint.default:No data`;
   @Input()
   filters: Filtering[] = [];
   @Input()
@@ -62,6 +64,15 @@ export class DynamicTableComponent<T extends Uniquely>
 
   constructor(el: ElementRef) {
     this.self = el.nativeElement;
+  }
+
+  ngOnInit(): void {
+    // init startWidth with auto computed width if not set
+    if (this.startWidth === undefined) {
+      this.startWidth = this.self.offsetWidth;
+    }
+    // init width with startWidth
+    this.width = this.startWidth;
   }
 
   ngAfterContentInit(): void {
@@ -107,12 +118,6 @@ export class DynamicTableComponent<T extends Uniquely>
   }
 
   ngAfterViewInit(): void {
-    // init startWidth with auto computed width if not set
-    if (this.startWidth === undefined) {
-      this.startWidth = this.self.offsetWidth;
-    }
-    // init width with startWidth
-    this.width = this.startWidth;
     // init elements reactivity and init again on element changes
     this.initHeadCellsReactivity();
     this.initRowsReactivity();

@@ -1,7 +1,3 @@
-<div [ngClass]="{'global-container': true}">
-    <!-- <div [ngClass]="{'header': true}"></div> -->
-    <div [ngClass]="{'view-container': true}">
-        <!-- <shared-splash *ngIf="$loading" [nextStageSignalSubject]="lbNextStageSubject"/> -->
-        <router-outlet/>
-    </div>
+<div [ngClass]="{'global-container': true}" fxFlex="1 1 auto">
+    <router-outlet/>
 </div>

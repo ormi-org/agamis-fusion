@@ -2,9 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/htt
 import { Injectable } from '@angular/core';
 import { AppConfig } from '../../models/app-config.model';
 import { CoreModule } from '@core/core.module';
-import { Store } from '@ngrx/store';
 import { environment } from '@environments/environment';
-import { loadConfig } from '@core/states/app-state/app-state.actions';
 import { Observable, catchError, of, retry, tap, throwError } from 'rxjs';
 
 @Injectable({
@@ -13,8 +11,7 @@ import { Observable, catchError, of, retry, tap, throwError } from 'rxjs';
 export class ConfigService {
 
   constructor(
-    private http: HttpClient,
-    private readonly store: Store
+    private http: HttpClient
   ) {}
 
   load(defaults?: AppConfig): Observable<AppConfig> {
@@ -39,9 +36,6 @@ export class ConfigService {
         }
         const err = new Error('An error occured while loading application local configuration');
         return throwError(() => err)
-      }),
-      tap((fetchedConfig) => {
-        this.store.dispatch(loadConfig({ config: fetchedConfig }));
       })
     )
   }
