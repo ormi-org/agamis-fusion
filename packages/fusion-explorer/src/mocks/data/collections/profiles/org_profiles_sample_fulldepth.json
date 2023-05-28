@@ -72,6 +72,21 @@
                 "path": "json:sources/permissions.json",
                 "cycle": true
             }
+        },
+        "lastLogin": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time"
+        },
+        "createdAt": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time"
+        },
+        "updatedAt": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time"
         }
     }
 }

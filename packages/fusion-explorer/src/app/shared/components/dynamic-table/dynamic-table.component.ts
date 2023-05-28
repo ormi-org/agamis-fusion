@@ -10,7 +10,6 @@ import {
   QueryList,
   ViewChildren,
 } from '@angular/core';
-import '@angular/localize/init';
 import { Column } from './models/column.model';
 import { Row } from './models/row.model';
 import DataSource from './typed/data-source/data-source.interface';
@@ -95,7 +94,7 @@ export class DynamicTableComponent<T extends Uniquely>
         new BehaviorSubject(c.getWidth())
       );
     });
-    // Cols are defined now push datasource
+    // Cols are defined; now push datasource
     this.datasource.connect().subscribe((updatedVal) => {
       this.rows = updatedVal.map((v, i) => {
         return new Row(

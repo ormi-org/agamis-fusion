@@ -3,7 +3,7 @@
     "length": {
         "type": "number",
         "subtype": "u64",
-        "constant": 10
+        "constant": 1
     },
     "content": {
         "type": "object",
@@ -12,10 +12,46 @@
             "uuid": {}
         },
         "label": {
-            "type": "string",
-            "faker": {
-                "generator": "company_name"
-            }
-        }
+            "type": "one_of",
+            "variants": [
+                {
+                    "weight": 1,
+                    "type": "string",
+                    "constant": "Les héros de Tyrie"
+                }
+            ]
+        },
+        "type_": {
+            "type": "one_of",
+            "variants": [
+                {
+                    "weight": 0.5,
+                    "type": "object",
+                    "content": {
+                        "type": "object",
+                        "id": {
+                            "type": "string",
+                            "uuid": {}
+                        },
+                        "labels": {
+                            "type": "datasource",
+                            "path": "json:./collections/organizations/sources/org-identities/org-identity-1.json",
+                            "cycle": false
+                        },
+                        "createdAt": {
+                            "type": "date_time",
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "subtype": "naive_date_time"
+                        },
+                        "updatedAt": {
+                            "type": "date_time",
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "subtype": "naive_date_time"
+                        }
+                    }
+                }
+            ]
+        },
+        "queryable": "true"
     }
 }

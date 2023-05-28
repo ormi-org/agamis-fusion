@@ -1,12 +1,16 @@
-import { Server } from "miragejs";
+import { Response, Server } from "miragejs";
 import { default as organizations } from "../../data/dist/organizations.json";
 
-const DEFAULT_ORGANIZATION_ID = '649454cb-a859-4ac4-bbce-c0c7c43a999e';
+const DEFAULT_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16';
 
 const organizationsRoutes = (server: Server) => {[
-    server.get(`/organization/:orgId`, (_, request) => {
+    server.get(`/api/v1/organizations/:orgId`, (_, request) => {
         let id = request.params["orgId"];
-        return organizations.organizations_sample.filter(org => org)
+        const org = organizations.organizations_sample.find(org => org.id === id);
+        if (org === undefined) {
+            return new Response(404, {}, { errors: [`organization not found with id:#${id}`] });
+        }
+        return org;
     })
 ]};
 

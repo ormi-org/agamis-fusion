@@ -1,12 +1,13 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { CoreModule } from '@core/core.module';
 import { Organization } from '@core/models/data/organization.model';
 import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, catchError, retry, throwError } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: CoreModule
 })
 export class OrganizationService {
 
@@ -23,5 +24,16 @@ export class OrganizationService {
 
   getOrganizationById(id: string): Observable<Organization> {
     return this.http.get<Organization>(this.baseUrl + '/' + id)
+    .pipe(
+      retry(2),
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 0) {
+          console.warn('> OrganizationService#getOrganizationById(string) >> an error occured on http request:', err.error);
+        } else {
+          console.warn('> OrganizationService#getOrganizationById(string) >> server returned code %d with body:', err.status, err.error);
+        }
+        return throwError(() => err);
+      })
+    )
   }
 }

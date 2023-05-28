@@ -1,6 +1,7 @@
 import { Response, Server, createServer } from 'miragejs';
 import profilesRoutes from './routes/profiles';
 import authRoutes from './routes/auth';
+import organizationsRoutes from './routes/organizations';
 
 export function v1() {
     createServer({
@@ -10,6 +11,7 @@ export function v1() {
             //     new Response(404)
             // )),
             profilesRoutes(this),
+            organizationsRoutes(this),
             authRoutes(this),
             this.passthrough("**")
         }
