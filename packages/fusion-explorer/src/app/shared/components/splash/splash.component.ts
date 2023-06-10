@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
+import { SplashService } from '@core/services/utils/splash/splash.service';
 import { Color, Icon } from '@shared/constants/assets';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Stage as LoadingBarStage } from '../loading-bar/models/stage.model';
 
 @Component({
@@ -29,6 +30,9 @@ export class SplashComponent {
     }
   ];
 
-  @Input()
-  nextStageSignalSubject!: Subject<void>;
+  protected nextStageSignalSubject: Subject<void>;
+
+  constructor(private readonly splashService: SplashService) {
+    this.nextStageSignalSubject = splashService.getNextStageObserver();
+  }
 }

@@ -14,7 +14,6 @@ describe('SplashComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(SplashComponent);
-    fixture.componentInstance.nextStageSignalSubject = new BehaviorSubject<void>(undefined);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

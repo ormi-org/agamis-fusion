@@ -22,6 +22,7 @@ $header-size: 36px;
 }
 
 .view-container {
+    position: relative;
     height: calc(100% - $header-size);
     > *:nth-child(1) {
         height: 100%;

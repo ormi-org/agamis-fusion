@@ -3,7 +3,7 @@
         <shared-header/>
     </div>
     <div [ngClass]="{'view-container': true}">
-        <shared-splash *ngIf="$loading" [nextStageSignalSubject]="lbNextStageSubject"/>
+        <shared-splash *ngIf="(splashService.isLoading() | async)"/>
         <router-outlet/>
     </div>
 </div>
