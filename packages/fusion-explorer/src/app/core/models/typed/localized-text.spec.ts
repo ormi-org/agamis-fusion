@@ -6,19 +6,19 @@ const MAPPINGS: Array<LanguageMapping> = [
         languageId: '2102d805-71c9-45ba-b758-dab3d95928eb',
         textId: '5ef26d66-efcb-4f9c-a329-dd38e2485c48',
         content: 'a test text',
-        languageCode: 'en'
+        languageCode: 'en-US'
     },
     {
         languageId: 'e08c2cf5-4889-43fd-8c03-1ca714525d87',
         textId: '5ef26d66-efcb-4f9c-a329-dd38e2485c48',
         content: 'un texte de test',
-        languageCode: 'fr'
+        languageCode: 'fr-FR'
     }
 ];
 
 const EXPECTED_LOCALIZED_TEXT: LocalizedText = new LocalizedText([
-    ['en', 'a test text'],
-    ['fr', 'un texte de test']
+    ['en-US', 'a test text'],
+    ['fr-FR', 'un texte de test']
 ]);
 
 describe('localized-test', () => {

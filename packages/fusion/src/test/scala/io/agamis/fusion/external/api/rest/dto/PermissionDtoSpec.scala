@@ -45,13 +45,13 @@ class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
           new LanguageMapping(
             UUID.fromString("ce772d05-9f6c-48d8-82ad-139bd67df5e4"),
             UUID.fromString("b24c0669-8977-46a9-ab81-6881912f912d"),
-            "fr",
+            "fr-FR",
             "a french label"
           ),
           new LanguageMapping(
             UUID.fromString("1a913e70-fc7d-4b0f-8935-94462c9d161a"),
             UUID.fromString("ae9236c1-b1a9-44d7-b448-a8ec0cec8c0e"),
-            "en",
+            "en-US",
             "an english label"
           )
         ),
@@ -59,13 +59,13 @@ class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
           new LanguageMapping(
             UUID.fromString("65f2db7c-ba3e-4412-885d-db32035b6c9e"),
             UUID.fromString("cc4c0bbb-67ae-41ac-a776-1e45b5eae444"),
-            "fr",
+            "fr-FR",
             "a french description"
           ),
           new LanguageMapping(
             UUID.fromString("06b49441-f112-47b2-9f32-68291f6d6dbb"),
             UUID.fromString("ee8e7789-b6e8-46aa-b64d-40022957dab6"),
-            "en",
+            "en-US",
             "an english description"
           )
         ),
@@ -91,13 +91,13 @@ class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
           new LanguageMapping(
             UUID.fromString("ce772d05-9f6c-48d8-82ad-139bd67df5e4"),
             UUID.fromString("b24c0669-8977-46a9-ab81-6881912f912d"),
-            "fr",
+            "fr-FR",
             "a french label"
           ),
           new LanguageMapping(
             UUID.fromString("1a913e70-fc7d-4b0f-8935-94462c9d161a"),
             UUID.fromString("ae9236c1-b1a9-44d7-b448-a8ec0cec8c0e"),
-            "en",
+            "en-US",
             "an english label"
           )
         ),
@@ -105,13 +105,13 @@ class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
           new LanguageMapping(
             UUID.fromString("65f2db7c-ba3e-4412-885d-db32035b6c9e"),
             UUID.fromString("cc4c0bbb-67ae-41ac-a776-1e45b5eae444"),
-            "fr",
+            "fr-FR",
             "a french description"
           ),
           new LanguageMapping(
             UUID.fromString("06b49441-f112-47b2-9f32-68291f6d6dbb"),
             UUID.fromString("ee8e7789-b6e8-46aa-b64d-40022957dab6"),
-            "en",
+            "en-US",
             "an english description"
           )
         ),

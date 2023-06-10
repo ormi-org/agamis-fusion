@@ -2,8 +2,9 @@ import { Component, Input, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { Icon } from '@shared/constants/assets';
-import { Ordering } from '@shared/constants/utils/ordering';
+import { DefinedOrdering, Ordering } from '@shared/constants/utils/ordering';
 import { Column } from '../models/column.model';
+import Sorting from '../typed/data-source/typed/sorting.interface';
 
 @Component({
   selector: 'shared-dyntable-head-cell',
@@ -25,17 +26,16 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   protected orderingEnum: typeof Ordering = Ordering;
   protected orderingIcon: Icon = Icon.ARROW;
   // Init ordering subject
-  private orderingSubject: Subject<Ordering> = new Subject();
+  private orderingSubject: Subject<DefinedOrdering> = new Subject();
   // Init resizing subject (key, newWidth, moveDelta)
   private resizingSubject: Subject<[string, number, number]> = new Subject();
   private resizing: boolean = false;
 
   constructor(private renderer: Renderer2) {
-    // Init ordering subject value and reversed subscription
-    this.orderingSubject.next(this.associatedColumn.ordering);
-    this.orderingSubject.subscribe((updatedVal) => {
-      this.associatedColumn.ordering = updatedVal;
-    });
+    // Init ordering subject value with specified one
+    if (this.associatedColumn.ordering !== Ordering.NONE) {
+      this.orderingSubject.next(this.associatedColumn.ordering);
+    }
   }
 
   ngOnInit(): void {
@@ -46,16 +46,16 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   }
 
   protected switchOrdering(): void {
-    this.orderingSubject.next(
-      (() => {
-        switch (this.associatedColumn.ordering) {
-          case Ordering.ASC:
-            return Ordering.DESC;
-          default:
-            return Ordering.ASC;
-        }
-      })()
-    );
+    var newOrdering = (() => {
+      switch (this.associatedColumn.ordering) {
+        case Ordering.ASC:
+          return Ordering.DESC;
+        default:
+          return Ordering.ASC;
+      }
+    })();
+    this.associatedColumn.ordering = newOrdering;
+    this.orderingSubject.next(newOrdering);
   }
 
   protected isResizable(): boolean {
@@ -96,11 +96,11 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
     return this.resizingSubject.asObservable();
   }
 
-  public getOrdering(): Observable<Ordering> {
+  public getOrdering(): Observable<DefinedOrdering> {
     return this.orderingSubject.asObservable();
   }
 
   public clearOrdering(): void {
-    this.orderingSubject.next(Ordering.NONE);
+    this.associatedColumn.ordering = Ordering.NONE;
   }
 }

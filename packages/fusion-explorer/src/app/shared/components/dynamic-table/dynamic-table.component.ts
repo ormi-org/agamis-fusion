@@ -18,8 +18,9 @@ import { HeadCellComponent } from './head-cell/head-cell.component';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { ColumnDirective } from './meta/column/column.directive';
 import Filtering from './typed/data-source/typed/filtering.interface';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { RowComponent } from './row/row.component';
+import Sorting from './typed/data-source/typed/sorting.interface';
 
 const DEFAULT_PAGING_SIZE = 10;
 
@@ -32,6 +33,7 @@ export class DynamicTableComponent<T extends Uniquely>
   implements OnInit, OnDestroy, AfterViewInit, AfterContentInit
 {
   protected math = Math;
+  private sortEvent: Subject<Sorting> = new Subject();
 
   @Input()
   datasource!: DataSource<T>;
@@ -105,15 +107,6 @@ export class DynamicTableComponent<T extends Uniquely>
         );
       });
     });
-    this.datasource.load(
-      this.filters,
-      {
-        field: orderedCol.getKey(),
-        direction: <Ordering.ASC | Ordering.DESC>orderedCol.getOrder(),
-      },
-      1,
-      DEFAULT_PAGING_SIZE
-    );
   }
 
   ngAfterViewInit(): void {
@@ -147,27 +140,17 @@ export class DynamicTableComponent<T extends Uniquely>
     this.headCellsElements.toArray().forEach((headCell) => {
       // Handling ordering event firing
       headCell.getOrdering().subscribe((updatedValue) => {
-        if (updatedValue !== Ordering.NONE) {
           // If new value is different from NONE
           // Then broadcast a clearOrdering on other headCells
-          this.headCellsElements
-            .toArray()
-            .filter((_) => _ !== headCell)
-            .forEach((_) => _.clearOrdering());
-          // Load with new order
-          // TODO: add filtering save
-          this.datasource.load(
-            this.filters,
-            {
-              field: headCell.associatedColumn.key,
-              direction: <Ordering.ASC | Ordering.DESC>(
-                headCell.associatedColumn.ordering
-              ),
-            },
-            1,
-            DEFAULT_PAGING_SIZE
-          );
-        }
+        this.headCellsElements
+          .toArray()
+          .filter((_) => _ !== headCell)
+          .forEach((_) => _.clearOrdering());
+        // fire sorting action event
+        this.sortEvent.next({
+          direction: updatedValue,
+          field: headCell.associatedColumn.key
+        });
       });
       // Handling resizing event firing
       headCell.getResizing().subscribe((updatedValue) => {

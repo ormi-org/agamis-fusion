@@ -20,4 +20,4 @@ export const explorerStateReducer = createReducer(
             organization: action.organization
         }
     ))
-)
+);

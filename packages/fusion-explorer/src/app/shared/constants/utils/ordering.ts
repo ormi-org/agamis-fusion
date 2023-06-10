@@ -3,3 +3,5 @@ export enum Ordering {
     NONE = 0,
     ASC = 1
 }
+
+export type DefinedOrdering = Ordering.ASC | Ordering.DESC;

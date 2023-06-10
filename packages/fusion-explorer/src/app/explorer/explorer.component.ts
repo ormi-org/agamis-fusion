@@ -9,6 +9,10 @@ import { Subject, catchError, of, tap, throwError, zip } from 'rxjs';
 import { setOrganization } from './states/explorer-state/explorer-state.actions';
 import { Organization } from '@core/models/data/organization.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { LocalStorageService } from '@core/services/utils/local-storage.service';
+import { LocalStorageError, LocalStorageSuccess } from '@core/models/local-storage/local-storage-result.model';
+
+const LS_ORG_ID_KEY = 'app.native.fusion.explorer.orgid';
 
 @Component({
   selector: 'explorer',
@@ -24,15 +28,29 @@ export class ExplorerComponent implements AfterViewInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly store: Store,
+    private readonly localStorageService: LocalStorageService,
     private readonly configService: ConfigService,
     private readonly jwtAuthService: JwtAuthenticationService,
     private readonly organizationService: OrganizationService
   ) {}
 
+  getOrgIdFromEitherQueryParamOrLocalStorage(): string {
+    const orgIdFromQueryParams = this.route.snapshot.queryParamMap.get('orgId');
+    const orgIdResultFromLocalStorage = this.localStorageService.get<string>(LS_ORG_ID_KEY);
+    if (orgIdFromQueryParams === null && orgIdResultFromLocalStorage.result === 'error') {
+      const msg = 'could not get organization id';
+      console.error('>> ExplorerComponent#getOrgIdFromEitherQueryParamOrLocalStorage > could not get organization id');
+      throw new Error('could not get organization id');
+    }
+    return orgIdFromQueryParams || (<LocalStorageSuccess<string>>orgIdResultFromLocalStorage).item;
+  }
+
   ngAfterViewInit(): void {
-    // 0. check if orgId is provided; otherwise redirect to bad request
-    const orgId = this.route.snapshot.queryParamMap.get('orgId');
-    if (orgId === null) {
+    // 0. check if orgId is provided (or contained in localStorage); otherwise redirect to bad request
+    let orgId: string;
+    try {
+      orgId = this.getOrgIdFromEitherQueryParamOrLocalStorage();
+    } catch (error) {
       this.router.navigateByUrl('/error', { state: { code: 400, title: 'bad request', text: $localize`:@@client.messages.errors.input.no-organization-id:no organization identifier provided` } })
       return;
     }
@@ -63,7 +81,8 @@ export class ExplorerComponent implements AfterViewInit {
         this.organizationService.getOrganizationById(orgId)
         .pipe(
           tap((org: Organization) => {
-            this.store.dispatch(setOrganization({ organization: org }))
+            this.store.dispatch(setOrganization({ organization: org }));
+            this.localStorageService.set(LS_ORG_ID_KEY, org.id);
           }),
           catchError((err: HttpErrorResponse) => {
             if (err.status === 404) {

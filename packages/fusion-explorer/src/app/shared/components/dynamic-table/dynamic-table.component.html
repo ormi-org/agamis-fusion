@@ -12,7 +12,7 @@
     </div>
     <ng-template #elseBlock>
         <div [ngClass]="{'empty-hint': true}">
-            {{ emptyHint }}
+            {{ emptyHint | capitalizeFirst }}
         </div>
     </ng-template>
 </div>

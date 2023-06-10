@@ -1,22 +1,30 @@
-import { Component } from '@angular/core';
-import { UserDatasource } from './datasources/user.datasource';
-import { UserService } from '@core/services/user/user.service';
+import { Component, OnInit } from '@angular/core';
+import { UserTableDatasource } from './datasources/user-table.datasource';
 import { Ordering } from '@shared/constants/utils/ordering';
+import { Store } from '@ngrx/store';
+import { ProfileService } from '@core/services/profile/profile.service';
+import Sorting from '@shared/components/dynamic-table/typed/data-source/typed/sorting.interface';
 
 @Component({
   selector: 'admin-page-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
-export class UsersComponent {
+export class UsersComponent implements OnInit {
   protected Ordering = Ordering;
   
-  private userService: UserService;
-  
-  protected userDatasource: UserDatasource;
+  protected tableDatasource: UserTableDatasource;
 
-  constructor(userService: UserService) {
-    this.userService = userService;
-    this.userDatasource = new UserDatasource(this.userService);
+  constructor(private profileService: ProfileService, private readonly _: Store) {
+    this.tableDatasource = new UserTableDatasource(_, this.profileService);
+  }
+
+  ngOnInit(): void {
+    // this.tableDatasource.load(
+    //   [],
+    //   {
+    //     field: 
+    //   }
+    // )
   }
 }
