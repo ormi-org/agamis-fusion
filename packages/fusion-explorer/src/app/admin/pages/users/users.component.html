@@ -1,5 +1,5 @@
-<div>
-    <shared-dyntable [datasource]="tableDatasource">
+<div #pageContainer>
+    <shared-dyntable [datasource]="tableDatasource" [minWidth]="1200">
         <shared-dyntable-column
             key="username"
             title="username"
@@ -30,17 +30,18 @@
             i18n-title="@@ui.classic.admin.pages.users.table.col.last-seen"
             [resizable]="true"
             [initOrder]="Ordering.ASC"
-            [width]="120"/>
+            [width]="170"/>
         <shared-dyntable-column
             key="updatedAt"
             title="last updated"
             i18n-title="@@ui.classic.admin.pages.users.table.col.last-updated"
             [resizable]="true"
-            [width]="120"/>
+            [width]="200"/>
         <shared-dyntable-column
             key="createdAt"
             title="created on"
             i18n-title="@@ui.classic.admin.pages.users.table.col.created-on"
-            [resizable]="false"/>
+            [resizable]="true"
+            [width]="120"/>
     </shared-dyntable>
 </div>

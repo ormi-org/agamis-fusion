@@ -7,9 +7,6 @@ div.table {
         align-items: stretch;
         width: 100%;
         > * {
-            &:last-child {
-                flex: 1;
-            }
             &.resizable {
                 border-right: 1px solid;
                 border-right-color: map-get($colors, secondary-one);
@@ -17,12 +14,12 @@ div.table {
         }
     }
     > div.empty-hint {
+        padding-left: 30px;
         padding-top: 10px;
         height: 28px;
         font-size: 12px;
         display: flex;
         align-items: center;
-        justify-content: space-around;
         color: map-get($colors, secondary-one);
     }
 }

@@ -1,6 +1,6 @@
 <div [ngClass]="{'head-cell': true}"
     (click)="switchOrdering()"
-    [ngStyle]="{'width': colWidth != 0 ? colWidth + 'px' : 'auto'}"
+    [ngStyle]="{'width': colWidth != 0 ? -40 + colWidth + 'px' : 'auto'}"
 >
   <span>
     {{ getValue() | capitalizeFirst }}

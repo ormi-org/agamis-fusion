@@ -13,13 +13,13 @@ import Sorting from '../typed/data-source/typed/sorting.interface';
 })
 export class HeadCellComponent implements HeadCellDefinition, OnInit {
   @Input()
-  associatedColumn: Column = {
-    key: "undefined",
-    resizable: false,
-    value: "undefined text",
-    ordering: Ordering.NONE,
-    widthSubject: new BehaviorSubject(0)
-  };
+  associatedColumn: Column = new Column(
+    "undefined",
+    "undefined text",
+    false,
+    Ordering.NONE,
+    new BehaviorSubject(0)
+  );
 
   protected colWidth!: number;
 

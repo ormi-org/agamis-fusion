@@ -22,8 +22,12 @@ export class SeparatorComponent implements AfterContentInit {
   protected paddingRight!: number;
 
   @HostBinding('style.height')
+  @HostBinding('style.min-height')
+  @HostBinding('style.max-height')
   protected height!: string;
   @HostBinding('style.width')
+  @HostBinding('style.min-width')
+  @HostBinding('style.max-width')
   protected width!: string;
 
   ngAfterContentInit(): void {
