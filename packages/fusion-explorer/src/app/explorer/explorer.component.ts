@@ -8,5 +8,8 @@ import { SplashService } from '@core/services/utils/splash/splash.service';
 })
 export class ExplorerComponent {
 
-  constructor(protected readonly splashService: SplashService) {}
+  constructor(protected readonly splashService: SplashService) {
+    // reset loading-bar
+    splashService.reset();
+  }
 }

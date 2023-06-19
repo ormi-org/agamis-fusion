@@ -5,10 +5,10 @@ import { Store } from "@ngrx/store";
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
 import Filtering from "@shared/components/dynamic-table/typed/data-source/typed/filtering.interface";
 import Sorting from "@shared/components/dynamic-table/typed/data-source/typed/sorting.interface";
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, map, Observable, ReplaySubject, skipWhile, Subject } from "rxjs";
 
 export class UserTableDatasource implements DataSource<Profile> {
-    private orgId: string | undefined;
+    private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject();
     private profilesSubject = new BehaviorSubject<Profile[]>([]);
     private loadingSubject = new BehaviorSubject<boolean>(false);
 
@@ -18,28 +18,41 @@ export class UserTableDatasource implements DataSource<Profile> {
         private readonly store: Store,
         private profileService: ProfileService
     ) {
-        this.store.select(selectOrganization).subscribe((org) => {
-            this.orgId = org?.id;
-        });
+        // attach subject to observable orgId
+        this.store
+            .select(selectOrganization)
+            .pipe(
+                skipWhile(_ => !_),
+                map((org) => {
+                    return org?.id
+                })
+            )
+            .subscribe(this.orgIdSub);
     }
 
     connect(): Observable<Profile[]> {
         return this.profilesSubject.asObservable();
     }
+    
     disconnect(): void {
         this.profilesSubject.complete();
         this.loadingSubject.complete();
     }
+
     load(filters: Filtering[], sorting: Sorting, pageIndex: number, pageSize: number): void {
-        if (this.orgId === undefined) {
-            this.profilesSubject.next([]);
-            return;
-        }
-        this.loadingSubject.next(true);
-        this.profileService.fetchUserProfilesFromOrganization(this.orgId, {
-            filters, sorting, pageIndex, pageSize
-        }).subscribe((profiles) => {
-            this.profilesSubject.next(profiles);
-        })
+        // wait for orgId to be populated from store
+        this.orgIdSub.subscribe(orgId => {
+            if (orgId === undefined) {
+                // return empty set if orgId is not defined
+                this.profilesSubject.next([]);
+                return;
+            }
+            this.loadingSubject.next(true);
+            this.profileService.fetchUserProfilesFromOrganization(orgId, {
+                filters, sorting, pageIndex, pageSize
+            }).subscribe((profiles) => {
+                this.profilesSubject.next(profiles);
+            });
+        });
     }
 }

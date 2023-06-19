@@ -32,8 +32,6 @@ export class DynamicTableComponent<T extends Uniquely>
   emptyHint: string = $localize`:@@ui.classic.shared.dynamic-table.empty-hint.default:No data`;
   @Input()
   filters: Filtering[] = [];
-  @Input()
-  minWidth!: number;
 
   private width!: number;
 
@@ -59,7 +57,6 @@ export class DynamicTableComponent<T extends Uniquely>
 
   ngOnInit(): void {
     // Set initial width
-    this.width = Math.max(this.host.nativeElement.offsetWidth, this.minWidth);
   }
 
   ngAfterContentInit(): void {
@@ -140,13 +137,10 @@ export class DynamicTableComponent<T extends Uniquely>
       });
       // Handling resizing event firing
       headCell.getResizing().subscribe((updatedValue) => {
-        // if new width is not below set minimum
-        if (this.width + updatedValue[2] >= this.minWidth) {
-          // update corresponding column width
-          this.columns
-          .find(_ => _.key === updatedValue[0])
-          ?.widthSubject.next(updatedValue[1]);
-        }
+        // update corresponding column width
+        this.columns
+        .find(_ => _.key === updatedValue[0])
+        ?.widthSubject.next(updatedValue[1]);
       })
     });
   }

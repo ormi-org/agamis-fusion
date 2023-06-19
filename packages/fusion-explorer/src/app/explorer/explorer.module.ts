@@ -12,6 +12,7 @@ import {
 } from './states/explorer-state/explorer-state.reducers';
 import { BrowserComponent } from './components/browser/browser.component';
 import { AdminModule } from '@admin/admin.module';
+import { LoadingService } from './utils/loading/loading.service';
 
 @NgModule({
   declarations: [
@@ -29,5 +30,8 @@ import { AdminModule } from '@admin/admin.module';
       explorerStateReducer
     ),
   ],
+  providers: [
+    LoadingService
+  ]
 })
 export class ExplorerModule {}

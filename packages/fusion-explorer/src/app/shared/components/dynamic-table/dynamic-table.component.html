@@ -1,4 +1,4 @@
-<div #tableContainer [ngClass]="{'table': true}" [ngStyle]="{'min-width': minWidth + 'px'}">
+<div #tableContainer [ngClass]="{'table': true}">
     <div [ngClass]="{'table-head': true}">
         <shared-dyntable-head-cell [ngClass]="{'resizable': col.resizable}" *ngFor="let col of columns"
             [associatedColumn]="col"/>
@@ -11,7 +11,7 @@
             [cellsWidths]="getColumnsWidthsAsync"/>
     </div>
     <ng-template #elseBlock>
-        <div [ngClass]="{'empty-hint': true}" [ngStyle]="{'width': minWidth + 'px'}">
+        <div [ngClass]="{'empty-hint': true}">
             {{ emptyHint | capitalizeFirst }}
         </div>
     </ng-template>

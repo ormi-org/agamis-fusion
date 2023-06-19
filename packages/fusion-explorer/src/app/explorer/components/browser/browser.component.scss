@@ -12,6 +12,8 @@
 
     > .heading-bar-container {
         height: 38px;
+        display: flex;
+        flex-direction: column;
     }
 
     > .content-container {

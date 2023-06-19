@@ -15,7 +15,7 @@ import { catchError, throwError, tap, zip, of, Subscription } from 'rxjs';
 
 const LS_ORG_ID_KEY = 'app.native.fusion.explorer.orgid';
 
-export const preparationDataResolver: ResolveFn<Subscription | undefined> = (route, state) => {
+export const preparationDataResolver: ResolveFn<Subscription | undefined> = (route, _) => {
   // injections
   const router = inject(Router);
   const store = inject(Store);

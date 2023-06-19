@@ -10,15 +10,10 @@ import { BehaviorSubject } from 'rxjs';
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
-export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
+export class UsersComponent implements OnInit {
   protected Ordering = Ordering;
   
   protected tableDatasource: UserTableDatasource;
-  protected resizeObs!: ResizeObserver;
-  protected width: BehaviorSubject<number> = new BehaviorSubject(0);
-
-  @ViewChild('pageContainer', {read: ElementRef})
-  private pageContainerRef!: ElementRef;
 
   constructor(
     private profileService: ProfileService,
@@ -28,23 +23,15 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // this.tableDatasource.load(
-    //   [],
-    //   {
-    //     field: 
-    //   }
-    // )
-  }
-
-  ngAfterViewInit(): void {
-    this.width.next(this.pageContainerRef.nativeElement.offsetWidth);
-    this.resizeObs = new ResizeObserver(entries => {
-      this.width.next(entries[0].contentRect.width);
-    });
-    this.resizeObs.observe(this.pageContainerRef.nativeElement);
-  }
-
-  ngOnDestroy(): void {
-    this.resizeObs.unobserve(this.pageContainerRef.nativeElement);
+    // initial fetching
+    this.tableDatasource.load(
+      [],
+      {
+        field: "lastLogin",
+        direction: Ordering.ASC
+      },
+      1,
+      25
+    )
   }
 }

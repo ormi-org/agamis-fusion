@@ -1,6 +1,6 @@
-import { AfterViewInit, ChangeDetectorRef, Component, DoCheck, Input, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Color } from '@shared/constants/assets';
-import { BehaviorSubject, Observable, Subject, switchMap } from 'rxjs';
+import { Subject } from 'rxjs';
 import { Stage } from './models/stage.model';
 
 const DEFAULT_STAGES: Stage[] = [
@@ -55,6 +55,7 @@ export class LoadingBarComponent implements AfterViewInit {
     this.currentStage += 1;
     const nextStage = this.stages[this.currentStage];
     if (nextStage !== undefined) {
+      // go to next stage
       this.fill = nextStage.fill;
       this.fillDuration = nextStage.fillDuration || 200;
       this.cd.detectChanges();

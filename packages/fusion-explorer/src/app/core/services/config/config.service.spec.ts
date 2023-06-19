@@ -2,14 +2,13 @@ import { TestBed } from '@angular/core/testing';
 
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { CoreModule } from '@core/core.module';
-import { AppState } from '@core/models/states/app-state.model';
-import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
-import { Store, StoreModule, combineReducers, select } from '@ngrx/store';
-import { Observable, catchError, filter } from 'rxjs';
-import { ConfigService } from './config.service';
-import * as fromFeature from '@core/states/app-state/app-state.reducers';
-import { loadConfig } from '@core/states/app-state/app-state.actions';
 import { AppConfig } from '@core/models/app-config.model';
+import { AppState } from '@core/models/states/app-state.model';
+import { loadConfig } from '@core/states/app-state/app-state.actions';
+import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
+import { select, Store, StoreModule } from '@ngrx/store';
+import { filter } from 'rxjs';
+import { ConfigService } from './config.service';
 
 const DEFAULT_ENDPOINTS = {
   AUTH: '/auth',
@@ -26,9 +25,7 @@ describe('ConfigService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        StoreModule.forRoot({
-          feature: combineReducers(fromFeature.appStateReducer)
-        }),
+        StoreModule.forRoot({}),
         CoreModule,
         HttpClientTestingModule,
       ]

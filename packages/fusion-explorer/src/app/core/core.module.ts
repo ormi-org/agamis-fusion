@@ -10,7 +10,7 @@ import { appStateCoreFeatureKey, appStateReducer } from './states/app-state/app-
   imports: [
     CommonModule,
     HttpClientModule,
-    SharedModule,
+    // SharedModule,
     StoreModule.forFeature(
       appStateCoreFeatureKey,
       appStateReducer

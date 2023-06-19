@@ -1,4 +1,8 @@
-<div ngClass="frame" [ngStyle]="{'height.px': height, 'width.px': width, 'background-color': '#' + bgColor}">
+<div ngClass="frame" [ngStyle]="{
+    'height.px': height,
+    'width': width !== 0 ? width+'px' : '100%',
+    'background-color': '#' + bgColor
+}">
     <div ngClass="fill" [ngStyle]="{
         'height.px': height,
         'width.%': fill,

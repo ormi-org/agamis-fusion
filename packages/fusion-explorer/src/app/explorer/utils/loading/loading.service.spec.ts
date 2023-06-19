@@ -1,20 +1,20 @@
 import { TestBed } from '@angular/core/testing';
-
-import { UserService } from './user.service';
-import { CoreModule } from '@core/core.module';
+import { ExplorerModule } from '@explorer/explorer.module';
 import { StoreModule } from '@ngrx/store';
 
-describe('UserService', () => {
-  let service: UserService;
+import { LoadingService } from './loading.service';
+
+describe('LoadingService', () => {
+  let service: LoadingService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
         StoreModule.forRoot({}),
-        CoreModule
+        ExplorerModule
       ]
     });
-    service = TestBed.inject(UserService);
+    service = TestBed.inject(LoadingService);
   });
 
   it('should be created', () => {
