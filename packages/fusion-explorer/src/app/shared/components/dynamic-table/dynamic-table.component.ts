@@ -73,9 +73,7 @@ export class DynamicTableComponent<T extends Uniquely>
     // Callback for updating table width based on all col widths,
     // on any col resize
     combineLatest(this.columns.map((col) => col.widthSubject)).subscribe((updatedColWidths) => {
-      // console.log(updatedColWidths);
       this.host.nativeElement.style.width = updatedColWidths.reduce((acc, width) => acc + width, 0) + 'px';
-      console.log(this.host.nativeElement.style.width);
     });
     // Cols are defined; now push datasource
     this.datasource.connect().subscribe((updatedVal) => {
