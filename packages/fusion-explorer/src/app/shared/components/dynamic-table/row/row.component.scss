@@ -12,8 +12,9 @@ div.row {
         &:last-child {
             flex: 1;
         }
-        margin-left: 12px;
-        margin-right: 12px;
+        box-sizing: border-box;
+        padding-left: 12px;
+        padding-right: 12px;
     }
 
     &:hover, &.selected {

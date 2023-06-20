@@ -4,6 +4,8 @@
 div.cell {
     display: flex;
     align-items: center;
+    align-self: baseline;
+    box-sizing: border-box;
     padding: 9px 8px 9px 8px;
     font-size: 12px;
     // region text overflow start

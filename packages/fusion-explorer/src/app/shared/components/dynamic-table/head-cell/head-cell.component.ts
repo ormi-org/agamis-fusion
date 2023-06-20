@@ -1,10 +1,11 @@
-import { Component, Input, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { Icon } from '@shared/constants/assets';
 import { DefinedOrdering, Ordering } from '@shared/constants/utils/ordering';
 import { Column } from '../models/column.model';
-import Sorting from '../typed/data-source/typed/sorting.interface';
+
+const MIN_WIDTH = 50;
 
 @Component({
   selector: 'shared-dyntable-head-cell',
@@ -21,7 +22,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
     new BehaviorSubject(0)
   );
 
-  protected colWidth!: number;
+  private colWidth!: number;
 
   protected orderingEnum: typeof Ordering = Ordering;
   protected orderingIcon: Icon = Icon.ARROW;
@@ -31,7 +32,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   private resizingSubject: Subject<[string, number, number]> = new Subject();
   private resizing: boolean = false;
 
-  constructor(private renderer: Renderer2) {
+  constructor(private renderer: Renderer2, private host: ElementRef) {
     // Init ordering subject value with specified one
     if (this.associatedColumn.ordering !== Ordering.NONE) {
       this.orderingSubject.next(this.associatedColumn.ordering);
@@ -42,6 +43,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
     // Init width value and subscribe to changes
     this.associatedColumn.widthSubject.subscribe((updatedValue) => {
       this.colWidth = updatedValue;
+      this.host.nativeElement.style.width = updatedValue + 'px';
     });
   }
 
@@ -77,7 +79,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
     let resizableMousemove = this.renderer.listen('document', 'mousemove', (event: MouseEvent) => {
       if (this.resizing) {
         const deltaX = event.pageX - startX;
-        const newWidth = startWidth + deltaX;
+        const newWidth = Math.max(startWidth + deltaX, MIN_WIDTH);
         this.resizingSubject.next([this.associatedColumn.key, newWidth, - (previousDelta - deltaX)]);
         previousDelta = deltaX;
       }

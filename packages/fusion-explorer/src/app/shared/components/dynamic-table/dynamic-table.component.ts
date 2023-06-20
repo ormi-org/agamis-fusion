@@ -2,17 +2,16 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, Renderer2, ViewChildren
+  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, combineLatest, Subject } from 'rxjs';
 import { HeadCellComponent } from './head-cell/head-cell.component';
 import { ColumnDirective } from './meta/column/column.directive';
 import { Column } from './models/column.model';
 import { Row } from './models/row.model';
 import { RowComponent } from './row/row.component';
 import DataSource from './typed/data-source/data-source.interface';
-import Filtering from './typed/data-source/typed/filtering.interface';
 import Sorting from './typed/data-source/typed/sorting.interface';
 import { Uniquely } from './typed/uniquely.interface';
 
@@ -22,7 +21,7 @@ import { Uniquely } from './typed/uniquely.interface';
   styleUrls: ['./dynamic-table.component.scss'],
 })
 export class DynamicTableComponent<T extends Uniquely>
-  implements OnInit, OnDestroy, AfterViewInit, AfterContentInit
+  implements OnDestroy, AfterViewInit, AfterContentInit
 {
   private sortEvent: Subject<Sorting> = new Subject();
 
@@ -30,10 +29,6 @@ export class DynamicTableComponent<T extends Uniquely>
   datasource!: DataSource<T>;
   @Input()
   emptyHint: string = $localize`:@@ui.classic.shared.dynamic-table.empty-hint.default:No data`;
-  @Input()
-  filters: Filtering[] = [];
-
-  private width!: number;
 
   protected columns: Array<Column> = [];
   protected getColumnsWidthsAsync: () => [string, BehaviorSubject<number>][] =
@@ -55,10 +50,6 @@ export class DynamicTableComponent<T extends Uniquely>
     private host: ElementRef
   ) {}
 
-  ngOnInit(): void {
-    // Set initial width
-  }
-
   ngAfterContentInit(): void {
     const colDefs = this.columnsDef.toArray();
     const orderedCol = colDefs.find((c) => {
@@ -78,6 +69,13 @@ export class DynamicTableComponent<T extends Uniquely>
         c.getOrder(),
         new BehaviorSubject(c.getWidth())
       )
+    });
+    // Callback for updating table width based on all col widths,
+    // on any col resize
+    combineLatest(this.columns.map((col) => col.widthSubject)).subscribe((updatedColWidths) => {
+      // console.log(updatedColWidths);
+      this.host.nativeElement.style.width = updatedColWidths.reduce((acc, width) => acc + width, 0) + 'px';
+      console.log(this.host.nativeElement.style.width);
     });
     // Cols are defined; now push datasource
     this.datasource.connect().subscribe((updatedVal) => {

@@ -13,16 +13,16 @@ export default {
     viewport: {
       viewports: {
         ...customViewport,
-        ...MINIMAL_VIEWPORTS
+        ...MINIMAL_VIEWPORTS,
       },
-      defaultViewport: 'shared-dyntable-default'
-    }
+      defaultViewport: 'shared-dyntable-default',
+    },
   },
   decorators: [
     moduleMetadata({
-      imports: [SharedModule]
-    })
-  ]
+      imports: [SharedModule],
+    }),
+  ],
 } as Meta<DynamicTableComponent<any>>;
 
 export const Default = {
@@ -52,10 +52,11 @@ export const Default = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
@@ -90,10 +91,11 @@ export const OrderedBySecondColumn = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
@@ -129,10 +131,11 @@ export const Empty = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf([]),
@@ -169,10 +172,11 @@ export const EmptyWithCustomHint = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf([]),
@@ -201,10 +205,11 @@ export const MissingColumn = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
@@ -216,7 +221,7 @@ export const FilteredColumn = {
   render: (args: DynamicTableComponent<any>) => ({
     props: args,
     template: `
-      <shared-dyntable [datasource]="datasource" [filters]="filters">
+      <shared-dyntable [datasource]="datasource">
         <shared-dyntable-column
           key="first"
           [title]="'a first column'"
@@ -239,20 +244,15 @@ export const FilteredColumn = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
-    filters: [
-      {
-        field: 'first',
-        value: '0'
-      }
-    ]
   },
 };
 
@@ -260,7 +260,7 @@ export const EllipsedText = {
   render: (args: DynamicTableComponent<any>) => ({
     props: args,
     template: `
-      <shared-dyntable [datasource]="datasource" [filters]="filters">
+      <shared-dyntable [datasource]="datasource">
         <shared-dyntable-column
           key="first"
           [title]="'a first column'"
@@ -272,7 +272,7 @@ export const EllipsedText = {
           key="second"
           [title]="'a second column'"
           [resizable]="true"
-          [width]=30>
+          [width]=50>
         </shared-dyntable-column>
         <shared-dyntable-column
           key="third"
@@ -283,19 +283,14 @@ export const EllipsedText = {
         <shared-dyntable-column
           key="fourth"
           [title]="'a fourth column'"
-          [resizable]="false">
+          [resizable]="true"
+          [width]=120>
         </shared-dyntable-column>
       </shared-dyntable>
-    `
+    `,
   }),
   args: {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
-    filters: [
-      {
-        field: 'first',
-        value: '0'
-      }
-    ]
   },
 };

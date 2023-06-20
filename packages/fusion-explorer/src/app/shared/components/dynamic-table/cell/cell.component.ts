@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit } from '@angular/core';
 import { CellDefinition } from '../typed/cell-definition.interface';
 import { BehaviorSubject } from 'rxjs';
 
@@ -15,11 +15,11 @@ export class CellComponent implements CellDefinition, OnInit {
   @Input()
   widthSubject!: BehaviorSubject<number>;
 
-  protected width: number = 0;
+  constructor(private host: ElementRef) {}
 
   ngOnInit(): void {
     this.widthSubject.subscribe((updatedValue) => {
-      this.width = updatedValue;
+      this.host.nativeElement.style.width = updatedValue + 'px';
     });
   }
 

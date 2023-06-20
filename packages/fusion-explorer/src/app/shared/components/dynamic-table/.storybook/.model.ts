@@ -1,3 +1,4 @@
+import { Ordering } from '@shared/constants/utils/ordering';
 import { BehaviorSubject, Observable, startWith } from 'rxjs';
 import DataSource from '../typed/data-source/data-source.interface';
 import Filtering from '../typed/data-source/typed/filtering.interface';
@@ -54,6 +55,15 @@ export class DummyDatasource implements DataSource<Dummy> {
   static asSourceOf(sourceData: Dummy[]): DummyDatasource {
     let ds = new DummyDatasource();
     ds.dummies = sourceData;
+    ds.load(
+      [],
+      {
+        direction: Ordering.DESC,
+        field: ''
+      },
+      1,
+      5
+    );
     return ds;
   }
 

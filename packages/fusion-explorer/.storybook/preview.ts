@@ -1,5 +1,5 @@
-// import "./default.css";
 import { Meta } from '@storybook/angular';
+import '@angular/localize/init';
 
 const meta: Meta = {
     parameters: {

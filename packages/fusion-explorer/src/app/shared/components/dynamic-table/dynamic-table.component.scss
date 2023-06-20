@@ -1,11 +1,14 @@
 @import "constants/variables";
 @import 'base';
 
+:host {
+    display: inline-block;
+}
+
 div.table {
     > div.table-head {
         display: flex;
         align-items: stretch;
-        width: 100%;
         > * {
             &.resizable {
                 border-right: 1px solid;
@@ -13,6 +16,10 @@ div.table {
             }
         }
     }
+    // > div.table-body {
+    //     display: flex;
+    //     flex-direction: column;
+    // }
     > div.empty-hint {
         padding-left: 30px;
         padding-top: 10px;
