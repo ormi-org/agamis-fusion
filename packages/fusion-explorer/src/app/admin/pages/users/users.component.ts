@@ -28,7 +28,7 @@ export class UsersComponent implements OnInit {
       [],
       {
         field: "lastLogin",
-        direction: Ordering.ASC
+        direction: Ordering.DESC
       },
       1,
       25

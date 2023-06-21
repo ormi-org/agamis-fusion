@@ -6,6 +6,8 @@ import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
 import { Store } from '@ngrx/store';
 import { retry, catchError, throwError, Observable, of } from 'rxjs';
 import { ProfileQuery } from './types/profile-query.model';
+import { PageableQuery } from '../typed/pageable-query';
+import { Ordering } from '@shared/constants/utils/ordering';
 
 @Injectable({
   providedIn: CoreModule
@@ -29,12 +31,19 @@ export class ProfileService {
    */
   fetchUserProfilesFromOrganization(orgId: string, query: ProfileQuery): Observable<Profile[]> {
     if (this.orgBaseUrl === undefined) {
+      console.warn('> ProfileService#fetchUserProfilesFromOrganization(string, ProfileQuery) >> base url is not defined');
       return of([]);
     }
-    return this.http.get<Profile[]>(`${this.orgBaseUrl}/${orgId}/profiles`,{
+    return this.http.get<Profile[]>(`${this.orgBaseUrl}/${orgId}/profiles`, {
       params: new HttpParams().appendAll(query.filters.reduce((acc, filter) => {
-        return {...acc, [filter.field]: filter.value }
-      }, {}))
+          return {...acc, [filter.field]: filter.value }
+        }, {
+          offset: query.offset,
+          limit: query.limit,
+          order_by: [query.sorting.field, query.sorting.direction].join(','),
+          include: query.include.join(',')
+        })
+      )
     })
     .pipe(
       retry(2),

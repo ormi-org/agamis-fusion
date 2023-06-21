@@ -12,6 +12,7 @@ export interface Profile extends TimeTracked, Uniquely {
     emails?: Array<string>,
     permissions?: Array<Permission>,
     organization?: Organization,
+    isActive: Boolean,
     lastLogin: Date,
     userId: string,
     user?: User

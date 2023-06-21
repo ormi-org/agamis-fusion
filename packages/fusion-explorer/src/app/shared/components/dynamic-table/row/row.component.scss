@@ -4,14 +4,11 @@
 div.row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: left;
     gap: 1px;
-    min-height: 28px;
+    height: 28px;
 
     > * {
-        &:last-child {
-            flex: 1;
-        }
         box-sizing: border-box;
         padding-left: 12px;
         padding-right: 12px;

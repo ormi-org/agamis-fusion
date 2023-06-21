@@ -46,8 +46,11 @@ export class DynamicTableComponent<T extends Uniquely>
   @ViewChildren(RowComponent)
   private rowElements!: QueryList<RowComponent<T>>;
 
+  @ViewChildren('tableContainer')
+  private container!: ElementRef;
+
   constructor(
-    private host: ElementRef
+    // private host: ElementRef
   ) {}
 
   ngAfterContentInit(): void {
@@ -73,7 +76,7 @@ export class DynamicTableComponent<T extends Uniquely>
     // Callback for updating table width based on all col widths,
     // on any col resize
     combineLatest(this.columns.map((col) => col.widthSubject)).subscribe((updatedColWidths) => {
-      this.host.nativeElement.style.width = updatedColWidths.reduce((acc, width) => acc + width, 0) + 'px';
+      this.container.nativeElement.style.width = updatedColWidths.reduce((acc, width) => acc + width, 0) + 'px';
     });
     // Cols are defined; now push datasource
     this.datasource.connect().subscribe((updatedVal) => {

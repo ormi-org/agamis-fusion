@@ -1,2 +1,14 @@
 @import "constants/variables";
 @import 'base';
+
+:host {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+
+div.page-container {
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}

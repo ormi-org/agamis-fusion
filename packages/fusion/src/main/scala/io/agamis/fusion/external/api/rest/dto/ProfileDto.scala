@@ -21,11 +21,12 @@ import io.agamis.fusion.core.db.models.sql.generics.Email
   * @param lastName
   * @param firstName
   * @param mainEmail
-  * @param emails
-  * @param permissions
-  * @param organization
+  * @param emails (includable) other emails
+  * @param permissions (includable) permissions
+  * @param organization (includable) organization
   * @param lastLogin
   * @param userId
+  * @param user (includable) related user
   * @param createdAt
   * @param updatedAt
   */
@@ -34,9 +35,11 @@ final case class ProfileDto(
     alias: Option[String],
     lastName: String,
     firstName: String,
+    mainEmail: String,
     emails: Option[List[String]],
     permissions: Option[List[PermissionDto]],
     organization: Option[OrganizationDto],
+    isActive: Boolean,
     lastLogin: Instant,
     userId: String,
     user: Option[UserDto],
@@ -51,9 +54,11 @@ object ProfileDto {
       p.alias,
       p.lastname,
       p.firstname,
+      p.mainEmail.address,
       Some(p.emails.filter(_._1 == true).map(_._2.address)),
       Some(p.permissions.filter(_._1 == true).map(r => PermissionDto.from(r._2))),
       p.relatedOrganization.collect { case o: Organization => OrganizationDto.from(o) },
+      p.isActive,
       p.lastLogin.toInstant,
       p.userId.toString,
       p.relatedUser.collect { case u: User => UserDto.from(u) },
@@ -68,7 +73,7 @@ trait ProfileJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     import io.agamis.fusion.external.api.rest.dto.organization.OrganizationJsonProtocol._
     import io.agamis.fusion.external.api.rest.dto.user.UserApiJsonProtocol._
 
-    implicit val profileFormat: RootJsonFormat[ProfileDto] = jsonFormat12(ProfileDto.apply)
+    implicit val profileFormat: RootJsonFormat[ProfileDto] = jsonFormat14(ProfileDto.apply)
 }
 
 object ProfileJsonProtocol extends ProfileJsonSupport

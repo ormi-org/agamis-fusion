@@ -80,6 +80,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
       if (this.resizing) {
         const deltaX = event.pageX - startX;
         const newWidth = Math.max(startWidth + deltaX, MIN_WIDTH);
+        // const newWidth = startWidth + deltaX;
         this.resizingSubject.next([this.associatedColumn.key, newWidth, - (previousDelta - deltaX)]);
         previousDelta = deltaX;
       }

@@ -1,6 +1,10 @@
 @import "constants/variables";
 @import 'base';
 
+:host {
+    border-right: solid red 1px;
+}
+
 div.cell {
     display: flex;
     align-items: center;

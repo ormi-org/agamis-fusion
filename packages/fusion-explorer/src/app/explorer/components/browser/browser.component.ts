@@ -23,7 +23,7 @@ const LOADING_BAR_STAGES: Stage[] = [
 ];
 
 @Component({
-  selector: 'app-browser',
+  selector: 'explorer-browser',
   templateUrl: './browser.component.html',
   styleUrls: ['./browser.component.scss'],
 })

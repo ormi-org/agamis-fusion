@@ -1,5 +1,6 @@
 import { Profile } from "@core/models/data/profile.model";
 import { ProfileService } from "@core/services/profile/profile.service";
+import { IncludableProfileFields } from "@core/services/profile/types/profile-query.model";
 import { selectOrganization } from "@explorer/states/explorer-state/explorer-state.selectors";
 import { Store } from "@ngrx/store";
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
@@ -49,7 +50,11 @@ export class UserTableDatasource implements DataSource<Profile> {
             }
             this.loadingSubject.next(true);
             this.profileService.fetchUserProfilesFromOrganization(orgId, {
-                filters, sorting, pageIndex, pageSize
+                filters,
+                include: [IncludableProfileFields.USER],
+                sorting, 
+                offset: (pageIndex - 1) * pageSize,
+                limit: pageIndex * pageSize
             }).subscribe((profiles) => {
                 this.profilesSubject.next(profiles);
             });

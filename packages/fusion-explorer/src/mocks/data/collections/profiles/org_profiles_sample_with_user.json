@@ -40,6 +40,10 @@
                 "generator": "first_name"
             }
         },
+        "isActive": {
+            "type": "bool",
+            "frequency": 0.7
+        },
         "lastLogin": {
             "type": "date_time",
             "format": "%Y-%m-%d %H:%M:%S",
