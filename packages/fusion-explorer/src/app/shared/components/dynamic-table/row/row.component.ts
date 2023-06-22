@@ -2,6 +2,7 @@ import {
   Component,
   Input,
   OnInit,
+  TemplateRef,
 } from '@angular/core';
 import { RowDefinition } from '../typed/row-definition.interface';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -18,7 +19,11 @@ export class RowComponent<T extends Object>
   @Input()
   index!: number;
   @Input()
-  keys!: string[];
+  templating!: {
+    key: string,
+    compute: ((model: T) => { value: string }),
+    template: TemplateRef<any>
+  }[];
   @Input()
   model!: T;
   @Input()
@@ -41,39 +46,19 @@ export class RowComponent<T extends Object>
 
   ngOnInit(): void {
     // populate cells
-    this.cells = this.keys.reduce((acc, key, i) => {
-      const keyPath = key.split('.');
+    this.cells = this.templating.reduce((acc, { key, compute, template }, i) => {
+      const computedValue = compute(this.model);
       acc.push(
         new Cell(
           i.toString(),
           i,
-          keyPath.length > 1 ? 
-          keyPath.slice(1).reduce((previous, pathItem) => {
-            console.log(pathItem, previous);
-            return pathItem ? previous[pathItem] : previous;
-          }, this.model[keyPath[0]]).toString() :
-          this.model[key].toString(),
+          computedValue,
+          template,
           this.cellsWidths().find(_ => _[0] === key)?.[1] || new BehaviorSubject(0)
         )
       )
       return acc;
     }, <Cell[]>[]);
-    // this.cells = Object.entries(this.model).reduce((acc, field, i) => {
-    //   console.log(field);
-    //   if (this.keys.includes(field[0])) {
-    //     acc.push(
-    //       new Cell(
-    //         i.toString(),
-    //         this.keys.indexOf(field[0]),
-    //         field[0].split('.').reduce((previous, pathItem) => {
-    //           return pathItem ? previous[pathItem] : previous;
-    //         }, field[1]).toString(),
-    //         this.cellsWidths().find(_ => _[0] === field[0])?.[1] || new BehaviorSubject(0)
-    //       )
-    //     );
-    //   }
-    //   return acc;
-    // }, <Cell[]>[]).sort((a, b) => a.index - b.index);
   }
 
   protected select(): void {

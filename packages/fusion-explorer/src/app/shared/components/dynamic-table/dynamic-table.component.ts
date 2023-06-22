@@ -2,7 +2,7 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChildren
+  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { BehaviorSubject, combineLatest, Subject } from 'rxjs';
@@ -46,13 +46,6 @@ export class DynamicTableComponent<T extends Uniquely>
   @ViewChildren(RowComponent)
   private rowElements!: QueryList<RowComponent<T>>;
 
-  @ViewChildren('tableContainer')
-  private container!: ElementRef;
-
-  constructor(
-    // private host: ElementRef
-  ) {}
-
   ngAfterContentInit(): void {
     const colDefs = this.columnsDef.toArray();
     const orderedCol = colDefs.find((c) => {
@@ -73,18 +66,13 @@ export class DynamicTableComponent<T extends Uniquely>
         new BehaviorSubject(c.getWidth())
       )
     });
-    // Callback for updating table width based on all col widths,
-    // on any col resize
-    combineLatest(this.columns.map((col) => col.widthSubject)).subscribe((updatedColWidths) => {
-      this.container.nativeElement.style.width = updatedColWidths.reduce((acc, width) => acc + width, 0) + 'px';
-    });
     // Cols are defined; now push datasource
     this.datasource.connect().subscribe((updatedVal) => {
       this.rows = updatedVal.map((v, i) => {
         return new Row(
           v.uqId,
           i,
-          colDefs.map((colcomp) => colcomp.getKey()),
+          colDefs.map((col) => ({ key: col.getKey(), compute: col.compute, template: col.template })),
           v
         );
       });

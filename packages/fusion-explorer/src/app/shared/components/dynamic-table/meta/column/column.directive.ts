@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, Input, TemplateRef } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 
 @Directive({
@@ -7,6 +7,14 @@ import { Ordering } from '@shared/constants/utils/ordering';
 export class ColumnDirective {
   @Input()
   key!: string;
+  @Input()
+  template!: TemplateRef<any>;
+  @Input()
+  compute: ((model: any) => { value: string }) = (m) => {
+    return {
+      value: m[this.key]?.toString() || ""
+    }
+  };
   @Input()
   title!: string;
   @Input()

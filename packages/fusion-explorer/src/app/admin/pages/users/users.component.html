@@ -1,11 +1,22 @@
 <div class="page-container">
     <shared-dyntable [datasource]="tableDatasource">
         <shared-dyntable-column
-            key="user.username"
+            key="user.username|alias"
+            [template]="usernameTemplate"
+            [compute]="usernameValueComputing"
             title="username"
             i18n-title="@@ui.classic.admin.pages.users.table.col.username"
             [resizable]="true"
             [width]="180"/>
+        <ng-template #usernameTemplate let-value="value" let-isAlias="isAlias">
+            <div ngClass="username-cell">
+                <div>{{value}}</div>
+                <div *ngIf="isAlias" ngClass="alias-icon">
+                    <div ngClass="text">A</div>
+                    <img ngClass="alias-icon-frame" src="{{Icon.AGAMIS_FUSION_BLUE_STAR| iconify}}" alt="agamis fusion blue star's icon" #icon/>
+                </div>
+            </div>
+        </ng-template>
         <shared-dyntable-column
             key="firstName"
             title="firstname"
@@ -42,6 +53,6 @@
             title="created on"
             i18n-title="@@ui.classic.admin.pages.users.table.col.created-on"
             [resizable]="true"
-            [width]="120"/>
+            [width]="160"/>
     </shared-dyntable>
 </div>

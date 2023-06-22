@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HeaderTitleItem } from '@core/models/header-title-item.model';
 import { selectOrganization } from '@explorer/states/explorer-state/explorer-state.selectors';
 import { Store } from '@ngrx/store';

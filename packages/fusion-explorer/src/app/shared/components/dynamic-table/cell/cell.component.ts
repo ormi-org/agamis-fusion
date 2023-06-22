@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, TemplateRef } from '@angular/core';
 import { CellDefinition } from '../typed/cell-definition.interface';
 import { BehaviorSubject } from 'rxjs';
 
@@ -11,9 +11,13 @@ export class CellComponent implements CellDefinition, OnInit {
   @Input()
   index!: number;
   @Input()
-  value!: string;
+  context!: {
+    value: string
+  };
   @Input()
   widthSubject!: BehaviorSubject<number>;
+  @Input()
+  template!: TemplateRef<any>;
 
   constructor(private host: ElementRef) {}
 
@@ -24,6 +28,6 @@ export class CellComponent implements CellDefinition, OnInit {
   }
 
   getValue(): string {
-    return this.value;
+    return this.context.value;
   }
 }

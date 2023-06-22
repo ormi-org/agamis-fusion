@@ -1,9 +1,10 @@
 @import "constants/variables";
 @import 'base';
 
-:host {
-    border-right: solid red 1px;
-}
+// for debugging
+// :host {
+//     border-right: solid red 1px;
+// }
 
 div.cell {
     display: flex;

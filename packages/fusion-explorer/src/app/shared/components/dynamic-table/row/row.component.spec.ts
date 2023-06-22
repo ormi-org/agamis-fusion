@@ -19,7 +19,12 @@ describe('RowComponent', () => {
     fixture = TestBed.createComponent(RowComponent);
     component = fixture.componentInstance;
     component.index = 0;
-    component.keys = ["first", "second", "third", "fourth"];
+    component.templates = [
+      { key: "first" }, 
+      { key: "second" },
+      { key: "third" },
+      { key: "fourth" }
+    ];
     component.model = {
       first: "a value for first",
       second: "a value for second",

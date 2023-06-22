@@ -12,3 +12,25 @@ div.page-container {
     overflow-x: auto;
     overflow-y: hidden;
 }
+
+div.username-cell {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    > div.alias-icon {
+        position: relative;
+        margin-left: 25px;
+        text-align: center;
+        > div.text {
+            position: absolute;
+            text-align: center;
+            width: 100%;
+            color: white;
+            z-index: 1;
+        }
+        
+        > div.alias-icon-frame {
+            position: absolute;
+        }
+    }
+}

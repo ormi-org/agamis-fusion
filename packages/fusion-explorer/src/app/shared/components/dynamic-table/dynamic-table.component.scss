@@ -3,6 +3,7 @@
 
 :host {
     display: inline-block;
+    height: 100%;
     min-width: 100%;
 }
 
@@ -22,8 +23,8 @@ div.table-container {
             }
         }
         > div.table-body {
-            max-height: calc(100% - 30px);
-            overflow-y: scroll;
+            height: calc(100% - 30px);
+            overflow-y: auto;
         }
         > div.empty-hint {
             padding-left: 30px;

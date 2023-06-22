@@ -1,4 +1,5 @@
 export enum Icon {
+    AGAMIS_FUSION_BLUE_STAR = 'agamis-fusion-blue-star.svg',
     AGAMIS_FUSION_LOGO = 'agamis-fusion-logo.svg',
     ARROW = 'arrow.svg',
     BUILDING_GROUP = 'building-group.svg',

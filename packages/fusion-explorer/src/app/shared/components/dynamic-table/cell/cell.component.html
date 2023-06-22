@@ -1,5 +1,10 @@
 <div [ngClass]="{'cell': true}">
-  <span>
-    {{ getValue() | capitalizeFirst }}
-  </span>
+  <ng-template #default let-value="value">
+    <span>
+      {{ value | capitalizeFirst }}
+    </span>
+  </ng-template>
+  <ng-container [ngTemplateOutlet]="template || default"
+    [ngTemplateOutletContext]="context" >
+  </ng-container>
 </div>

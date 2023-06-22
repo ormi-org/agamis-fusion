@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
-import { SharedModule } from '@shared/shared.module';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ExplorerModule } from '@explorer/explorer.module';
+import { StoreModule } from '@ngrx/store';
 import { BrowserComponent } from './browser.component';
 
 describe('BrowserComponent', () => {
@@ -9,7 +10,7 @@ describe('BrowserComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RouterModule, SharedModule],
+      imports: [RouterTestingModule, ExplorerModule, StoreModule.forRoot({})],
       declarations: [BrowserComponent],
     }).compileComponents();
 

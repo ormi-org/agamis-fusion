@@ -1,8 +1,14 @@
+import { TemplateRef } from "@angular/core";
+
 export class Row<T> {
     constructor(
         public uqId: string,
         public index: number,
-        public keys: string[],
+        public templating: ({
+            key: string,
+            compute: ((model: Object) => { value: string }),
+            template: TemplateRef<any>
+        })[],
         public value: T,
     ) {}
 }

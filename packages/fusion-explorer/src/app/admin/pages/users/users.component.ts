@@ -1,9 +1,12 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { UserTableDatasource } from './datasources/user-table.datasource';
-import { Ordering } from '@shared/constants/utils/ordering';
-import { Store } from '@ngrx/store';
+import { Component, OnInit } from '@angular/core';
+import { Profile } from '@core/models/data/profile.model';
 import { ProfileService } from '@core/services/profile/profile.service';
-import { BehaviorSubject } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Icon } from '@shared/constants/assets';
+import { Ordering } from '@shared/constants/utils/ordering';
+import { UserTableDatasource } from './datasources/user-table.datasource';
+
+type UsernameTemplateComputing = (profile: Profile) => { value: string; isAlias: boolean };
 
 @Component({
   selector: 'admin-page-users',
@@ -12,8 +15,19 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class UsersComponent implements OnInit {
   protected Ordering = Ordering;
+  protected Icon: typeof Icon = Icon;
   
   protected tableDatasource: UserTableDatasource;
+
+  protected usernameValueComputing: UsernameTemplateComputing = ((profile: Profile) => {
+    return profile.alias ? {
+        value: profile.alias.toString(),
+        isAlias: true
+      } : {
+        value: (profile.user?.username || '').toString(),
+        isAlias: false
+      }
+  });
 
   constructor(
     private profileService: ProfileService,
