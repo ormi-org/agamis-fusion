@@ -17,4 +17,6 @@ export enum Color {
     SECONDARY_ONE = 'C8C3B2',
     SECONDARY_TWO = 'C8C3B27B',
     SECONDARY_THREE = '505050',
+    SUCCESS = '57AA4F',
+    ERROR = 'CB2828',
 }

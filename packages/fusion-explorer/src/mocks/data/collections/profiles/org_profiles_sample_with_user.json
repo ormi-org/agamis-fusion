@@ -47,7 +47,9 @@
         "lastLogin": {
             "type": "date_time",
             "format": "%Y-%m-%d %H:%M:%S",
-            "subtype": "naive_date_time"
+            "subtype": "naive_date_time",
+            "begin": "2023-06-20 00:00:00",
+            "end": "2023-06-22 23:59:59"
         },
         "userId": {
             "type": "same_as",
@@ -69,12 +71,16 @@
         "createdAt": {
             "type": "date_time",
             "format": "%Y-%m-%d %H:%M:%S",
-            "subtype": "naive_date_time"
+            "subtype": "naive_date_time",
+            "begin": "2022-06-22 00:00:00",
+            "end": "2023-06-22 00:00:00"
         },
         "updatedAt": {
             "type": "date_time",
             "format": "%Y-%m-%d %H:%M:%S",
-            "subtype": "naive_date_time"
+            "subtype": "naive_date_time",
+            "begin": "2022-06-22 00:00:00",
+            "end": "2023-06-22 00:00:00"
         }
     }
 }

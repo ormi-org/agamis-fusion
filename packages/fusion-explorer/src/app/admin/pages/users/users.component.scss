@@ -18,19 +18,27 @@ div.username-cell {
     display: flex;
     align-items: center;
     > div.alias-icon {
+        display: flex;
         position: relative;
-        margin-left: 25px;
+        margin-left: 20px;
         text-align: center;
         > div.text {
+            display: flex;
             position: absolute;
-            text-align: center;
+            justify-content: center;
+            top: -1px;
             width: 100%;
             color: white;
             z-index: 1;
         }
-        
-        > div.alias-icon-frame {
-            position: absolute;
+    }
+}
+
+div.active-cell {
+    > div {
+        @include setColor(error);
+        &.active {
+            @include setColor(success);
         }
     }
 }

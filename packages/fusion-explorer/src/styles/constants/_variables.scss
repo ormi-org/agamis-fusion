@@ -5,6 +5,8 @@ $colors: (
     secondary-one: #C8C3B2,
     secondary-two: #C8C3B27B,
     secondary-three: #505050,
+    success: #57AA4F,
+    error: #CB2828
 );
 
 @mixin setColor($colorName) {

@@ -3,6 +3,7 @@ import { ExplorerComponent } from './explorer.component';
 import { StoreModule } from '@ngrx/store';
 import { CoreModule } from '@core/core.module';
 import { RouterTestingModule } from '@angular/router/testing';
+import { SharedModule } from '@shared/shared.module';
 
 describe('ExplorerComponent', () => {
   let component: ExplorerComponent;
@@ -10,7 +11,7 @@ describe('ExplorerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CoreModule, StoreModule.forRoot({}), RouterTestingModule],
+      imports: [CoreModule, StoreModule.forRoot({}), RouterTestingModule, SharedModule],
       declarations: [ExplorerComponent],
     }).compileComponents();
 

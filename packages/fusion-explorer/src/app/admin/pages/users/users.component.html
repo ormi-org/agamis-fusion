@@ -7,7 +7,7 @@
             title="username"
             i18n-title="@@ui.classic.admin.pages.users.table.col.username"
             [resizable]="true"
-            [width]="180"/>
+            [width]="220"/>
         <ng-template #usernameTemplate let-value="value" let-isAlias="isAlias">
             <div ngClass="username-cell">
                 <div>{{value}}</div>
@@ -22,21 +22,29 @@
             title="firstname"
             i18n-title="@@ui.classic.admin.pages.users.table.col.firstname"
             [resizable]="true"
-            [width]="120"/>
+            [width]="150"/>
         <shared-dyntable-column
             key="lastName"
             title="lastname"
             i18n-title="@@ui.classic.admin.pages.users.table.col.lastname"
             [resizable]="true"
-            [width]="100"/>
+            [width]="150"/>
         <shared-dyntable-column
             key="isActive"
+            [template]="activeTemplate"
+            [compute]="activeValueComputing"
             title="active"
             i18n-title="@@ui.classic.admin.pages.users.table.col.active"
             [resizable]="true"
             [width]="90"/>
+        <ng-template #activeTemplate let-value="value" let-isActive="isActive">
+            <div ngClass="active-cell">
+                <div [ngClass]="{'active': isActive }">{{value | capitalizeFirst}}</div>
+            </div>
+        </ng-template>
         <shared-dyntable-column
             key="lastLogin"
+            [compute]="lastSeenComputing"
             title="last seen"
             i18n-title="@@ui.classic.admin.pages.users.table.col.last-seen"
             [resizable]="true"
@@ -44,12 +52,14 @@
             [width]="170"/>
         <shared-dyntable-column
             key="updatedAt"
+            [compute]="dateTimeComputing"
             title="last updated"
             i18n-title="@@ui.classic.admin.pages.users.table.col.last-updated"
             [resizable]="true"
             [width]="200"/>
         <shared-dyntable-column
             key="createdAt"
+            [compute]="dateTimeComputing"
             title="created on"
             i18n-title="@@ui.classic.admin.pages.users.table.col.created-on"
             [resizable]="true"

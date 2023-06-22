@@ -4,6 +4,7 @@ import { RowComponent } from './row.component';
 import { BehaviorSubject } from 'rxjs';
 import { CellComponent } from '../cell/cell.component';
 import { SharedModule } from '@shared/shared.module';
+import { TemplateRef } from '@angular/core';
 
 describe('RowComponent', () => {
   let component: RowComponent<Object>;
@@ -19,12 +20,7 @@ describe('RowComponent', () => {
     fixture = TestBed.createComponent(RowComponent);
     component = fixture.componentInstance;
     component.index = 0;
-    component.templates = [
-      { key: "first" }, 
-      { key: "second" },
-      { key: "third" },
-      { key: "fourth" }
-    ];
+    component.templating = [];
     component.model = {
       first: "a value for first",
       second: "a value for second",

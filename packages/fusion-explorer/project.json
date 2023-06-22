@@ -100,7 +100,7 @@
     },
     "gen-data": {
       "executor": "nx:run-commands",
-      "defaultConfiguration": "",
+      "defaultConfiguration": "all",
       "options": {
         "cwd": "packages/fusion-explorer/src/mocks/data"
       },
