@@ -2,14 +2,17 @@ import { Subject, BehaviorSubject, Observable } from "rxjs";
 
 export abstract class Loading {
     private nextStageSignalSubject: Subject<void> = new Subject();
-    private $loading: BehaviorSubject<boolean> = new BehaviorSubject(false);
+    protected loadingSubject: Subject<boolean> = new Subject();
+
+    $loading: Observable<boolean> = this.loadingSubject.asObservable();
 
     public getNextStageObserver(): Subject<void> {
         return this.nextStageSignalSubject;
     }
 
+    // Reset loading state at beginning
     public reset(): void {
-        this.$loading.next(true);
+        this.loadingSubject.next(true);
     }
 
     public next(): void {
@@ -17,10 +20,6 @@ export abstract class Loading {
     }
 
     public complete(): void {
-        this.$loading.next(false);
-    }
-
-    public isLoading(): Observable<boolean> {
-        return this.$loading.asObservable();
+        this.loadingSubject.next(false);
     }
 }

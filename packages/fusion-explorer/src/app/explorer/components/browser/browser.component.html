@@ -3,12 +3,12 @@
         <!-- TODO: heading bar Component -->
         heading-bar here!
         <shared-loading-bar
-            *ngIf="(loadingService.isLoading() | async)"
             [height]="2"
             [width]="0"
             [stages]="loadingBarStages"
             [bgColor]="Color.PRIMARY_THREE"
             [nextStageSignalSubject]="loadingService.getNextStageObserver()"
+            [loadingStateObserver]="loadingService.$loading"
             />
     </div>
     <div ngClass="content-container">

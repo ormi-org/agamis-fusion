@@ -4,16 +4,15 @@ import { IncludableProfileFields } from "@core/services/profile/types/profile-qu
 import { selectOrganization } from "@explorer/states/explorer-state/explorer-state.selectors";
 import { Store } from "@ngrx/store";
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
-import Filtering from "@shared/components/dynamic-table/typed/data-source/typed/filtering.interface";
-import Sorting from "@shared/components/dynamic-table/typed/data-source/typed/sorting.interface";
+import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typed/loading-query.interface";
 import { BehaviorSubject, map, Observable, ReplaySubject, skipWhile, Subject } from "rxjs";
 
 export class UserTableDatasource implements DataSource<Profile> {
     private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject();
     private profilesSubject = new BehaviorSubject<Profile[]>([]);
-    private loadingSubject = new BehaviorSubject<boolean>(false);
+    private loadingSubject = new ReplaySubject<boolean>();
 
-    public $loading: Observable<boolean> = this.loadingSubject.asObservable();
+    $loading: Observable<boolean> = this.loadingSubject.asObservable();
 
     constructor(
         private readonly store: Store,
@@ -40,7 +39,7 @@ export class UserTableDatasource implements DataSource<Profile> {
         this.loadingSubject.complete();
     }
 
-    load(filters: Filtering[], sorting: Sorting, pageIndex: number, pageSize: number): void {
+    load(query: LoadingQuery): void {
         // wait for orgId to be populated from store
         this.orgIdSub.subscribe(orgId => {
             if (orgId === undefined) {
@@ -48,6 +47,11 @@ export class UserTableDatasource implements DataSource<Profile> {
                 this.profilesSubject.next([]);
                 return;
             }
+            // extract query elements
+            const {
+                filters, sorting, pageIndex, pageSize
+            } = query;
+            // put subject into loading state
             this.loadingSubject.next(true);
             this.profileService.fetchUserProfilesFromOrganization(orgId, {
                 filters,
@@ -56,6 +60,7 @@ export class UserTableDatasource implements DataSource<Profile> {
                 offset: (pageIndex - 1) * pageSize,
                 limit: pageIndex * pageSize
             }).subscribe((profiles) => {
+                this.loadingSubject.next(false);
                 this.profilesSubject.next(profiles);
             });
         });

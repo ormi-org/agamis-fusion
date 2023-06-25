@@ -11,7 +11,7 @@ const organizationsRoutes = (server: Server) => {[
             return new Response(404, {}, { errors: [`organization not found with id:#${id}`] });
         }
         return org;
-    })
+    }, { timing: 1000 })
 ]};
 
 export default organizationsRoutes;

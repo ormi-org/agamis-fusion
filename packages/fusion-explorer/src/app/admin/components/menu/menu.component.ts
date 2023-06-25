@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Icon } from '@shared/constants/assets';
 import { ItemComponent } from './item/item.component';
 
@@ -8,13 +9,10 @@ import { ItemComponent } from './item/item.component';
   styleUrls: ['./menu.component.scss'],
 })
 export class MenuComponent implements AfterViewInit {
-  icons: typeof Icon = Icon;
-  icon: Icon = Icon.USER_LOCK;
-  tailIcon: Icon = Icon.ARROW;
+  protected readonly icons: typeof Icon = Icon;
+  protected isCollapsed: boolean = true;
 
   @Input() text: string = "Undefined text";
-
-  @Input() isCollapsed?: boolean = true;
 
   @Input()
   height: number = 0;
@@ -24,6 +22,11 @@ export class MenuComponent implements AfterViewInit {
 
   @ViewChildren(ItemComponent)
   menuItems!: QueryList<ItemComponent>;
+
+  constructor(route: ActivatedRoute) {
+    const currentRoute = route.toString();
+    this.isCollapsed = currentRoute.includes('/admin');
+  }
 
   ngAfterViewInit(): void {
     this.menuBody.nativeElement.style.maxHeight = 

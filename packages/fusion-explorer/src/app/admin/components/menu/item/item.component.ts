@@ -20,8 +20,6 @@ export class ItemComponent implements AfterViewInit {
   @Input()
   link?: string[];
 
-  protected isActive: boolean = false;
-
   private nativeElement: HTMLElement;
 
   constructor(element: ElementRef) {

@@ -4,14 +4,20 @@
             <shared-dyntable-head-cell [ngClass]="{'resizable': col.resizable}" *ngFor="let col of columns"
                 [associatedColumn]="col"/>
         </div>
-        <div *ngIf="rows.length > 0; else elseBlock" [ngClass]="{'table-body': true}">
-            <shared-dyntable-row *ngFor="let row of rows"
-                [index]="row.index"
-                [templating]="row.templating"
-                [model]="row.value"
-                [cellsWidths]="getColumnsWidthsAsync"/>
+        <div *ngIf="(datasource.$loading | async); else dataBlock"
+             [ngClass]="{'loading-hint': true}">
+            ...
         </div>
-        <ng-template #elseBlock>
+        <ng-template #dataBlock>
+            <div *ngIf="rows.length > 0; else emptyHintBlock" [ngClass]="{'table-body': true}">
+                <shared-dyntable-row *ngFor="let row of rows"
+                    [index]="row.index"
+                    [templating]="row.templating"
+                    [model]="row.value"
+                    [cellsWidths]="getColumnsWidthsAsync"/>
+            </div>
+        </ng-template>
+        <ng-template #emptyHintBlock>
             <div [ngClass]="{'empty-hint': true}">
                 {{ emptyHint | capitalizeFirst }}
             </div>

@@ -9,7 +9,7 @@ const profilesRoutes = (server: Server) => {
   [
     server.get(
       `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profiles`,
-      (schema, request) => {
+      (_, request) => {
         const { offset, limit, order_by, include } = request.queryParams;
         const splitOrdered = order_by.split(',');
         const order = [splitOrdered[0], splitOrdered[1]];
@@ -17,27 +17,28 @@ const profilesRoutes = (server: Server) => {
         const excluded = EXCLUDED_FIELDS.filter(
           (f) => !includedFields.includes(f)
         );
+        // return dynamic result
         return profiles.org_profiles_sample_with_user
-          .sort((a, b) => {
-            switch (order[0]) {
-              case 'lastLogin':
-                return (
-                  (new Date(a[order[0]]).getTime() -
-                    new Date(b[order[0]]).getTime()) *
-                  Number.parseInt(order[1])
-                );
-              default:
-                return a[order[0]] - b[order[0]] * Number.parseInt(order[1]);
-            }
-          })
-          .slice(Number.parseInt(offset), Number.parseInt(limit))
-          .map((p) => {
-            excluded.forEach((exc) => {
-              p[exc] = undefined;
-            });
-            return p;
+        .sort((a, b) => {
+          switch (order[0]) {
+            case 'lastLogin':
+              return (
+                (new Date(a[order[0]]).getTime() -
+                  new Date(b[order[0]]).getTime()) *
+                Number.parseInt(order[1])
+              );
+            default:
+              return a[order[0]] - b[order[0]] * Number.parseInt(order[1]);
+          }
+        })
+        .slice(Number.parseInt(offset), Number.parseInt(limit))
+        .map((p) => {
+          excluded.forEach((exc) => {
+            p[exc] = undefined;
           });
-      }
+          return p;
+        });
+      }, { timing: 1000 }
     ),
   ];
 };

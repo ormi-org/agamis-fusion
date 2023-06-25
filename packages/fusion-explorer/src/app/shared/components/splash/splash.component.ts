@@ -14,11 +14,12 @@ export class SplashComponent {
   protected loadingBarStages: LoadingBarStage[] = [
     {
       fill: 0,
-      autoNext: 500
+      autoNext: 0
     },
     {
       fill: 13,
-      fillDuration: 100
+      fillDuration: 100,
+      autoNext: 100
     },
     {
       fill: 87,
@@ -30,9 +31,6 @@ export class SplashComponent {
     }
   ];
 
-  protected nextStageSignalSubject: Subject<void>;
-
-  constructor(private readonly splashService: SplashService) {
-    this.nextStageSignalSubject = splashService.getNextStageObserver();
+  constructor(protected readonly splashService: SplashService) {
   }
 }

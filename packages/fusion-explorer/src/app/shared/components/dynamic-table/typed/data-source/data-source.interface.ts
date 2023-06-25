@@ -1,6 +1,5 @@
 import { Observable } from "rxjs";
-import Sorting from "./typed/sorting.interface";
-import Filtering from "./typed/filtering.interface";
+import LoadingQuery from "./typed/loading-query.interface";
 
 export default interface DataSource<T> {
     /**
@@ -19,9 +18,10 @@ export default interface DataSource<T> {
      * @param pageIndex index of the data page to get
      * @param pageSize number of elements inside the page
      */
-    load(filters: Filtering[], sorting: Sorting, pageIndex: number, pageSize: number): void;
+    load(query: LoadingQuery): void;
     /**
      * a loading observable to keep track of loading state of the source
+     * (be careful to use a BehaviorSubject to emit current value on subscribe)
      */
     $loading: Observable<boolean>;
 }

@@ -44,7 +44,7 @@ describe('DateFormatter', () => {
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'a month ago';
+    var expected = 'last month';
     var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 1);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
@@ -69,7 +69,7 @@ describe('DateFormatter', () => {
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'a week ago';
+    var expected = 'last week';
     var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
@@ -94,7 +94,7 @@ describe('DateFormatter', () => {
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'a day ago';
+    var expected = 'yesterday';
     var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))

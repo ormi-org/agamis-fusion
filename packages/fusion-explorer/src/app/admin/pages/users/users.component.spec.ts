@@ -3,6 +3,7 @@ import { UsersComponent } from './users.component';
 import { CoreModule } from '@core/core.module';
 import { SharedModule } from '@shared/shared.module';
 import { StoreModule } from '@ngrx/store';
+import { ExplorerModule } from '@explorer/explorer.module';
 
 describe('UsersComponent', () => {
   let component: UsersComponent;
@@ -13,7 +14,8 @@ describe('UsersComponent', () => {
       imports: [
         StoreModule.forRoot({}),
         CoreModule,
-        SharedModule
+        SharedModule,
+        ExplorerModule
       ],
       declarations: [UsersComponent],
     }).compileComponents();

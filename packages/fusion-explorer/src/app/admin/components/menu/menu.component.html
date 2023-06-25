@@ -1,42 +1,38 @@
 <div
-  [ngClass]="{ 'menu-container': true, collapsed: isCollapsed }"
+  [ngClass]="{ 'menu-container': true, 'collapsed': isCollapsed }"
   [ngStyle]="{ height: height + 'px' }"
 >
   <div [ngClass]="{ 'menu-header': true }" (click)="toggleCollapse()">
     <span [ngClass]="{ 'header-title': true }">
-      <img src="{{ icon | iconify }}" alt="administration menu header icon" />
+      <img src="{{ icons.USER_LOCK | iconify }}" alt="administration menu header icon" />
       {{ text | capitalizeFirst }}
     </span>
     <img
       [ngClass]="{ 'tail-icon': true }"
-      src="{{ tailIcon | iconify }}"
+      src="{{ icons.ARROW | iconify }}"
       alt="administration menu header icon"
     />
   </div>
   <div [ngClass]="{ 'menu-body': true }" #menuBody>
     <admin-menu-item
-      #menuItem
       [icon]="{ key: icons.USER, height: '16px' }"
       text="users"
       i18n-text="@@ui.classic.admin.menu.users"
       [link]="['./admin/users']"
     ></admin-menu-item>
     <admin-menu-item
-      #menuItem
       [icon]="{ key: icons.GROUP, height: '14px' }"
       text="groups"
       i18n-text="@@ui.classic.admin.menu.groups"
       [link]="['./admin/groups']"
     ></admin-menu-item>
     <admin-menu-item
-      #menuItem
       [icon]="{ key: icons.KEY, height: '14px' }"
       text="permissions"
       i18n-text="@@ui.classic.admin.menu.permissions"
       [link]="['./admin/permissions']"
     ></admin-menu-item>
     <admin-menu-item
-      #menuItem
       [icon]="{ key: icons.BUILDING_GROUP, height: '16px' }"
       text="organization"
       i18n-text="@@ui.classic.admin.menu.organization"

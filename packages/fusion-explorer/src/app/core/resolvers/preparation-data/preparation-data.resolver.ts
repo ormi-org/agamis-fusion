@@ -35,9 +35,9 @@ export const preparationDataResolver: ResolveFn<Subscription | undefined> = (rou
   }
   const orgId: string = orgIdFromQueryParams || (<LocalStorageSuccess<string>>orgIdResultFromLocalStorage).item;
   // 1. Loading App Global Configuration configuration
+  splashService.reset();
   return configService.load()
     .pipe(
-      tap(_ => splashService.next()),
       catchError((err) => {
         // nav to error page
         router.navigateByUrl('/error', { state: { title: 'fatal error', text: $localize`:@@client.messages.errors.generics.unrecoverable:an irrecoverable error occured` } } );

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { ActivationStart, Event, Router } from '@angular/router';
 import { LoadingService } from '@explorer/utils/loading/loading.service';
 import { Stage } from '@shared/components/loading-bar/models/stage.model';
 import { Direction } from '@shared/components/separator/models/enums/direction.enum';
@@ -10,15 +11,17 @@ const LOADING_BAR_STAGES: Stage[] = [
     autoNext: 100,
   },
   {
-    fill: 70,
+    fill: 10,
+    autoNext: 300,
+    fillDuration: 200,
   },
   {
     fill: 90,
-    autoNext: 100,
-    fillDuration: 5000
+    fillDuration: 5000,
   },
   {
-    fill: 100
+    fill: 100,
+    fillDuration: 200,
   }
 ];
 
@@ -27,15 +30,20 @@ const LOADING_BAR_STAGES: Stage[] = [
   templateUrl: './browser.component.html',
   styleUrls: ['./browser.component.scss'],
 })
-export class BrowserComponent implements OnInit {
-  protected Direction: typeof Direction = Direction;
-  protected Color: typeof Color = Color;
-  protected fusionIcon: Icon = Icon.AGAMIS_FUSION_LOGO;
-  protected loadingBarStages: Stage[] = LOADING_BAR_STAGES;
+export class BrowserComponent {
+  protected readonly Direction: typeof Direction = Direction;
+  protected readonly Color: typeof Color = Color;
+  protected readonly fusionIcon: Icon = Icon.AGAMIS_FUSION_LOGO;
+  protected readonly loadingBarStages: Stage[] = LOADING_BAR_STAGES;
 
-  constructor(protected readonly loadingService: LoadingService) {}
-
-  ngOnInit(): void {
-    // throw new Error('Method not implemented.');
+  constructor(
+    router: Router,
+    protected readonly loadingService: LoadingService,
+  ) {
+    router.events.subscribe((e: Event) => {
+      if (e instanceof ActivationStart) {
+        this.loadingService.complete();
+      }
+    });
   }
 }

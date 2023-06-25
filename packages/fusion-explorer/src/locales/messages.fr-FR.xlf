@@ -49,11 +49,23 @@
       <trans-unit id="ui.classic.admin.pages.users.table.col.last-updated" datatype="html">
         <source>last updated</source><target state="new">dernière modification</target>
         
-      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">55</context></context-group></trans-unit>
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">56</context></context-group></trans-unit>
       <trans-unit id="ui.classic.admin.pages.users.table.col.created-on" datatype="html">
         <source>created on</source><target state="new">créé le</target>
         
-      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">61</context></context-group></trans-unit><trans-unit id="ui.classic.explorer.browser.admin-menu.title" datatype="html">
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">63</context></context-group></trans-unit><trans-unit id="ui.classic.const.word.yes" datatype="html">
+        <source>yes</source><target state="new">oui</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.const.word.no" datatype="html">
+        <source>no</source><target state="new">non</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.explorer.browser.admin-menu.title" datatype="html">
         <source>administration</source><target state="new">administration</target>
         
       <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/explorer/components/browser/browser.component.html</context><context context-type="linenumber">19</context></context-group></trans-unit><trans-unit id="client.messages.errors.input.no-organization-id" datatype="html">
@@ -69,7 +81,7 @@
       <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/core/resolvers/preparation-data/preparation-data.resolver.ts</context><context context-type="linenumber">69</context></context-group></trans-unit><trans-unit id="ui.classic.shared.dynamic-table.empty-hint.default" datatype="html">
         <source>No data</source><target state="new">aucune donnée</target>
         
-      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/shared/components/dynamic-table/dynamic-table.component.ts</context><context context-type="linenumber">31</context></context-group></trans-unit><trans-unit id="ui.classic.shared.const.date.more-than-a-year" datatype="html">
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/shared/components/dynamic-table/dynamic-table.component.ts</context><context context-type="linenumber">32</context></context-group></trans-unit><trans-unit id="ui.classic.shared.const.date.more-than-a-year" datatype="html">
         <source>more than a year</source><target state="new">il y a plus d'un an</target>
         <context-group purpose="location">
           <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>

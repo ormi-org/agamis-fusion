@@ -2,10 +2,10 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
+  ContentChildren, Input, OnDestroy, OnInit, QueryList, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
-import { BehaviorSubject, combineLatest, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { HeadCellComponent } from './head-cell/head-cell.component';
 import { ColumnDirective } from './meta/column/column.directive';
 import { Column } from './models/column.model';
@@ -24,6 +24,7 @@ export class DynamicTableComponent<T extends Uniquely>
   implements OnDestroy, AfterViewInit, AfterContentInit
 {
   private sortEvent: Subject<Sorting> = new Subject();
+  private selectedEntityEvent: Subject<T> = new Subject();
 
   @Input()
   datasource!: DataSource<T>;
@@ -34,8 +35,6 @@ export class DynamicTableComponent<T extends Uniquely>
   protected getColumnsWidthsAsync: () => [string, BehaviorSubject<number>][] =
     () => this.columns.map((col) => [col.key, col.widthSubject]);
   protected rows: Array<Row<T>> = [];
-
-  private selectedEntitySubject: Subject<T> = new Subject();
 
   @ContentChildren(ColumnDirective)
   private columnsDef!: QueryList<ColumnDirective>;
@@ -100,7 +99,7 @@ export class DynamicTableComponent<T extends Uniquely>
           .toArray()
           .filter(_ => _ !== row)
           .forEach(_ => _.clearSelect());
-          this.selectedEntitySubject.next(updatedValue[1]);
+          this.selectedEntityEvent.next(updatedValue[1]);
         }
       });
     });
@@ -136,7 +135,11 @@ export class DynamicTableComponent<T extends Uniquely>
     this.datasource.disconnect();
   }
 
-  public getSelectEvent(): Subject<T> {
-    return this.selectedEntitySubject;
+  public getSortEvent(): Observable<Sorting> {
+    return this.sortEvent.asObservable();
+  }
+
+  public getSelectEvent(): Observable<T> {
+    return this.selectedEntityEvent.asObservable();
   }
 }
