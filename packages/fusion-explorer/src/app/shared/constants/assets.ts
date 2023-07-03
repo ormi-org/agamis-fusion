@@ -8,6 +8,7 @@ export enum Icon {
     USER_LOCK = 'user-lock.svg',
     USER = 'user.svg',
     CROSS = 'cross.svg',
+    DISKETTE = 'diskette.svg',
     QUESTION_LINE = 'question-line.svg',
 }
 

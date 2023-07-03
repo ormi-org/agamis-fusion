@@ -155,6 +155,10 @@ div.container {
         }
         > button.submit {
             border: 1px solid map-get($colors, 'input-borders-light');
+            border-radius: 2px;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
             @include setColor(primary-three);
             cursor: pointer;
             width: fit-content;
