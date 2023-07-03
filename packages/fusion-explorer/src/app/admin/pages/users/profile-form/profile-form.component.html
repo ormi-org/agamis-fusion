@@ -57,7 +57,7 @@
                        (change)="onUsernameChange($event)"
                        [placeholder]="profile.user?.username"
                 />
-                <div *ngIf="profile.alias !== undefined" ngClass="alias-icon">
+                <div *ngIf="profile.alias !== null" ngClass="alias-icon">
                     <div ngClass="text">A</div>
                     <img ngClass="alias-icon-frame"
                          src="{{Icon.AGAMIS_FUSION_BLUE_STAR | iconify}}"
@@ -92,10 +92,12 @@
                        i18n="@@ui.classic.admin.pages.users.profile.details.active:active">
                     {{ "active" | capitalizeFirst }}
                 </label>
-                <input type="checkbox"
-                       [value]="profile.isActive"
-                       (change)="onActiveStateChange($event)"
-                       [placeholder]="profile.isActive"
+                <shared-switch (change)="onActiveStateChange($event)"
+                               [value]="profile.isActive"
+                               [falseValue]="'no' | capitalizeFirst"
+                               i18n-falseValue="@@ui.classic.const.word.no:no"
+                               [trueValue]="'yes' | capitalizeFirst"
+                               i18n-trueValue="@@ui.classic.const.word.yes:yes"
                 />
             </div>
             <div class="raw-field">
@@ -126,6 +128,8 @@
                 </span>
             </div>
         </section>
-
+        <button class="submit" (click)="onFormSubmit()">
+            <span i18n="@@ui.classic.admin.pages.users.profile.details.save:save">Save</span>
+        </button>
     </div>
 </div>

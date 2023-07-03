@@ -14,6 +14,7 @@ import { RouterModule } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { SeparatorComponent } from './components/separator/separator.component';
 import { TimeDiffLimitPipe } from './pipes/timeDiffLimit.pipe';
+import { SwitchComponent } from './components/switch/switch.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { TimeDiffLimitPipe } from './pipes/timeDiffLimit.pipe';
     LoadingBarComponent,
     HeaderComponent,
     SeparatorComponent,
+    SwitchComponent,
   ],
   imports: [CommonModule, RouterModule],
   exports: [
@@ -46,6 +48,7 @@ import { TimeDiffLimitPipe } from './pipes/timeDiffLimit.pipe';
     LoadingBarComponent,
     HeaderComponent,
     SeparatorComponent,
+    SwitchComponent,
   ],
 })
 export class SharedModule {}

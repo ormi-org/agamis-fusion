@@ -50,7 +50,11 @@ export class ProfileFormComponent implements OnInit {
     console.log(event);
   }
 
-  onActiveStateChange(event: Event): void {
-    console.log(event);
+  onActiveStateChange(state: boolean): void {
+    console.log(state);
+  }
+
+  onFormSubmit(): void {
+    console.log("submit");
   }
 }
