@@ -25,23 +25,22 @@ div.table-container {
         > div.table-body {
             height: calc(100% - 30px);
             overflow-y: auto;
-        }
-
-        > div.empty-hint, > div.loading-hint {
-            padding-left: 30px;
-            padding-top: 10px;
-            height: 28px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        > div.empty-hint {
-            color: map-get($colors, secondary-one);
-        }
-
-        > div.loading-hint {
-            color: map-get($colors, secondary-three);
+            > div.empty-hint, > div.loading-hint {
+                padding-left: 30px;
+                padding-top: 10px;
+                height: 28px;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+            }
+    
+            > div.empty-hint {
+                color: map-get($colors, secondary-one);
+            }
+    
+            > div.loading-hint {
+                color: map-get($colors, secondary-three);
+            }
         }
     }
 }
