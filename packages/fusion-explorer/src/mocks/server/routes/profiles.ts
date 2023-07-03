@@ -1,4 +1,4 @@
-import { Server } from 'miragejs';
+import { Response, Server } from 'miragejs';
 import { default as profiles } from '../../data/dist/profiles.json';
 
 const DEFAULT_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16';
@@ -56,6 +56,21 @@ const profilesRoutes = (server: Server) => {
           });
           return p;
         });
+      }, { timing: 1000 }
+    ),
+    server.get(
+      `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
+      (_, request) => {
+        const { id } = request.params;
+        // return dynamic result
+        const fetched = profiles
+        .org_profiles_sample_with_user
+        .find(p => p.id === id);
+
+        if (!fetched) {
+          return new Response(404, {});
+        }
+        return fetched;
       }, { timing: 1000 }
     ),
   ];

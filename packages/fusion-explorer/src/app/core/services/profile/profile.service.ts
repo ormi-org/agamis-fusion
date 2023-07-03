@@ -88,4 +88,42 @@ export class ProfileService {
         })
       );
   }
+
+  fetchProfileById(
+    orgId: string,
+    profileId: string
+  ): Observable<Profile> {
+    if (this.orgBaseUrl === undefined) {
+      console.warn(
+        '> ProfileService#fetchProfileById(string, string) >> base url is not defined'
+      );
+      return of();
+    }
+    return this.http
+      .get<Profile>(`${this.orgBaseUrl}/${orgId}/profile/${profileId}`)
+      .pipe(
+        retry(2),
+        map((p) => {
+          p.lastLogin = new Date(p.lastLogin);
+          p.updatedAt = new Date(p.updatedAt);
+          p.createdAt = new Date(p.createdAt);
+          return p;
+        }),
+        catchError((err: HttpErrorResponse) => {
+          if (err.status === 0) {
+            console.warn(
+              '< ProfileService#fetchProfileById(string, string) << an error occured on http request:',
+              err.error
+            );
+          } else {
+            console.warn(
+              '< ProfileService#fetchProfileById(string, string) << server returned code %d with body:',
+              err.status,
+              err.error
+            )
+          }
+          return throwError(() => err);
+        })
+      )
+  }
 }

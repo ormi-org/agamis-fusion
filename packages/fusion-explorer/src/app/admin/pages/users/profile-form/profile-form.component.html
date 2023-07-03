@@ -121,10 +121,10 @@
             <div class="raw-field">
                 <span
                        i18n="@@ui.classic.admin.pages.users.profile.details.created-on:created-on">
-                    {{ "last updated" | capitalizeFirst }}
+                    {{ "created on" | capitalizeFirst }}
                 </span>
                 <span>
-                    {{ profile.updatedAt | date:'medium' }}
+                    {{ profile.createdAt | date:'medium' }}
                 </span>
             </div>
         </section>
