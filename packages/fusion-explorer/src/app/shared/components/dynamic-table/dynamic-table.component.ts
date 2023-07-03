@@ -2,7 +2,7 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, Input, OnDestroy, QueryList, ViewChildren
+  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -25,6 +25,7 @@ export class DynamicTableComponent<T extends Uniquely>
 {
   private sortEvent: Subject<Sorting> = new Subject();
   private selectedEntityEvent: Subject<T> = new Subject();
+  private bodyScrollEvent: Subject<void> = new Subject();
 
   @Input()
   datasource!: DataSource<T>;
@@ -35,6 +36,9 @@ export class DynamicTableComponent<T extends Uniquely>
   protected getColumnsWidthsAsync: () => [string, BehaviorSubject<number>][] =
     () => this.columns.map((col) => [col.key, col.widthSubject]);
   protected rows: Array<Row<T>> = [];
+
+  @ViewChild('tableBody', { read: ElementRef })
+  private tableBody!: ElementRef;
 
   @ContentChildren(ColumnDirective)
   private columnsDef!: QueryList<ColumnDirective>;
@@ -79,6 +83,10 @@ export class DynamicTableComponent<T extends Uniquely>
   }
 
   ngAfterViewInit(): void {
+    // reset scroll to 0 when datasource values are reset
+    this.datasource.getResetEvent().subscribe(() => {
+      (<HTMLElement>this.tableBody.nativeElement).scrollTo(0, 0);
+    });
     // init elements reactivity and init again on element changes
     this.initHeadCellsReactivity();
     this.initRowsReactivity();
@@ -135,11 +143,24 @@ export class DynamicTableComponent<T extends Uniquely>
     this.datasource.disconnect();
   }
 
+  protected onBodyScroll(event: WheelEvent): void {
+    const element = event.currentTarget as HTMLElement;
+    if ((element.offsetHeight + Math.round(element.scrollTop)) >= element.scrollHeight
+      && event.deltaY > 0) {
+      // trigger scroll only if at bottom and scrolling down
+      this.bodyScrollEvent.next();
+    }
+  }
+
   public getSortEvent(): Observable<Sorting> {
     return this.sortEvent.asObservable();
   }
 
   public getSelectEvent(): Observable<T> {
     return this.selectedEntityEvent.asObservable();
+  }
+
+  public getBodyScrollEvent(): Observable<void> {
+    return this.bodyScrollEvent.asObservable();
   }
 }

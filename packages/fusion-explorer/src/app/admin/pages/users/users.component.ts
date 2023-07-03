@@ -9,7 +9,7 @@ import LoadingQuery from '@shared/components/dynamic-table/typed/data-source/typ
 import { Icon } from '@shared/constants/assets';
 import { DateFormatter } from '@shared/constants/utils/date-formatter';
 import { Ordering } from '@shared/constants/utils/ordering';
-import { Subject } from 'rxjs';
+import { Subject, auditTime, filter, withLatestFrom } from 'rxjs';
 import { UserTableDatasource } from './datasources/user-table.datasource';
 import { ProfileFormService } from './profile-form/profile-form.service';
 
@@ -26,7 +26,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   protected Ordering = Ordering;
   protected Icon: typeof Icon = Icon;
   
-  protected datasourceQuerySubject: Subject<LoadingQuery> = new Subject();
+  protected datasourceQuerySubject: Subject<[LoadingQuery, boolean]> = new Subject();
   protected tableDatasource: UserTableDatasource;
 
   private query: LoadingQuery = {
@@ -36,7 +36,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       direction: Ordering.DESC
     },
     pageIndex: 1,
-    pageSize: 25
+    pageSize: 50
   };
 
   @ViewChild(DynamicTableComponent)
@@ -96,11 +96,11 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
     // subscribe to loadingQuery for fetching
-    this.datasourceQuerySubject.subscribe((query) => {
-      this.tableDatasource.load(query);
+    this.datasourceQuerySubject.subscribe(([query, stack]) => {
+      this.tableDatasource.load(query, stack);
     });
     // initial fetch
-    this.datasourceQuerySubject.next(this.query);
+    this.datasourceQuerySubject.next([this.query, false]);
   }
 
   ngAfterViewInit(): void {
@@ -111,8 +111,23 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     this.dynTable.getSortEvent().subscribe((updatedValue) => {
       this.query.sorting = updatedValue;
-      this.datasourceQuerySubject.next(this.query);
+      this.query.pageIndex = 1;
+      this.datasourceQuerySubject.next([this.query, false]);
     })
+    // check on scroll event for table to load next chunk of data
+    this.dynTable.getBodyScrollEvent()
+    .pipe(
+      auditTime(500),
+      withLatestFrom(this.loadingService.$loading),
+      filter(([_, loading]) => loading === false)
+    ).subscribe(([_, loading]) => {
+      // trigger next page only if not already loading
+      if (!loading) {
+        // itterate pageIndex by 1 then next & stack
+        this.query.pageIndex += 1;
+        this.datasourceQuerySubject.next([this.query, true]);
+      }
+    });
   }
   
   ngOnDestroy(): void {

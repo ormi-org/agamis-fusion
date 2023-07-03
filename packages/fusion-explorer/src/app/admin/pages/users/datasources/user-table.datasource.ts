@@ -5,10 +5,11 @@ import { selectOrganization } from "@explorer/states/explorer-state/explorer-sta
 import { Store } from "@ngrx/store";
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
 import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typed/loading-query.interface";
-import { BehaviorSubject, map, Observable, ReplaySubject, skipWhile } from "rxjs";
+import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, take } from "rxjs";
 
 export class UserTableDatasource implements DataSource<Profile> {
     private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject();
+    private resetSubject = new Subject<void>();
     private profilesSubject = new BehaviorSubject<Profile[]>([]);
     private loadingSubject = new ReplaySubject<boolean>();
 
@@ -39,7 +40,7 @@ export class UserTableDatasource implements DataSource<Profile> {
         this.loadingSubject.complete();
     }
 
-    load(query: LoadingQuery): void {
+    load(query: LoadingQuery, stack: boolean): void {
         // wait for orgId to be populated from store
         this.orgIdSub.subscribe(orgId => {
             if (orgId === undefined) {
@@ -53,16 +54,39 @@ export class UserTableDatasource implements DataSource<Profile> {
             } = query;
             // put subject into loading state
             this.loadingSubject.next(true);
-            this.profileService.fetchUserProfilesFromOrganization(orgId, {
+            const fetchProfileSub = this.profileService.fetchUserProfilesFromOrganization(orgId, {
                 filters,
                 include: [IncludableProfileFields.USER],
                 sorting, 
                 offset: (pageIndex - 1) * pageSize,
                 limit: pageIndex * pageSize
-            }).subscribe((profiles) => {
-                this.loadingSubject.next(false);
-                this.profilesSubject.next(profiles);
             });
+            // if stack, stack up new result with old
+            if (stack) {
+                combineLatest([
+                    this.profilesSubject,
+                    fetchProfileSub
+                ])
+                .pipe(
+                    // Prevents repeat on profilesSubject
+                    take(1)
+                )
+                .subscribe(([here, fetched]) => {
+                    this.loadingSubject.next(false);
+                    this.profilesSubject.next(here.concat(fetched));
+                })
+            // else reset and replace current values
+            } else {
+                this.resetSubject.next();
+                fetchProfileSub.subscribe((profiles) => {
+                    this.loadingSubject.next(false);
+                    this.profilesSubject.next(profiles);
+                });
+            }
         });
+    }
+
+    getResetEvent(): Observable<void> {
+        return this.resetSubject.asObservable();
     }
 }

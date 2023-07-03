@@ -13,15 +13,22 @@ export default interface DataSource<T> {
     /** 
      * load data
      * 
-     * @param filters a filters specification
-     * @param sorting a sorting order
-     * @param pageIndex index of the data page to get
-     * @param pageSize number of elements inside the page
+     * @param query query object {
+     *      @param filters a filters specification
+     *      @param sorting a sorting order
+     *      @param pageIndex index of the data page to get
+     *      @param pageSize number of elements inside the page
+     * }
+     * @param stack either should stack with already fetched data or not
      */
-    load(query: LoadingQuery): void;
+    load(query: LoadingQuery, stack: boolean): void;
     /**
      * a loading observable to keep track of loading state of the source
      * (be careful to use a BehaviorSubject to emit current value on subscribe)
      */
     $loading: Observable<boolean>;
+    /**
+     * a reset event observable to track state
+     */
+    getResetEvent(): Observable<void>;
 }
