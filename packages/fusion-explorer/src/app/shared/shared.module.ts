@@ -13,11 +13,13 @@ import { LoadingBarComponent } from './components/loading-bar/loading-bar.compon
 import { RouterModule } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { SeparatorComponent } from './components/separator/separator.component';
+import { TimeDiffLimitPipe } from './pipes/timeDiffLimit.pipe';
 
 @NgModule({
   declarations: [
     CapitalizeFirstPipe,
     IconifyPipe,
+    TimeDiffLimitPipe,
     DynamicTableComponent,
     HeadCellComponent,
     CellComponent,
@@ -33,6 +35,7 @@ import { SeparatorComponent } from './components/separator/separator.component';
   exports: [
     CapitalizeFirstPipe,
     IconifyPipe,
+    TimeDiffLimitPipe,
     DynamicTableComponent,
     HeadCellComponent,
     CellComponent,

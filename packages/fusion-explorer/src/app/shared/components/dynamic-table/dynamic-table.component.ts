@@ -2,7 +2,7 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, Input, OnDestroy, OnInit, QueryList, ViewChildren
+  ContentChildren, Input, OnDestroy, QueryList, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -52,7 +52,7 @@ export class DynamicTableComponent<T extends Uniquely>
     });
     if (orderedCol === undefined) {
       // Throw an error if no column is ordered
-      let msg = `Table cannot instiate without at least one ordered column`;
+      const msg = `Table cannot instiate without at least one ordered column`;
       throw new Error(msg);
     }
     // Push column definitions from angular html materialized content
@@ -82,10 +82,10 @@ export class DynamicTableComponent<T extends Uniquely>
     // init elements reactivity and init again on element changes
     this.initHeadCellsReactivity();
     this.initRowsReactivity();
-    this.headCellsElements.changes.subscribe(_ => {
+    this.headCellsElements.changes.subscribe(() => {
       this.initHeadCellsReactivity();
     });
-    this.rowElements.changes.subscribe(_ => {
+    this.rowElements.changes.subscribe(() => {
       this.initRowsReactivity();
     });
   }

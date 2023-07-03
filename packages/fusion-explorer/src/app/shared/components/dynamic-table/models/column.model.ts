@@ -2,7 +2,7 @@ import { Ordering } from "@shared/constants/utils/ordering";
 import { BehaviorSubject } from "rxjs";
 
 export class Column {
-    private width: number = 0;
+    private width = 0;
 
     constructor(
         public key: string,

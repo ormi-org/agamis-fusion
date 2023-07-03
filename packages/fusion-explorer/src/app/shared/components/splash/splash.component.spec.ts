@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SplashComponent } from './splash.component';
 import { SharedModule } from '@shared/shared.module';
-import { BehaviorSubject } from 'rxjs';
 import { CoreModule } from '@core/core.module';
 import { StoreModule } from '@ngrx/store';
 

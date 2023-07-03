@@ -9,6 +9,18 @@
 
 div.page-container {
     height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    display: flex;
+    align-content: center;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+div.table-container {
+    height: 100%;
+    width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
 }

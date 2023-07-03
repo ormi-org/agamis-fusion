@@ -17,7 +17,7 @@ export class CellComponent implements CellDefinition, OnInit {
   @Input()
   widthSubject!: BehaviorSubject<number>;
   @Input()
-  template!: TemplateRef<any>;
+  template!: TemplateRef<unknown>;
 
   constructor(private host: ElementRef) {}
 

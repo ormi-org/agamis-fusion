@@ -15,7 +15,7 @@ import { catchError, throwError, tap, zip, of, Subscription } from 'rxjs';
 
 const LS_ORG_ID_KEY = 'app.native.fusion.explorer.orgid';
 
-export const preparationDataResolver: ResolveFn<Subscription | undefined> = (route, _) => {
+export const preparationDataResolver: ResolveFn<Subscription | undefined> = (route) => {
   // injections
   const router = inject(Router);
   const store = inject(Store);
@@ -48,7 +48,7 @@ export const preparationDataResolver: ResolveFn<Subscription | undefined> = (rou
         store.dispatch(loadConfig({ config: fetchedConfig }));
       })
     )
-    .subscribe((_) => {
+    .subscribe(() => {
       zip(
         // 2. Authentication + Load profile data
         jwtAuthService.getUserInfo()
@@ -82,8 +82,11 @@ export const preparationDataResolver: ResolveFn<Subscription | undefined> = (rou
           return throwError(() => new Error(err))
         })
       )
-      .subscribe(([_]) => {
+      .subscribe(() => {
         splashService.next();
+        route.data = {
+          orgId: orgId
+        };
         // timeout the splash disapearance for smoothing loading bar animation
         setTimeout(() => {
           splashService.complete();

@@ -23,7 +23,7 @@ export default {
   ]
 } as Meta<ItemComponent>;
 
-export const itemNormal = {  
+export const ItemNormal = {  
   render: (args: ItemComponent) => ({
     props: args,
   }),
@@ -33,7 +33,7 @@ export const itemNormal = {
   },
 };
 
-export const itemActive = {
+export const ItemActive = {
   render: (args: ItemComponent) => ({
     props: args,
   }),

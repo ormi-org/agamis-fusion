@@ -4,6 +4,7 @@ import { CoreModule } from '@core/core.module';
 import { SharedModule } from '@shared/shared.module';
 import { StoreModule } from '@ngrx/store';
 import { ExplorerModule } from '@explorer/explorer.module';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('UsersComponent', () => {
   let component: UsersComponent;
@@ -13,6 +14,7 @@ describe('UsersComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         StoreModule.forRoot({}),
+        RouterTestingModule,
         CoreModule,
         SharedModule,
         ExplorerModule

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { Icon } from '@shared/constants/assets';
 
 @Component({
@@ -8,7 +8,7 @@ import { Icon } from '@shared/constants/assets';
 })
 export class ItemComponent implements AfterViewInit {
   @Input()
-  text: string = "undefined text";
+  text = "undefined text";
   @Input()
   icon: {
     key: Icon,

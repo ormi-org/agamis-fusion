@@ -26,8 +26,10 @@ describe('HeadCellComponent', () => {
 
   test('#switchOrdering() should toggle #associatedColumn->ordering', () => {
     expect(component.associatedColumn.ordering).toBe(Ordering.NONE);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (component as any).switchOrdering();
     expect(component.associatedColumn.ordering).toBe(Ordering.ASC);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (component as any).switchOrdering();
     expect(component.associatedColumn.ordering).toBe(Ordering.DESC);
   });

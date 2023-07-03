@@ -1,7 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { SplashService } from '@core/services/utils/splash/splash.service';
-import { Color, Icon } from '@shared/constants/assets';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Icon } from '@shared/constants/assets';
 import { Stage as LoadingBarStage } from '../loading-bar/models/stage.model';
 
 @Component({

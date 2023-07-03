@@ -8,7 +8,7 @@ export class Cell {
         public context: {
             value: string
         },
-        public template: TemplateRef<any>,
+        public template: TemplateRef<unknown>,
         public widthSubject: BehaviorSubject<number>
     ) {}
 }

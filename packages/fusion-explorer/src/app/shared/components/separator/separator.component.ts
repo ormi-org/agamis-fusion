@@ -1,4 +1,4 @@
-import { AfterContentInit, Component, HostBinding, Input, OnInit } from '@angular/core';
+import { AfterContentInit, Component, HostBinding, Input } from '@angular/core';
 import { Direction } from './models/enums/direction.enum';
 
 @Component({

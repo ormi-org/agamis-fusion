@@ -15,137 +15,137 @@ describe('DateFormatter', () => {
   });
 
   it('formatToTimeDiffLimit(Date)#should return number of months when number of diffday is <= 365 and > 30', () => {
-    var expected = '1 year ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365);
+    let expected = '1 year ago';
+    let dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11.6);
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11.6);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '11 months ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11.2);
+    expected = '11 months ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11.2);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '11 months ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11);
+    expected = '11 months ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 11);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '2 months ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 2);
+    expected = '2 months ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 2);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'last month';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 1);
+    expected = 'last month';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/12 * 1);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
   });
 
   it('formatToTimeDiffLimit(Date)#should return number of weeks when number of diffday is < 30 and >= 7', () => {
-    var expected = '4 weeks ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 4);
+    let expected = '4 weeks ago';
+    let dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 4);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 3.6);
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 3.6);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '3 weeks ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 3.2);
+    expected = '3 weeks ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52 * 3.2);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'last week';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52);
+    expected = 'last week';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 365/52);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
   });
 
   it('formatToTimeDiffLimit(Date)#should return number of days when number of diffday is < 7 and >= 1', () => {
-    var expected = '6 days ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 6);
+    let expected = '6 days ago';
+    let dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 6);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 6.4);
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 6.4);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '3 days ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 2.5);
+    expected = '3 days ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY * 2.5);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'yesterday';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_DAY);
+    expected = 'yesterday';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_DAY);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
   });
 
   it('formatToTimeDiffLimit(Date)#should return number of hours when number of diffhour is < 24 and >= 1', () => {
-    var expected = '23 hours ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 23);
+    let expected = '23 hours ago';
+    let dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 23);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 23.3);
+    dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 23.3);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '3 hours ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 2.5);
+    expected = '3 hours ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR * 2.5);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'an hour ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR);
+    expected = 'an hour ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_HOUR);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
   });
 
   it('formatToTimeDiffLimit(Date)#should return number of minutes when number of diffmin is < 60', () => {
-    var expected = '59 minutes ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 59);
+    let expected = '59 minutes ago';
+    let dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 59);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 59.2);
+    dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 59.2);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = '10 minutes ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 10);
+    expected = '10 minutes ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_MIN * 10);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);
 
-    var expected = 'a minute ago';
-    var dateToCompare = new Date(new Date().getTime() - MS_PER_MIN);
+    expected = 'a minute ago';
+    dateToCompare = new Date(new Date().getTime() - MS_PER_MIN);
 
     expect(DateFormatter.formatToTimeDiffLimit(dateToCompare))
     .toBe(expected);

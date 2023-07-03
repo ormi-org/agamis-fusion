@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Input, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnInit } from '@angular/core';
 import { Color } from '@shared/constants/assets';
 import { Observable, Subject } from 'rxjs';
 import { Stage } from './models/stage.model';
@@ -36,7 +36,7 @@ export class LoadingBarComponent implements OnInit, AfterViewInit {
   nextStageSignalSubject!: Subject<void>;
   @Input()
   stages: Stage[] = DEFAULT_STAGES;
-  private currentStage: number = -1;
+  private currentStage = -1;
   protected fill: number = INITIAL_FILL;
   protected fillDuration: number = INITIAL_FILL_DURATION;
   @Input()

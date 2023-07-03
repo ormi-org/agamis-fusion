@@ -24,7 +24,7 @@ const EXPECTED_LOCALIZED_TEXT: LocalizedText = new LocalizedText([
 describe('localized-test', () => {
 
     it('should create', () => {
-        let lt = new LocalizedText();
+        const lt = new LocalizedText();
         expect(lt instanceof LocalizedText).toBeTruthy();
     });
 

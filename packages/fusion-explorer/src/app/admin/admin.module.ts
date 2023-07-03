@@ -9,6 +9,8 @@ import { UsersComponent } from './pages/users/users.component';
 import { GroupsComponent } from './pages/groups/groups.component';
 import { PermissionsComponent } from './pages/permissions/permissions.component';
 import { OrganizationComponent } from './pages/organization/organization.component';
+import { ProfileFormComponent } from './pages/users/profile-form/profile-form.component';
+import { ProfileFormService } from './pages/users/profile-form/profile-form.service';
 
 @NgModule({
   declarations: [
@@ -18,8 +20,10 @@ import { OrganizationComponent } from './pages/organization/organization.compone
     GroupsComponent,
     PermissionsComponent,
     OrganizationComponent,
+    ProfileFormComponent,
   ],
   imports: [CommonModule, AdminRoutingModule, SharedModule],
   exports: [MenuComponent],
+  providers: [ProfileFormService]
 })
 export class AdminModule {}

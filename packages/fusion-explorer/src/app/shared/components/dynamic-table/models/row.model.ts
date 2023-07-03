@@ -6,13 +6,13 @@ export class Row<T> {
         public index: number,
         public templating: ({
             key: string,
-            compute: ((model: Object) => { value: string }),
-            template: TemplateRef<any>
+            compute: ((model: object) => { value: string }),
+            template: TemplateRef<unknown>
         })[],
         public value: T,
     ) {}
 }
 
-export function trackByUqId(_: number, el: Row<any>): string {
+export function trackByUqId(_: number, el: Row<unknown>): string {
     return el.uqId;
 }

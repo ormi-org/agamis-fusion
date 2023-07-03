@@ -1,7 +1,7 @@
-import { Response, Server, createServer } from 'miragejs';
-import profilesRoutes from './routes/profiles';
+import { createServer } from 'miragejs';
 import authRoutes from './routes/auth';
 import organizationsRoutes from './routes/organizations';
+import profilesRoutes from './routes/profiles';
 
 export function v1() {
     createServer({

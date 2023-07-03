@@ -7,6 +7,7 @@ export enum Icon {
     KEY = 'key.svg',
     USER_LOCK = 'user-lock.svg',
     USER = 'user.svg',
+    CROSS = 'cross.svg',
     QUESTION_LINE = 'question-line.svg',
 }
 
@@ -14,6 +15,7 @@ export enum Color {
     PRIMARY_ONE = '1E1E1E',
     PRIMARY_TWO = 'EF4343',
     PRIMARY_THREE = 'F5F1E4',
+    PRIMARY_MODAL = '52575C',
     SECONDARY_ONE = 'C8C3B2',
     SECONDARY_TWO = 'C8C3B27B',
     SECONDARY_THREE = '505050',

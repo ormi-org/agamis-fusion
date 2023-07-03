@@ -1,9 +1,9 @@
-import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AppConfig } from '../../models/app-config.model';
 import { CoreModule } from '@core/core.module';
 import { environment } from '@environments/environment';
-import { Observable, catchError, of, retry, tap, throwError } from 'rxjs';
+import { Observable, catchError, of, retry, throwError } from 'rxjs';
+import { AppConfig } from '../../models/app-config.model';
 
 @Injectable({
   providedIn: CoreModule,

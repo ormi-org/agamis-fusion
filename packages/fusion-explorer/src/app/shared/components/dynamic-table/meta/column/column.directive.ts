@@ -8,8 +8,9 @@ export class ColumnDirective {
   @Input()
   key!: string;
   @Input()
-  template!: TemplateRef<any>;
+  template!: TemplateRef<unknown>;
   @Input()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compute: ((model: any) => { value: string }) = (m) => {
     return {
       value: m[this.key]?.toString() || ""
@@ -22,7 +23,7 @@ export class ColumnDirective {
   @Input()
   initOrder: Ordering = Ordering.NONE;
   @Input()
-  width: number = 0;
+  width = 0;
 
   getKey(): string {
     return this.key;

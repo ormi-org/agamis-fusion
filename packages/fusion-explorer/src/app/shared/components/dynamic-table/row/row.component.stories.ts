@@ -22,10 +22,10 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<RowComponent<any>>;
+} as Meta<RowComponent<object>>;
 
 export const Default = {
-  render: (args: RowComponent<any>) => ({
+  render: (args: RowComponent<object>) => ({
     props: args,
   }),
   args: {
@@ -36,7 +36,7 @@ export const Default = {
 };
 
 export const DefaultSelected = {
-  render: (args: RowComponent<any>) => ({
+  render: (args: RowComponent<object>) => ({
     props: args,
   }),
   args: {

@@ -5,6 +5,7 @@ import { SharedModule } from '@shared/shared.module';
 import { customViewport } from './.storybook';
 import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 import { Ordering } from '@shared/constants/utils/ordering';
+import { Uniquely } from './typed/uniquely.interface';
 
 export default {
   title: 'Shared/DynamicTable/Table',
@@ -23,10 +24,10 @@ export default {
       imports: [SharedModule],
     }),
   ],
-} as Meta<DynamicTableComponent<any>>;
+} as Meta<DynamicTableComponent<Uniquely>>;
 
 export const Default = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable [datasource]="datasource">
@@ -65,7 +66,7 @@ export const Default = {
 };
 
 export const OrderedBySecondColumn = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable [datasource]="datasource">
@@ -104,7 +105,7 @@ export const OrderedBySecondColumn = {
 };
 
 export const Empty = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable
@@ -144,7 +145,7 @@ export const Empty = {
 };
 
 export const EmptyWithCustomHint = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable
@@ -185,7 +186,7 @@ export const EmptyWithCustomHint = {
 };
 
 export const MissingColumn = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable [datasource]="datasource">
@@ -218,7 +219,7 @@ export const MissingColumn = {
 };
 
 export const FilteredColumn = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable [datasource]="datasource">
@@ -257,7 +258,7 @@ export const FilteredColumn = {
 };
 
 export const EllipsedText = {
-  render: (args: DynamicTableComponent<any>) => ({
+  render: (args: DynamicTableComponent<Uniquely>) => ({
     props: args,
     template: `
       <shared-dyntable [datasource]="datasource">

@@ -1,8 +1,7 @@
 import { Ordering } from '@shared/constants/utils/ordering';
-import { BehaviorSubject, Observable, startWith } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import DataSource from '../typed/data-source/data-source.interface';
-import Filtering from '../typed/data-source/typed/filtering.interface';
-import Sorting from '../typed/data-source/typed/sorting.interface';
+import LoadingQuery from '../typed/data-source/typed/loading-query.interface';
 
 interface Dummy {
   first: number;
@@ -53,16 +52,17 @@ export class DummyDatasource implements DataSource<Dummy> {
 
   // static factory
   static asSourceOf(sourceData: Dummy[]): DummyDatasource {
-    let ds = new DummyDatasource();
+    const ds = new DummyDatasource();
     ds.dummies = sourceData;
-    ds.load(
-      [],
-      {
+    ds.load({
+      filters: [],
+      sorting: {
         direction: Ordering.DESC,
         field: ''
       },
-      1,
-      5
+      pageIndex: 1,
+      pageSize: 5
+    }
     );
     return ds;
   }
@@ -71,13 +71,14 @@ export class DummyDatasource implements DataSource<Dummy> {
     return this.dummiesSubject.asObservable();
   }
 
-  load(filters: Filtering[], sorting: Sorting, pageIndex: number, pageSize: number): void {
+  load(query: LoadingQuery): void {
     // A dummy way to simulate loading from backend
+    const { filters, sorting } = query;
     const seen: Set<number> = new Set();
     const filtered = 
       filters.length > 0 ?
       filters.reduce((acc, f) => {
-        let filtered: Dummy[] = 
+        const filtered: Dummy[] = 
           this.dummies.filter((d) => {
             return d[f.field].toString().includes(f.value);
           });

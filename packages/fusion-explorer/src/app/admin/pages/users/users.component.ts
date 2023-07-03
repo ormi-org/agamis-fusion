@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, Inject, LOCALE_ID, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Profile } from '@core/models/data/profile.model';
 import { ProfileService } from '@core/services/profile/profile.service';
 import { LoadingService } from '@explorer/utils/loading/loading.service';
@@ -10,6 +11,7 @@ import { DateFormatter } from '@shared/constants/utils/date-formatter';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { Subject } from 'rxjs';
 import { UserTableDatasource } from './datasources/user-table.datasource';
+import { ProfileFormService } from './profile-form/profile-form.service';
 
 type TemplateComputing = (profile: Profile) => { value: string };
 type UsernameTemplateComputing = (profile: Profile) => { value: string; isAlias: boolean };
@@ -26,6 +28,16 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   
   protected datasourceQuerySubject: Subject<LoadingQuery> = new Subject();
   protected tableDatasource: UserTableDatasource;
+
+  private query: LoadingQuery = {
+    filters: [],
+    sorting: {
+      field: 'lastLogin',
+      direction: Ordering.DESC
+    },
+    pageIndex: 1,
+    pageSize: 25
+  };
 
   @ViewChild(DynamicTableComponent)
   private dynTable!: DynamicTableComponent<Profile>;
@@ -63,12 +75,15 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   });
 
   constructor(
-    @Inject(LOCALE_ID) private locale: string,
-    private loadingService: LoadingService,
-    private profileService: ProfileService,
-    private readonly _: Store
+    @Inject(LOCALE_ID) private readonly locale: string,
+    private readonly router: Router,
+    private readonly activatedRoute: ActivatedRoute,
+    private readonly loadingService: LoadingService,
+    private readonly profileService: ProfileService,
+    private readonly profileFormService: ProfileFormService,
+    private readonly _store: Store
   ) {
-    this.tableDatasource = new UserTableDatasource(_, this.profileService);
+    this.tableDatasource = new UserTableDatasource(_store, this.profileService);
   }
 
   ngOnInit(): void {
@@ -85,23 +100,18 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       this.tableDatasource.load(query);
     });
     // initial fetch
-    this.datasourceQuerySubject.next({
-      filters: [],
-      sorting: {
-        field: 'lastLogin',
-        direction: Ordering.DESC
-      },
-      pageIndex: 1,
-      pageSize: 25
-    });
+    this.datasourceQuerySubject.next(this.query);
   }
 
   ngAfterViewInit(): void {
-    this.dynTable.getSelectEvent().subscribe((updatedValue) => {
-      console.log('Selected profile: %s', updatedValue.id);
+    this.dynTable.getSelectEvent().subscribe((selectedProfile) => {
+      this.router.navigate([selectedProfile.id], {relativeTo: this.activatedRoute}).then(() => {
+        this.profileFormService.pushProfile(selectedProfile);
+      });
     });
     this.dynTable.getSortEvent().subscribe((updatedValue) => {
-      console.log('Sorted profiles by: %s, %s', updatedValue.field, updatedValue.direction);
+      this.query.sorting = updatedValue;
+      this.datasourceQuerySubject.next(this.query);
     })
   }
   

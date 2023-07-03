@@ -1,4 +1,10 @@
-import { Component, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnInit,
+  Renderer2,
+} from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { HeadCellDefinition } from '../typed/head-cell-definition.interface';
 import { Icon } from '@shared/constants/assets';
@@ -10,13 +16,13 @@ const MIN_WIDTH = 50;
 @Component({
   selector: 'shared-dyntable-head-cell',
   templateUrl: './head-cell.component.html',
-  styleUrls: ['./head-cell.component.scss']
+  styleUrls: ['./head-cell.component.scss'],
 })
 export class HeadCellComponent implements HeadCellDefinition, OnInit {
   @Input()
   associatedColumn: Column = new Column(
-    "undefined",
-    "undefined text",
+    'undefined',
+    'undefined text',
     false,
     Ordering.NONE,
     new BehaviorSubject(0)
@@ -30,9 +36,12 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   private orderingSubject: Subject<DefinedOrdering> = new Subject();
   // Init resizing subject (key, newWidth, moveDelta)
   private resizingSubject: Subject<[string, number, number]> = new Subject();
-  private resizing: boolean = false;
+  private resizing = false;
 
-  constructor(private renderer: Renderer2, private host: ElementRef) {
+  constructor(
+    private renderer: Renderer2,
+    private host: ElementRef
+  ) {
     // Init ordering subject value with specified one
     if (this.associatedColumn.ordering !== Ordering.NONE) {
       this.orderingSubject.next(this.associatedColumn.ordering);
@@ -48,7 +57,7 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
   }
 
   protected switchOrdering(): void {
-    var newOrdering = (() => {
+    const newOrdering = (() => {
       switch (this.associatedColumn.ordering) {
         case Ordering.ASC:
           return Ordering.DESC;
@@ -76,23 +85,34 @@ export class HeadCellComponent implements HeadCellDefinition, OnInit {
 
   private toggleResizing(startX: number, startWidth: number): void {
     let previousDelta = 0;
-    let resizableMousemove = this.renderer.listen('document', 'mousemove', (event: MouseEvent) => {
-      if (this.resizing) {
-        const deltaX = event.pageX - startX;
-        const newWidth = Math.max(startWidth + deltaX, MIN_WIDTH);
-        // const newWidth = startWidth + deltaX;
-        this.resizingSubject.next([this.associatedColumn.key, newWidth, - (previousDelta - deltaX)]);
-        previousDelta = deltaX;
+    const resizableMousemove = this.renderer.listen(
+      'document',
+      'mousemove',
+      (event: MouseEvent) => {
+        if (this.resizing) {
+          const deltaX = event.pageX - startX;
+          const newWidth = Math.max(startWidth + deltaX, MIN_WIDTH);
+          // const newWidth = startWidth + deltaX;
+          this.resizingSubject.next([
+            this.associatedColumn.key,
+            newWidth,
+            -(previousDelta - deltaX),
+          ]);
+          previousDelta = deltaX;
+        }
       }
-    });
-    let resizableMouseup;
-    resizableMouseup = this.renderer.listen('document', 'mouseup', (_: MouseEvent) => {
-      if (this.resizing) {
-        this.resizing = false;
-        resizableMousemove();
-        resizableMouseup();
+    );
+    const resizableMouseup = this.renderer.listen(
+      'document',
+      'mouseup',
+      () => {
+        if (this.resizing) {
+          this.resizing = false;
+          resizableMousemove();
+          resizableMouseup();
+        }
       }
-    });
+    );
   }
 
   public getResizing(): Observable<[string, number, number]> {

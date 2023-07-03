@@ -6,13 +6,13 @@ import { LocalStorageResult } from '@core/models/local-storage/local-storage-res
   providedIn: CoreModule,
 })
 export class LocalStorageService {
-  constructor() {}
 
-  set(localStorageKey: string, value: Object): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set(localStorageKey: string, value: any): void {
     localStorage.setItem(localStorageKey, JSON.stringify(value));
   }
 
-  get<T extends Object>(localStorageKey: string): LocalStorageResult<T> {
+  get<T>(localStorageKey: string): LocalStorageResult<T> {
     return ((): LocalStorageResult<T> => {
       const res = localStorage.getItem(localStorageKey);
       if (res === null) {

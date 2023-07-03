@@ -1,0 +1,131 @@
+<shared-separator [direction]="Direction.VERTICAL"
+    [bordering]="0"
+    [color]="'#' + Color.SECONDARY_ONE"
+    [thickness]="1"
+/>
+<div class="container">
+    <h1 i18n="@@ui.classic.admin.pages.users.profile.details.title:details">{{ "Details" | capitalizeFirst }}</h1>
+    <!-- <p *ngIf="profile">Selected profile : {{profile.id}}</p> -->
+    <div *ngIf="profile" class="content">
+        <div class="profile-pic-head">
+            <div class="pic-zone">
+                <div class="pic-container">
+                    <img class="profile-pic" src="https://picsum.photos/64/64"/>
+                    <button (click)="deleteProfilePicture()">
+                    <img src="{{ Icon.CROSS | iconify }}" alt="cross icon"/> 
+                    </button>
+                </div>
+            </div>
+            <div class="pic-upload">
+                <h2 i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.title:upload another avatar">
+                    {{ "upload another avatar" | capitalizeFirst }}
+                </h2>
+                <div>
+                    <label class="upload-button" for="upload-button">
+                        <span i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.upload-button:details">
+                            {{ "choose file" | capitalizeFirst }}
+                        </span>...
+                    </label>
+                    <input id="upload-button" type="file"/>
+                    <div class="upload-info">
+                        <span i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.file:file">file</span>
+                        <span>: </span>
+                        <span *ngIf="selectedFile; else noFileSelected">
+                            {{ selectedFile.name }}
+                        </span>
+                        <ng-template #noFileSelected>
+                            <span i18n="@@ui.classic.const.word.none:none">
+                                {{ "none" | capitalizeFirst }}
+                            </span>
+                        </ng-template>
+                    </div>
+                </div>
+                <span class="max-size-hint"
+                      i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.size-hint:Maximum file size allowed : %sKB">
+                    {{ ("Maximum file size allowed : %sKB" | capitalizeFirst).replace("%s", maxAllowedFileSize.toString()) }}
+                </span>
+            </div>
+        </div>
+        <section class="main-form">
+            <div class="form-field">
+                <label for=""
+                       i18n="@@ui.classic.admin.pages.users.profile.details.username:username">
+                    {{ "username" | capitalizeFirst }}
+                </label>
+                <input type="text"
+                       [value]="profile.alias"
+                       (change)="onUsernameChange($event)"
+                       [placeholder]="profile.user?.username"
+                />
+                <div *ngIf="profile.alias !== undefined" ngClass="alias-icon">
+                    <div ngClass="text">A</div>
+                    <img ngClass="alias-icon-frame"
+                         src="{{Icon.AGAMIS_FUSION_BLUE_STAR | iconify}}"
+                         alt="agamis fusion blue star's icon" #icon
+                    />
+                </div>
+            </div>
+            <div class="form-field">
+                <label for=""
+                       i18n="@@ui.classic.admin.pages.users.profile.details.firstname:firstname">
+                    {{ "firstname" | capitalizeFirst }}
+                </label>
+                <input type="text"
+                       [value]="profile.firstName"
+                       (change)="onFirstnameChange($event)"
+                       [placeholder]="profile.firstName"
+                />
+            </div>
+            <div class="form-field">
+                <label for=""
+                       i18n="@@ui.classic.admin.pages.users.profile.details.lastname:lastname">
+                    {{ "lastname" | capitalizeFirst }}
+                </label>
+                <input type="text"
+                       [value]="profile.lastName"
+                       (change)="onLastnameChange($event)"
+                       [placeholder]="profile.lastName"
+                />
+            </div>
+            <div class="form-field">
+                <label for=""
+                       i18n="@@ui.classic.admin.pages.users.profile.details.active:active">
+                    {{ "active" | capitalizeFirst }}
+                </label>
+                <input type="checkbox"
+                       [value]="profile.isActive"
+                       (change)="onActiveStateChange($event)"
+                       [placeholder]="profile.isActive"
+                />
+            </div>
+            <div class="raw-field">
+                <span
+                       i18n="@@ui.classic.admin.pages.users.profile.details.last-seen:last-seen">
+                    {{ "last seen" | capitalizeFirst }}
+                </span>
+                <span>
+                    {{ profile.lastLogin | timeDiffLimit }}
+                </span>
+            </div>
+            <div class="raw-field">
+                <span
+                       i18n="@@ui.classic.admin.pages.users.profile.details.last-updated:last-updated">
+                    {{ "last updated" | capitalizeFirst }}
+                </span>
+                <span>
+                    {{ profile.updatedAt | date:'medium' }}
+                </span>
+            </div>
+            <div class="raw-field">
+                <span
+                       i18n="@@ui.classic.admin.pages.users.profile.details.created-on:created-on">
+                    {{ "last updated" | capitalizeFirst }}
+                </span>
+                <span>
+                    {{ profile.updatedAt | date:'medium' }}
+                </span>
+            </div>
+        </section>
+
+    </div>
+</div>

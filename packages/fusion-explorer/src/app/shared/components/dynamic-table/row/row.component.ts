@@ -13,7 +13,7 @@ import { Cell, trackByUqId } from '../models/cell.model';
   templateUrl: './row.component.html',
   styleUrls: ['./row.component.scss'],
 })
-export class RowComponent<T extends Object>
+export class RowComponent<T extends object>
   implements RowDefinition<T>, OnInit
 {
   @Input()
@@ -22,7 +22,7 @@ export class RowComponent<T extends Object>
   templating!: {
     key: string,
     compute: ((model: T) => { value: string }),
-    template: TemplateRef<any>
+    template: TemplateRef<unknown>
   }[];
   @Input()
   model!: T;
@@ -33,7 +33,7 @@ export class RowComponent<T extends Object>
 
   protected cellsTracking = trackByUqId;
 
-  protected selected: boolean = false;
+  protected selected = false;
   private selectedSubject: Subject<[boolean, T]> = new Subject();
 
   constructor() {

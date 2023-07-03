@@ -3,12 +3,20 @@ import { GroupsComponent } from './pages/groups/groups.component';
 import { OrganizationComponent } from './pages/organization/organization.component';
 import { PermissionsComponent } from './pages/permissions/permissions.component';
 import { UsersComponent } from './pages/users/users.component';
+import { ProfileFormComponent } from './pages/users/profile-form/profile-form.component';
 
 export const adminRoutes: Route[] = [
     {
         path: 'users',
-        pathMatch: 'full',
-        component: UsersComponent
+        pathMatch: 'prefix',
+        component: UsersComponent,
+        children: [
+            {
+                path: ':id',
+                pathMatch: 'full',
+                component: ProfileFormComponent
+            }
+        ]
     },
     {
         path: 'groups',

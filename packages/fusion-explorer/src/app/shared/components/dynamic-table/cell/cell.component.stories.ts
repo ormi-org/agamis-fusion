@@ -1,10 +1,9 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { CellComponent } from './cell.component';
-import { customViewport } from '../.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
 import { SharedModule } from '@shared/shared.module';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { CellDefinition } from '../typed/cell-definition.interface';
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
+import { Meta, moduleMetadata } from '@storybook/angular';
+import { BehaviorSubject } from 'rxjs';
+import { customViewport } from '../.storybook';
+import { CellComponent } from './cell.component';
 
 export default {
   title: 'Shared/DynamicTable/Cell',

@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LocalStorageService } from './local-storage.service';
 import { CoreModule } from '@core/core.module';
 import { StoreModule } from '@ngrx/store';
-import { LocalStorageResult } from '@core/models/local-storage/local-storage-result.model';
+import { LocalStorageService } from './local-storage.service';
 
 type Dummy = {
   field1: string,
@@ -13,19 +12,6 @@ type Dummy = {
 const EXPECTED_RESULT: Dummy = {
   field1: 'test1',
   field2: 1
-};
-
-const ERRONEOUS_RESULT = {
-  field1: 'test1',
-  field2: 'test2'
-};
-
-const mockFn = (key: string) => {
-  if (key === 'test') {
-    return JSON.stringify(EXPECTED_RESULT);
-  } else {
-    return null;
-  }
 };
 
 describe('LocalStorageService', () => {
@@ -59,7 +45,7 @@ describe('LocalStorageService', () => {
   });
 
   it('should return error when key is not found', () => {
-    const mockFn = (_: string) => {
+    const mockFn = () => {
       return null;
     };
     jest.spyOn(Storage.prototype, 'getItem').mockImplementation(mockFn);

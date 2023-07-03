@@ -4,11 +4,10 @@ import { RowComponent } from './row.component';
 import { BehaviorSubject } from 'rxjs';
 import { CellComponent } from '../cell/cell.component';
 import { SharedModule } from '@shared/shared.module';
-import { TemplateRef } from '@angular/core';
 
 describe('RowComponent', () => {
-  let component: RowComponent<Object>;
-  let fixture: ComponentFixture<RowComponent<Object>>;
+  let component: RowComponent<object>;
+  let fixture: ComponentFixture<RowComponent<object>>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -42,12 +41,16 @@ describe('RowComponent', () => {
 
   test('#select() should set #selected true', () => {
     // should be false at first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((component as any).selected).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (component as any).select();
     // should be true after click
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((component as any).selected).toBe(true);
     component.clearSelect();
     // should be false after reset
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((component as any).selected).toBe(false);
   });
 });

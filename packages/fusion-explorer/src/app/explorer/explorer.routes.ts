@@ -1,7 +1,6 @@
 import { Route } from '@angular/router';
 import { ExplorerComponent } from './explorer.component';
 import { BrowserComponent } from './components/browser/browser.component';
-import { preFetchDataGuard } from './guards/pre-fetch-data.guard';
 import { preparationDataResolver } from '@core/resolvers/preparation-data/preparation-data.resolver';
 
 export const explorerRoutes: Route[] = [

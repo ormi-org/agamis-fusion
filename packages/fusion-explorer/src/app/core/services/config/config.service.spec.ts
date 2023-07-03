@@ -50,7 +50,7 @@ describe('ConfigService', () => {
         }
       }
     }
-    service.load().subscribe((_) => {
+    service.load().subscribe(() => {
       const storeSpy = spyOn(store, 'dispatch');
       expect(storeSpy).toHaveBeenCalledWith(loadConfig({ config: expected }));
 
@@ -78,7 +78,7 @@ describe('ConfigService', () => {
         }
       }
     }
-    service.load().subscribe((_) => {
+    service.load().subscribe(() => {
       store
       .pipe(
         select(selectAppConfig),
