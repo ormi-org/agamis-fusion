@@ -16,10 +16,10 @@
                  [ngClass]="{'empty-hint': true}">
                 {{ emptyHint | capitalizeFirst }}
             </div>
-        </div>
-        <div *ngIf="(datasource.$loading | async)"
-             [ngClass]="{'loading-hint': true}">
-            ...
+            <div *ngIf="(datasource.$loading | async)"
+                 [ngClass]="{'loading-hint': true}">
+                ...
+            </div>
         </div>
     </div>
 </div>
