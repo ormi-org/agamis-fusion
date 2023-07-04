@@ -57,7 +57,7 @@
                        (change)="onUsernameChange($event)"
                        [placeholder]="profile.user?.username"
                 />
-                <div *ngIf="profile.alias !== null" ngClass="alias-icon">
+                <div *ngIf="profile.alias" ngClass="alias-icon">
                     <div ngClass="text">A</div>
                     <img ngClass="alias-icon-frame"
                          src="{{Icon.AGAMIS_FUSION_BLUE_STAR | iconify}}"

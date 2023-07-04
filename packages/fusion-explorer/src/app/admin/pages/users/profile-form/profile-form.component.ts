@@ -1,13 +1,13 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Profile } from '@core/models/data/profile.model';
+import { ProfileService } from '@core/services/profile/profile.service';
+import { selectOrganization } from '@explorer/states/explorer-state/explorer-state.selectors';
+import { Store } from '@ngrx/store';
 import { Direction } from '@shared/components/separator/models/enums/direction.enum';
 import { Color, Icon } from '@shared/constants/assets';
+import { combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs';
 import { ProfileFormService } from './profile-form.service';
-import { ProfileService } from '@core/services/profile/profile.service';
-import { ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { combineLatest, map, skipWhile } from 'rxjs';
-import { selectOrganization } from '@explorer/states/explorer-state/explorer-state.selectors';
 
 @Component({
   selector: 'admin-page-users-profile-form',
@@ -73,8 +73,7 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   }
 
   protected onFileSelected(event: Event): void {
-    const element = event.currentTarget as HTMLInputElement;
-    const fileList: FileList | null = element.files;
+    const fileList: FileList | null = (<HTMLInputElement>event.currentTarget).files;
     if (fileList && fileList.item(0)) {
       this.selectedFile = fileList.item(0);
     } else {
@@ -83,15 +82,15 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   }
 
   protected onUsernameChange(event: Event): void {
-    console.log(event);
+    this.profile.alias = (<HTMLInputElement>event.currentTarget).value;
   }
 
   protected onFirstnameChange(event: Event): void {
-    console.log(event);
+    this.profile.firstName = (<HTMLInputElement>event.currentTarget).value;
   }
 
   protected onLastnameChange(event: Event): void {
-    console.log(event);
+    this.profile.lastName = (<HTMLInputElement> event.currentTarget).value;
   }
 
   protected onActiveStateChange(state: boolean): void {
@@ -99,6 +98,49 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   }
 
   protected onFormSubmit(): void {
-    console.log("submit");
+    zip(
+      [
+        of(this.profile.firstName)
+        .pipe(
+          map((fn) => {
+            if (!fn) {
+              const msg = "firstname is not set";
+              // display err msg
+              throw new Error(msg);
+            }
+            return fn;
+          })
+        ),
+        of(this.profile.lastName)
+        .pipe(
+          tap((ln) => {
+            if (!ln) {
+              const msg = "lastname is not set";
+              // display err msg
+              throw new Error(msg);
+            }
+            return ln;
+          })
+        ),
+      ]
+    ).subscribe({
+      next: () => {
+        this.store.select(selectOrganization).pipe(
+          take(1),
+          skipWhile(org => !org),
+          map(org => org?.id)
+        ).subscribe((orgId) => {
+          if (orgId) {
+            this.profileService.updateProfile(orgId, this.profile)
+            .subscribe((p) => {
+              this.profileFormService.pushProfile(p);
+            });
+          }
+        })
+      },
+      error: (err) => {
+        console.error(err);
+      }
+    })
   }
 }

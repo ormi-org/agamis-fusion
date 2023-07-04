@@ -126,4 +126,43 @@ export class ProfileService {
         })
       )
   }
+
+  updateProfile(orgId: string, profile: Profile): Observable<Profile> {
+    if (this.orgBaseUrl === undefined) {
+      console.warn(
+        '> ProfileService#updateProfile(string, Profile) >> base url is not defined'
+      );
+      return of();
+    }
+    return this.http
+      .put<Profile>(`${this.orgBaseUrl}/${orgId}/profile/${profile.id}`, {
+        alias: profile.alias,
+        lastName: profile.lastName,
+        firstName: profile.firstName,
+        isActive: profile.isActive
+      }).pipe(
+        retry(2),
+        map((p) => {
+          p.lastLogin = new Date(p.lastLogin);
+          p.updatedAt = new Date(p.updatedAt);
+          p.createdAt = new Date(p.createdAt);
+          return p;
+        }),
+        catchError((err: HttpErrorResponse) => {
+          if (err.status === 0) {
+            console.warn(
+              '< ProfileService#updateProfile(string, Profile) << an error occured on http request:',
+              err.error
+            );
+          } else {
+            console.warn(
+              '< ProfileService#updateProfile(string, Profile) << server returned code %d with body:',
+              err.status,
+              err.error
+            )
+          }
+          return throwError(() => err);
+        })
+      )
+  }
 }
