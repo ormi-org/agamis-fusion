@@ -26,7 +26,7 @@
                             {{ "choose file" | capitalizeFirst }}
                         </span>...
                     </label>
-                    <input id="upload-button" type="file"/>
+                    <input id="upload-button" type="file" (change)="onFileSelected($event)" #uploadInput/>
                     <div class="upload-info">
                         <span i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.file:file">file</span>
                         <span>: </span>

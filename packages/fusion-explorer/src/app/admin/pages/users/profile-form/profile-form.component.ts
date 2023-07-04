@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Profile } from '@core/models/data/profile.model';
 import { Direction } from '@shared/components/separator/models/enums/direction.enum';
 import { Color, Icon } from '@shared/constants/assets';
@@ -14,7 +14,7 @@ import { selectOrganization } from '@explorer/states/explorer-state/explorer-sta
   templateUrl: './profile-form.component.html',
   styleUrls: ['./profile-form.component.scss'],
 })
-export class ProfileFormComponent implements OnInit {
+export class ProfileFormComponent implements OnInit, AfterViewInit {
   protected Color: typeof Color = Color;
   protected Direction: typeof Direction = Direction;
   protected Icon: typeof Icon = Icon;
@@ -22,6 +22,9 @@ export class ProfileFormComponent implements OnInit {
   protected profile!: Profile;
   protected selectedFile!: File | null;
   protected maxAllowedFileSize = 0;
+
+  @ViewChild('uploadInput', {read: ElementRef})
+  private uploadInput!: ElementRef;
 
   constructor(
     private readonly store: Store,
@@ -31,10 +34,9 @@ export class ProfileFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.profileFormService.getProfileMutationEvent().subscribe((p) => {
-      this.profile = p;
-    });
+    // initial load if profile not provided
     if (this.profile === undefined) {
+      // get orgId and profileId first before making GET request
       const initialProfileFetchSub = combineLatest([
         this.activatedRoute.paramMap.pipe(
           skipWhile(params => !params),
@@ -56,35 +58,47 @@ export class ProfileFormComponent implements OnInit {
     }
   }
 
-  deleteProfilePicture(): void {
+  ngAfterViewInit(): void {
+    // detect change in form model
+    this.profileFormService.getProfileMutationEvent().subscribe((p) => {
+      this.profile = p;
+      // reset input
+      (<HTMLInputElement>this.uploadInput.nativeElement).value = '';
+      (<HTMLInputElement>this.uploadInput.nativeElement).dispatchEvent(new Event('change'));
+    });
+  }
+
+  protected deleteProfilePicture(): void {
     return;
   }
 
-  onFileSelected(event: Event): void {
+  protected onFileSelected(event: Event): void {
     const element = event.currentTarget as HTMLInputElement;
     const fileList: FileList | null = element.files;
     if (fileList && fileList.item(0)) {
       this.selectedFile = fileList.item(0);
+    } else {
+      this.selectedFile = null;
     }
   }
 
-  onUsernameChange(event: Event): void {
+  protected onUsernameChange(event: Event): void {
     console.log(event);
   }
 
-  onFirstnameChange(event: Event): void {
+  protected onFirstnameChange(event: Event): void {
     console.log(event);
   }
 
-  onLastnameChange(event: Event): void {
+  protected onLastnameChange(event: Event): void {
     console.log(event);
   }
 
-  onActiveStateChange(state: boolean): void {
+  protected onActiveStateChange(state: boolean): void {
     this.profile.isActive = state;
   }
 
-  onFormSubmit(): void {
+  protected onFormSubmit(): void {
     console.log("submit");
   }
 }

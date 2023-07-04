@@ -12,7 +12,7 @@
                 [templating]="row.templating"
                 [model]="row.value"
                 [cellsWidths]="getColumnsWidthsAsync"/>
-            <div *ngIf="rows.length === 0"
+            <div *ngIf="rows.length === 0 && (datasource.$loading | async) === false"
                  [ngClass]="{'empty-hint': true}">
                 {{ emptyHint | capitalizeFirst }}
             </div>

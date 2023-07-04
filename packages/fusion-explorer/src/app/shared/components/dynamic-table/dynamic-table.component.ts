@@ -2,7 +2,7 @@ import {
   AfterContentInit,
   AfterViewInit,
   Component,
-  ContentChildren, ElementRef, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren
+  ContentChildren, ElementRef, Input, OnDestroy, QueryList, ViewChild, ViewChildren
 } from '@angular/core';
 import { Ordering } from '@shared/constants/utils/ordering';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
