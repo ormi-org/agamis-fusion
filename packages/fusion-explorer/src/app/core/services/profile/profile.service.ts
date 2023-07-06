@@ -84,7 +84,7 @@ export class ProfileService {
               err.error
             );
           }
-          return throwError(() => err);
+          return throwError(() => new Error(err.message));
         })
       );
   }

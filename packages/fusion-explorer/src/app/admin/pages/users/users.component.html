@@ -53,14 +53,14 @@
                 [width]="170"/>
             <shared-dyntable-column
                 key="updatedAt"
-                [compute]="dateTimeComputing"
+                [compute]="updateDateTimeComputing"
                 title="last updated"
                 i18n-title="@@ui.classic.admin.pages.users.table.col.last-updated"
                 [resizable]="true"
                 [width]="200"/>
             <shared-dyntable-column
                 key="createdAt"
-                [compute]="dateTimeComputing"
+                [compute]="creationDateTimeComputing"
                 title="created on"
                 i18n-title="@@ui.classic.admin.pages.users.table.col.created-on"
                 [resizable]="true"

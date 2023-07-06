@@ -68,9 +68,15 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   });
 
-  protected dateTimeComputing: TemplateComputing = ((profile: Profile) => {
+  protected creationDateTimeComputing: TemplateComputing = ((profile: Profile) => {
     return {
-      value: new Date(profile.lastLogin).toLocaleString(this.locale),
+      value: new Date(profile.createdAt).toLocaleString(this.locale),
+    }
+  });
+
+  protected updateDateTimeComputing: TemplateComputing = ((profile: Profile) => {
+    return {
+      value: new Date(profile.updatedAt).toLocaleString(this.locale),
     }
   });
 
@@ -101,12 +107,14 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     // initial fetch
     this.datasourceQuerySubject.next([this.query, false]);
+    // bind refresher for table on profile update
+    this.tableDatasource.bindUnaryRefresher(this.profileFormService.getOutput());
   }
 
   ngAfterViewInit(): void {
     this.dynTable.getSelectEvent().subscribe((selectedProfile) => {
       this.router.navigate([selectedProfile.id], {relativeTo: this.activatedRoute}).then(() => {
-        this.profileFormService.pushProfile(selectedProfile);
+        this.profileFormService.pushSource(selectedProfile);
       });
     });
     this.dynTable.getSortEvent().subscribe((updatedValue) => {

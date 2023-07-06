@@ -7,9 +7,10 @@ const EXCLUDED_FIELDS = ['emails', 'permissions', 'organization', 'user'];
 
 const profilesRoutes = (server: Server) => {
   [
+    server.db.createCollection('profiles', profiles.org_profiles_sample_with_user),
     server.get(
       `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profiles`,
-      (_, request) => {
+      (schema, request) => {
         const { offset, limit, order_by, include } = request.queryParams;
         const splitOrdered = order_by.split(',');
         const order = [splitOrdered[0], splitOrdered[1]];
@@ -47,7 +48,7 @@ const profilesRoutes = (server: Server) => {
             sortingFn = (a, b) => a[order[0]] - b[order[0]] * Number.parseInt(order[1]);
         }
         // return dynamic result
-        return profiles.org_profiles_sample_with_user
+        return schema.db['profiles']
         .sort(sortingFn)
         .slice(Number.parseInt(offset), Number.parseInt(limit))
         .map((p) => {
@@ -71,6 +72,24 @@ const profilesRoutes = (server: Server) => {
           return new Response(404, {});
         }
         return fetched;
+      }, { timing: 1000 }
+    ),
+    server.put(
+      `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
+      (schema, request) => {
+        const { id } = request.params;
+        const body = JSON.parse(request.requestBody);
+
+        const {
+          alias,
+          lastName,
+          firstName,
+          isActive
+        } = body;
+
+        return schema.db['profiles'].update({ id: id }, {
+          alias, lastName, firstName, isActive, updatedAt: new Date().toISOString()
+        })[0];
       }, { timing: 1000 }
     ),
   ];

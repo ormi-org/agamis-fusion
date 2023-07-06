@@ -6,8 +6,9 @@ import { selectOrganization } from '@explorer/states/explorer-state/explorer-sta
 import { Store } from '@ngrx/store';
 import { Direction } from '@shared/components/separator/models/enums/direction.enum';
 import { Color, Icon } from '@shared/constants/assets';
-import { combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs';
 import { ProfileFormService } from './profile-form.service';
+import { ProfilePicService } from '@core/services/profile/picture/profile-pic.service';
 
 @Component({
   selector: 'admin-page-users-profile-form',
@@ -18,9 +19,11 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   protected Color: typeof Color = Color;
   protected Direction: typeof Direction = Direction;
   protected Icon: typeof Icon = Icon;
+  protected loadingSubject = new BehaviorSubject<boolean>(false);
 
   protected profile!: Profile;
-  protected selectedFile!: File | null;
+  protected profilePicUrl: string | undefined;
+  protected selectedFile: File | null = null;
   protected maxAllowedFileSize = 0;
 
   @ViewChild('uploadInput', {read: ElementRef})
@@ -30,7 +33,8 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
     private readonly store: Store,
     private readonly activatedRoute: ActivatedRoute,
     private readonly profileFormService: ProfileFormService,
-    private readonly profileService: ProfileService
+    private readonly profileService: ProfileService,
+    private readonly profilePicService: ProfilePicService
   ) {}
 
   ngOnInit(): void {
@@ -51,6 +55,8 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
           this.profileService.fetchProfileById(orgId, profileId)
           .subscribe((p) => {
             this.profile = p;
+            // TODO: extract profilePicFile ID
+            this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
           });
         }
         initialProfileFetchSub.unsubscribe();
@@ -60,11 +66,13 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     // detect change in form model
-    this.profileFormService.getProfileMutationEvent().subscribe((p) => {
-      this.profile = p;
+    this.profileFormService.getSourceMutationEvent().subscribe((p) => {
       // reset input
-      (<HTMLInputElement>this.uploadInput.nativeElement).value = '';
-      (<HTMLInputElement>this.uploadInput.nativeElement).dispatchEvent(new Event('change'));
+      this.profile = p;
+      // TODO: extract profilePicFile ID
+      this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
+      (<HTMLInputElement>this.uploadInput?.nativeElement).value = '';
+      (<HTMLInputElement>this.uploadInput?.nativeElement).dispatchEvent(new Event('change'));
     });
   }
 
@@ -131,9 +139,16 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
           map(org => org?.id)
         ).subscribe((orgId) => {
           if (orgId) {
+            // start loading state
+            this.loadingSubject.next(true);
             this.profileService.updateProfile(orgId, this.profile)
             .subscribe((p) => {
-              this.profileFormService.pushProfile(p);
+              // stop loading state
+              this.loadingSubject.next(false);
+              // push profile to both source and output to update
+              // both form and table
+              this.profileFormService.pushSource(p);
+              this.profileFormService.pushOutput(p);
             });
           }
         })

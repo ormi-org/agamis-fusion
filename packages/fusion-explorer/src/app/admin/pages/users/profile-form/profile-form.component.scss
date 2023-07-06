@@ -2,22 +2,17 @@
 @import 'base';
 
 :host {
-    min-width: 350px;
+    min-width: 400px;
     width: 20%;
     height: 100%;
-    flex-grow: 0;
-    flex-shrink: 0;
     align-self: flex-start;
     overflow-x: visible;
-    display: flex;
-    flex-direction: row;
+    border-left: 1px solid map-get($colors, "secondary-one");
 }
 
 div.container {
     height: 100%;
-    display: flex;
-    flex-direction: column;
-
+    width: 100%;
     > h1 {
         font-size: 14px;
         font-weight: 400;
@@ -27,12 +22,14 @@ div.container {
     }
 
     .content {
-        margin-left: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 25px;
+        padding-left: 20px;
+        padding-right: 20px;
+        width: 100%;
+        box-sizing: border-box;
         > .profile-pic-head {
-            margin-left: 6px;
+            padding-left: 6px;
+            padding-bottom: 25px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: row;
             gap: 35px;
@@ -64,10 +61,8 @@ div.container {
                 }
             }
             > .pic-upload {
-                height: 64px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
+                min-width: 0;
+                overflow: hidden;
                 > h2 {
                     font-weight: 600;
                     font-size: 12px;
@@ -75,16 +70,19 @@ div.container {
                     margin-bottom: 7px;
                 }
                 > div {
+                    width: 100%;
                     display: flex;
+                    overflow: hidden;
                     flex-direction: row;
-                    justify-content: space-between;
                     align-items: center;
+                    flex: 1;
                     gap: 17px;
                     margin-bottom: 7px;
                     > input#upload-button {
                         display: none;
                     }
                     > label.upload-button {
+                        white-space: nowrap;
                         cursor: pointer;
                         display: inline-block;
                         font-size: 12px;
@@ -93,41 +91,66 @@ div.container {
                         border-radius: 35px;
                     }
                     > div.upload-info {
+                        display: flex;
+                        flex: 1;
+                        overflow: hidden;
                         font-size: 12px;
+                        > span:nth-child(1)::after {
+                            content: ":";
+                        }
+                        > span.file-name {
+                            margin-left: 4px;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
+                        }
                     }
                 }
                 > span.max-size-hint {
                     @include setColor('primary-modal');
                     font-size: 10px;
-                    font-weight: 500px;
+                    font-weight: 500;
                     font-style: italic;
                 }
             }
         }
         > section.main-form {
             font-size: 12px;
+            margin-bottom: 25px;
+            padding-right: 20px;
+            box-sizing: border-box;
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            > * {
+                flex: 1 1 0;
+                > :nth-child(1) {
+                    flex: 1;
+                    white-space: nowrap;
+                    min-width: 100px;
+                }
+                > :nth-child(2) {
+                    flex: 4;
+                }
+            }
             > div.form-field {
                 display: flex;
                 flex-direction: row;
+                position: relative;
                 > label {
-                    width: 90px;
                     font-weight: 600;
                 }
                 > input {
                     border: 1px solid map-get($colors, 'secondary-one');
                     @include setBgColor('primary-three');
-                    width: 170px;
-
-                    &[type=checkbox] {
-                        width: auto;
-                    }
                 }
                 > div.alias-icon {
                     display: flex;
-                    position: relative;
+                    position: absolute;
+                    right: -25px;
+                    top: 50%;
+                    transform: translateY(-50%);
                     margin-left: 6px;
                     text-align: center;
                     justify-content: center;
@@ -145,11 +168,7 @@ div.container {
                 display: flex;
                 flex-direction: row;
                 > span:nth-child(1) {
-                    width: 90px;
                     font-weight: 600;
-                }
-                > span:nth-child(2) {
-                    width: 170px;
                 }
             }
         }
@@ -159,15 +178,20 @@ div.container {
             display: flex;
             flex-direction: row;
             gap: 4px;
+            &.active {
+                @include setBgColor(success);
+                cursor: pointer;
+            }
+
+            &.processing {
+                @include setBgColor(outline-fade);
+                cursor: progress;
+            }
+
             @include setColor(primary-three);
-            cursor: pointer;
             width: fit-content;
             padding: 7px 14px 7px 14px;
             font-weight: 500;
-            @include setBgColor(success);
-            &.processing {
-                @include setBgColor(outline-fade);
-            }
         }
     }
 }

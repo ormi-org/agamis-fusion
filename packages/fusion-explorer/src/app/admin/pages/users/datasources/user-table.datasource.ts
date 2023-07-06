@@ -5,13 +5,14 @@ import { selectOrganization } from "@explorer/states/explorer-state/explorer-sta
 import { Store } from "@ngrx/store";
 import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
 import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typed/loading-query.interface";
-import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, take } from "rxjs";
+import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, Subscription, take } from "rxjs";
 
 export class UserTableDatasource implements DataSource<Profile> {
     private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject();
     private resetSubject = new Subject<void>();
     private profilesSubject = new BehaviorSubject<Profile[]>([]);
     private loadingSubject = new ReplaySubject<boolean>();
+    private unaryRefresher?: Subscription;
 
     $loading: Observable<boolean> = this.loadingSubject.asObservable();
 
@@ -61,6 +62,12 @@ export class UserTableDatasource implements DataSource<Profile> {
                 offset: (pageIndex - 1) * pageSize,
                 limit: pageIndex * pageSize
             });
+
+            const errorCallback = (err: Error) => {
+                console.error(err.message);
+                this.loadingSubject.next(false);
+                // TODO: display error message
+            };
             // if stack, stack up new result with old
             if (stack) {
                 combineLatest([
@@ -71,16 +78,23 @@ export class UserTableDatasource implements DataSource<Profile> {
                     // Prevents repeat on profilesSubject
                     take(1)
                 )
-                .subscribe(([here, fetched]) => {
-                    this.loadingSubject.next(false);
-                    this.profilesSubject.next(here.concat(fetched));
-                })
+                .subscribe({
+                    next: ([current, fetched]) => {
+                        this.loadingSubject.next(false);
+                        this.profilesSubject.next(current.concat(fetched));
+                    },
+                    error: errorCallback
+                });
             // else reset and replace current values
             } else {
+                // reset
                 this.resetSubject.next();
-                fetchProfileSub.subscribe((profiles) => {
-                    this.loadingSubject.next(false);
-                    this.profilesSubject.next(profiles);
+                fetchProfileSub.subscribe({
+                    next: (profiles) => {
+                        this.loadingSubject.next(false);
+                        this.profilesSubject.next(profiles);
+                    },
+                    error: errorCallback
                 });
             }
         });
@@ -88,5 +102,17 @@ export class UserTableDatasource implements DataSource<Profile> {
 
     getResetEvent(): Observable<void> {
         return this.resetSubject.asObservable();
+    }
+
+    bindUnaryRefresher(observable: Observable<Profile>): void {
+        this.unaryRefresher?.unsubscribe();
+        this.unaryRefresher = 
+            observable.subscribe((update) => {
+                const currentProfiles = this.profilesSubject.getValue();
+                const indexToUpdate = currentProfiles.findIndex((p) => p.id === update.id);
+                const finalProfiles = currentProfiles;
+                finalProfiles[indexToUpdate] = update;
+                this.profilesSubject.next(finalProfiles);
+            });
     }
 }

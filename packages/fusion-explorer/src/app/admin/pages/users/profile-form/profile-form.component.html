@@ -1,8 +1,3 @@
-<shared-separator [direction]="Direction.VERTICAL"
-    [bordering]="0"
-    [color]="'#' + Color.SECONDARY_ONE"
-    [thickness]="1"
-/>
 <div class="container">
     <h1 i18n="@@ui.classic.admin.pages.users.profile.details.title:details">{{ "Details" | capitalizeFirst }}</h1>
     <!-- <p *ngIf="profile">Selected profile : {{profile.id}}</p> -->
@@ -10,7 +5,7 @@
         <div class="profile-pic-head">
             <div class="pic-zone">
                 <div class="pic-container">
-                    <img class="profile-pic" src="https://picsum.photos/64/64"/>
+                    <img class="profile-pic" [src]="this.profilePicUrl"/>
                     <button (click)="deleteProfilePicture()">
                     <img src="{{ Icon.CROSS | iconify }}" alt="cross icon"/> 
                     </button>
@@ -29,12 +24,11 @@
                     <input id="upload-button" type="file" (change)="onFileSelected($event)" #uploadInput/>
                     <div class="upload-info">
                         <span i18n="@@ui.classic.admin.pages.users.profile.details.pic-upload.file:file">file</span>
-                        <span>: </span>
-                        <span *ngIf="selectedFile; else noFileSelected">
+                        <span *ngIf="selectedFile; else noFileSelected" class="file-name">
                             {{ selectedFile.name }}
                         </span>
                         <ng-template #noFileSelected>
-                            <span i18n="@@ui.classic.const.word.none:none">
+                            <span i18n="@@ui.classic.const.word.none:none" class="file-name">
                                 {{ "none" | capitalizeFirst }}
                             </span>
                         </ng-template>
@@ -128,7 +122,12 @@
                 </span>
             </div>
         </section>
-        <button class="submit" (click)="onFormSubmit()">
+        <button (click)="onFormSubmit()"
+                [ngClass]="{
+                    'submit': true,
+                    'processing': (this.loadingSubject | async) === true,
+                    'active': (this.loadingSubject | async) === false
+                }">
             <span i18n="@@ui.classic.admin.pages.users.profile.details.save:save">Save</span>
             <img src="{{ Icon.DISKETTE | iconify }}"/>
         </button>

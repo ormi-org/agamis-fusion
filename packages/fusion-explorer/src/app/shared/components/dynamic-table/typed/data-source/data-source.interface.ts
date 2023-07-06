@@ -31,4 +31,8 @@ export default interface DataSource<T> {
      * a reset event observable to track state
      */
     getResetEvent(): Observable<void>;
+    /**
+     * a method to bind a reverse refresher for unary data
+     */
+    bindUnaryRefresher(observable: Observable<T>): void;
 }
