@@ -6,7 +6,7 @@ import { selectOrganization } from '@explorer/states/explorer-state/explorer-sta
 import { Store } from '@ngrx/store';
 import { Direction } from '@shared/components/separator/models/enums/direction.enum';
 import { Color, Icon } from '@shared/constants/assets';
-import { BehaviorSubject, combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs';
+import { BehaviorSubject, Observable, TimeoutError, catchError, combineLatest, map, of, race, skipWhile, startWith, take, tap, timeout, withLatestFrom, zip } from 'rxjs';
 import { ProfileFormService } from './profile-form.service';
 import { ProfilePicService } from '@core/services/profile/picture/profile-pic.service';
 
@@ -38,42 +38,43 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.profileFormService.getSourceMutationEvent() // detect change in form model
+      .subscribe((p) => {
+        this.profile = p;
+        // TODO: extract profilePicFile ID
+        this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
+        // reset picture input on new profile provided
+        if (<HTMLInputElement>this.uploadInput?.nativeElement !== undefined) {
+          (<HTMLInputElement>this.uploadInput?.nativeElement).value = '';
+          (<HTMLInputElement>this.uploadInput?.nativeElement).dispatchEvent(new Event('change'));
+        }
+    })
     // initial load if profile not provided
-    if (this.profile === undefined) {
+    combineLatest([
       // get orgId and profileId first before making GET request
-      const initialProfileFetchSub = combineLatest([
-        this.activatedRoute.paramMap.pipe(
-          skipWhile(params => !params),
-          map(params => params.get('id'))
-        ),
-        this.store.select(selectOrganization).pipe(
-          skipWhile(org => !org),
-          map(org => org?.id)
-        )
-      ]).subscribe(([ profileId, orgId ]) => {
+      this.activatedRoute.paramMap.pipe(
+        skipWhile(params => !params),
+        map(params => params.get('id'))
+      ),
+      this.store.select(selectOrganization).pipe(
+        skipWhile(org => !org),
+        map(org => org?.id)
+      ),
+    ])
+    .subscribe(([ profileId, orgId ]) => {
+      if (this.profile === undefined) {
         if (profileId && orgId) {
           this.profileService.fetchProfileById(orgId, profileId)
           .subscribe((p) => {
-            this.profile = p;
-            // TODO: extract profilePicFile ID
-            this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
+            this.profileFormService.pushSource(p);
           });
         }
-        initialProfileFetchSub.unsubscribe();
-      });
-    }
+      }
+    })
   }
 
   ngAfterViewInit(): void {
-    // detect change in form model
-    this.profileFormService.getSourceMutationEvent().subscribe((p) => {
-      // reset input
-      this.profile = p;
-      // TODO: extract profilePicFile ID
-      this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
-      (<HTMLInputElement>this.uploadInput?.nativeElement).value = '';
-      (<HTMLInputElement>this.uploadInput?.nativeElement).dispatchEvent(new Event('change'));
-    });
+    return;
   }
 
   protected deleteProfilePicture(): void {
