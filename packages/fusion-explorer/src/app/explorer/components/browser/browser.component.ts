@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
-import { ActivationStart, Event, Router } from '@angular/router';
-import { LoadingService } from '@explorer/utils/loading/loading.service';
-import { Stage } from '@shared/components/loading-bar/models/stage.model';
-import { Direction } from '@shared/components/separator/models/enums/direction.enum';
-import { Color, Icon } from '@shared/constants/assets';
+import { Component } from '@angular/core'
+import { ActivationStart, Event, Router } from '@angular/router'
+import { LoadingService } from '@explorer/utils/loading/loading.service'
+import { Stage } from '@shared/components/loading-bar/models/stage.model'
+import { Direction } from '@shared/components/separator/models/enums/direction.enum'
+import { Color, Icon } from '@shared/constants/assets'
 
 const LOADING_BAR_STAGES: Stage[] = [
   {
@@ -23,7 +23,7 @@ const LOADING_BAR_STAGES: Stage[] = [
     fill: 100,
     fillDuration: 200,
   }
-];
+]
 
 @Component({
   selector: 'explorer-browser',
@@ -31,10 +31,10 @@ const LOADING_BAR_STAGES: Stage[] = [
   styleUrls: ['./browser.component.scss'],
 })
 export class BrowserComponent {
-  protected readonly Direction: typeof Direction = Direction;
-  protected readonly Color: typeof Color = Color;
-  protected readonly fusionIcon: Icon = Icon.AGAMIS_FUSION_LOGO;
-  protected readonly loadingBarStages: Stage[] = LOADING_BAR_STAGES;
+  protected readonly Direction: typeof Direction = Direction
+  protected readonly Color: typeof Color = Color
+  protected readonly fusionIcon: Icon = Icon.AGAMIS_FUSION_LOGO
+  protected readonly loadingBarStages: Stage[] = LOADING_BAR_STAGES
 
   constructor(
     router: Router,
@@ -42,8 +42,8 @@ export class BrowserComponent {
   ) {
     router.events.subscribe((e: Event) => {
       if (e instanceof ActivationStart) {
-        this.loadingService.complete();
+        this.loadingService.complete()
       }
-    });
+    })
   }
 }

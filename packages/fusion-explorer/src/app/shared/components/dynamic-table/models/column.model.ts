@@ -1,8 +1,8 @@
-import { Ordering } from "@shared/constants/utils/ordering";
-import { BehaviorSubject } from "rxjs";
+import { Ordering } from "@shared/constants/utils/ordering"
+import { BehaviorSubject } from "rxjs"
 
 export class Column {
-    private width = 0;
+    private width = 0
 
     constructor(
         public key: string,
@@ -12,11 +12,11 @@ export class Column {
         public widthSubject: BehaviorSubject<number>
     ) {
         this.widthSubject.subscribe((updatedWidth) => {
-            this.width = updatedWidth;
+            this.width = updatedWidth
         })
     }
 
     getCurrentWidth(): number {
-        return this.width;
+        return this.width
     }
 }

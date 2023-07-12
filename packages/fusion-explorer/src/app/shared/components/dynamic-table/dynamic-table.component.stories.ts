@@ -1,11 +1,11 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { DynamicTableComponent } from './dynamic-table.component';
-import { DUMMIES, DummyDatasource } from './.storybook/.model';
-import { SharedModule } from '@shared/shared.module';
-import { customViewport } from './.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { Ordering } from '@shared/constants/utils/ordering';
-import { Uniquely } from './typed/uniquely.interface';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { DynamicTableComponent } from './dynamic-table.component'
+import { DUMMIES, DummyDatasource } from './.storybook/.model'
+import { SharedModule } from '@shared/shared.module'
+import { customViewport } from './.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { Ordering } from '@shared/constants/utils/ordering'
+import { Uniquely } from './typed/uniquely.interface'
 
 export default {
   title: 'Shared/DynamicTable/Table',
@@ -24,7 +24,7 @@ export default {
       imports: [SharedModule],
     }),
   ],
-} as Meta<DynamicTableComponent<Uniquely>>;
+} as Meta<DynamicTableComponent<Uniquely>>
 
 export const Default = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -63,7 +63,7 @@ export const Default = {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
   },
-};
+}
 
 export const OrderedBySecondColumn = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -102,7 +102,7 @@ export const OrderedBySecondColumn = {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.DESC,
   },
-};
+}
 
 export const Empty = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -142,7 +142,7 @@ export const Empty = {
     datasource: DummyDatasource.asSourceOf([]),
     initOrder: Ordering.ASC,
   },
-};
+}
 
 export const EmptyWithCustomHint = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -183,7 +183,7 @@ export const EmptyWithCustomHint = {
     datasource: DummyDatasource.asSourceOf([]),
     initOrder: Ordering.ASC,
   },
-};
+}
 
 export const MissingColumn = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -216,7 +216,7 @@ export const MissingColumn = {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
   },
-};
+}
 
 export const FilteredColumn = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -255,7 +255,7 @@ export const FilteredColumn = {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
   },
-};
+}
 
 export const EllipsedText = {
   render: (args: DynamicTableComponent<Uniquely>) => ({
@@ -294,4 +294,4 @@ export const EllipsedText = {
     datasource: DummyDatasource.asSourceOf(DUMMIES),
     initOrder: Ordering.ASC,
   },
-};
+}

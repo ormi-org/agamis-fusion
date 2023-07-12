@@ -1,4 +1,4 @@
 export default interface Filtering {
-    field: string;
-    value: string;
+    field: string
+    value: string
 }

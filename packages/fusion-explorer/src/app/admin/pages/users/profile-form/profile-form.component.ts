@@ -1,14 +1,14 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Profile } from '@core/models/data/profile.model';
-import { ProfileService } from '@core/services/profile/profile.service';
-import { selectOrganization } from '@explorer/states/explorer-state/explorer-state.selectors';
-import { Store } from '@ngrx/store';
-import { Direction } from '@shared/components/separator/models/enums/direction.enum';
-import { Color, Icon } from '@shared/constants/assets';
-import { BehaviorSubject, Observable, TimeoutError, catchError, combineLatest, map, of, race, skipWhile, startWith, take, tap, timeout, withLatestFrom, zip } from 'rxjs';
-import { ProfileFormService } from './profile-form.service';
-import { ProfilePicService } from '@core/services/profile/picture/profile-pic.service';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core'
+import { ActivatedRoute } from '@angular/router'
+import { Profile } from '@core/models/data/profile.model'
+import { ProfilePicService } from '@core/services/profile/picture/profile-pic.service'
+import { ProfileService } from '@core/services/profile/profile.service'
+import { selectOrganization } from '@explorer/states/explorer-state/explorer-state.selectors'
+import { Store } from '@ngrx/store'
+import { Direction } from '@shared/components/separator/models/enums/direction.enum'
+import { Color, Icon } from '@shared/constants/assets'
+import { BehaviorSubject, combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs'
+import { ProfileFormService } from './profile-form.service'
 
 @Component({
   selector: 'admin-page-users-profile-form',
@@ -16,18 +16,18 @@ import { ProfilePicService } from '@core/services/profile/picture/profile-pic.se
   styleUrls: ['./profile-form.component.scss'],
 })
 export class ProfileFormComponent implements OnInit, AfterViewInit {
-  protected Color: typeof Color = Color;
-  protected Direction: typeof Direction = Direction;
-  protected Icon: typeof Icon = Icon;
-  protected loadingSubject = new BehaviorSubject<boolean>(false);
+  protected Color: typeof Color = Color
+  protected Direction: typeof Direction = Direction
+  protected Icon: typeof Icon = Icon
+  protected loadingSubject = new BehaviorSubject<boolean>(false)
 
-  protected profile!: Profile;
-  protected profilePicUrl: string | undefined;
-  protected selectedFile: File | null = null;
-  protected maxAllowedFileSize = 0;
+  protected profile!: Profile
+  protected profilePicUrl: string | undefined
+  protected selectedFile: File | null = null
+  protected maxAllowedFileSize = 0
 
   @ViewChild('uploadInput', {read: ElementRef})
-  private uploadInput!: ElementRef;
+  private uploadInput!: ElementRef
 
   constructor(
     private readonly store: Store,
@@ -40,13 +40,13 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.profileFormService.getSourceMutationEvent() // detect change in form model
       .subscribe((p) => {
-        this.profile = p;
+        this.profile = p
         // TODO: extract profilePicFile ID
-        this.profilePicUrl = this.profilePicService.fetchProfilePicUrl();
+        this.profilePicUrl = this.profilePicService.fetchProfilePicUrl()
         // reset picture input on new profile provided
         if (<HTMLInputElement>this.uploadInput?.nativeElement !== undefined) {
           (<HTMLInputElement>this.uploadInput?.nativeElement).value = '';
-          (<HTMLInputElement>this.uploadInput?.nativeElement).dispatchEvent(new Event('change'));
+          (<HTMLInputElement>this.uploadInput?.nativeElement).dispatchEvent(new Event('change'))
         }
     })
     // initial load if profile not provided
@@ -66,44 +66,44 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
         if (profileId && orgId) {
           this.profileService.fetchProfileById(orgId, profileId)
           .subscribe((p) => {
-            this.profileFormService.pushSource(p);
-          });
+            this.profileFormService.pushSource(p)
+          })
         }
       }
     })
   }
 
   ngAfterViewInit(): void {
-    return;
+    return
   }
 
   protected deleteProfilePicture(): void {
-    return;
+    return
   }
 
   protected onFileSelected(event: Event): void {
-    const fileList: FileList | null = (<HTMLInputElement>event.currentTarget).files;
+    const fileList: FileList | null = (<HTMLInputElement>event.currentTarget).files
     if (fileList && fileList.item(0)) {
-      this.selectedFile = fileList.item(0);
+      this.selectedFile = fileList.item(0)
     } else {
-      this.selectedFile = null;
+      this.selectedFile = null
     }
   }
 
   protected onUsernameChange(event: Event): void {
-    this.profile.alias = (<HTMLInputElement>event.currentTarget).value;
+    this.profile.alias = (<HTMLInputElement>event.currentTarget).value
   }
 
   protected onFirstnameChange(event: Event): void {
-    this.profile.firstName = (<HTMLInputElement>event.currentTarget).value;
+    this.profile.firstName = (<HTMLInputElement>event.currentTarget).value
   }
 
   protected onLastnameChange(event: Event): void {
-    this.profile.lastName = (<HTMLInputElement> event.currentTarget).value;
+    this.profile.lastName = (<HTMLInputElement> event.currentTarget).value
   }
 
   protected onActiveStateChange(state: boolean): void {
-    this.profile.isActive = state;
+    this.profile.isActive = state
   }
 
   protected onFormSubmit(): void {
@@ -113,22 +113,22 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
         .pipe(
           map((fn) => {
             if (!fn) {
-              const msg = "firstname is not set";
+              const msg = "firstname is not set"
               // display err msg
-              throw new Error(msg);
+              throw new Error(msg)
             }
-            return fn;
+            return fn
           })
         ),
         of(this.profile.lastName)
         .pipe(
           tap((ln) => {
             if (!ln) {
-              const msg = "lastname is not set";
+              const msg = "lastname is not set"
               // display err msg
-              throw new Error(msg);
+              throw new Error(msg)
             }
-            return ln;
+            return ln
           })
         ),
       ]
@@ -141,21 +141,21 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
         ).subscribe((orgId) => {
           if (orgId) {
             // start loading state
-            this.loadingSubject.next(true);
+            this.loadingSubject.next(true)
             this.profileService.updateProfile(orgId, this.profile)
             .subscribe((p) => {
               // stop loading state
-              this.loadingSubject.next(false);
+              this.loadingSubject.next(false)
               // push profile to both source and output to update
               // both form and table
-              this.profileFormService.pushSource(p);
-              this.profileFormService.pushOutput(p);
-            });
+              this.profileFormService.pushSource(p)
+              this.profileFormService.pushOutput(p)
+            })
           }
         })
       },
       error: (err) => {
-        console.error(err);
+        console.error(err)
       }
     })
   }

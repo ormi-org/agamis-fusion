@@ -1,20 +1,20 @@
-import { Profile } from "@core/models/data/profile.model";
-import { ProfileService } from "@core/services/profile/profile.service";
-import { IncludableProfileFields } from "@core/services/profile/types/profile-query.model";
-import { selectOrganization } from "@explorer/states/explorer-state/explorer-state.selectors";
-import { Store } from "@ngrx/store";
-import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface";
-import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typed/loading-query.interface";
-import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, Subscription, take } from "rxjs";
+import { Profile } from "@core/models/data/profile.model"
+import { ProfileService } from "@core/services/profile/profile.service"
+import { IncludableProfileFields } from "@core/services/profile/types/profile-query.model"
+import { selectOrganization } from "@explorer/states/explorer-state/explorer-state.selectors"
+import { Store } from "@ngrx/store"
+import DataSource from "@shared/components/dynamic-table/typed/data-source/data-source.interface"
+import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typed/loading-query.interface"
+import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, Subscription, take } from "rxjs"
 
 export class UserTableDatasource implements DataSource<Profile> {
-    private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject();
-    private resetSubject = new Subject<void>();
-    private profilesSubject = new BehaviorSubject<Profile[]>([]);
-    private loadingSubject = new ReplaySubject<boolean>();
-    private unaryRefresher?: Subscription;
+    private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject()
+    private resetSubject = new Subject<void>()
+    private profilesSubject = new BehaviorSubject<Profile[]>([])
+    private loadingSubject = new ReplaySubject<boolean>()
+    private unaryRefresher?: Subscription
 
-    $loading: Observable<boolean> = this.loadingSubject.asObservable();
+    $loading: Observable<boolean> = this.loadingSubject.asObservable()
 
     constructor(
         private readonly store: Store,
@@ -29,16 +29,16 @@ export class UserTableDatasource implements DataSource<Profile> {
                     return org?.id
                 })
             )
-            .subscribe(this.orgIdSub);
+            .subscribe(this.orgIdSub)
     }
 
     connect(): Observable<Profile[]> {
-        return this.profilesSubject.asObservable();
+        return this.profilesSubject.asObservable()
     }
     
     disconnect(): void {
-        this.profilesSubject.complete();
-        this.loadingSubject.complete();
+        this.profilesSubject.complete()
+        this.loadingSubject.complete()
     }
 
     load(query: LoadingQuery, stack: boolean): void {
@@ -46,28 +46,28 @@ export class UserTableDatasource implements DataSource<Profile> {
         this.orgIdSub.subscribe(orgId => {
             if (orgId === undefined) {
                 // return empty set if orgId is not defined
-                this.profilesSubject.next([]);
-                return;
+                this.profilesSubject.next([])
+                return
             }
             // extract query elements
             const {
                 filters, sorting, pageIndex, pageSize
-            } = query;
+            } = query
             // put subject into loading state
-            this.loadingSubject.next(true);
+            this.loadingSubject.next(true)
             const fetchProfileSub = this.profileService.fetchUserProfilesFromOrganization(orgId, {
                 filters,
                 include: [IncludableProfileFields.USER],
                 sorting, 
                 offset: (pageIndex - 1) * pageSize,
                 limit: pageIndex * pageSize
-            });
+            })
 
             const errorCallback = (err: Error) => {
-                console.error(err.message);
-                this.loadingSubject.next(false);
+                console.error(err.message)
+                this.loadingSubject.next(false)
                 // TODO: display error message
-            };
+            }
             // if stack, stack up new result with old
             if (stack) {
                 combineLatest([
@@ -80,39 +80,39 @@ export class UserTableDatasource implements DataSource<Profile> {
                 )
                 .subscribe({
                     next: ([current, fetched]) => {
-                        this.loadingSubject.next(false);
-                        this.profilesSubject.next(current.concat(fetched));
+                        this.loadingSubject.next(false)
+                        this.profilesSubject.next(current.concat(fetched))
                     },
                     error: errorCallback
-                });
+                })
             // else reset and replace current values
             } else {
                 // reset
-                this.resetSubject.next();
+                this.resetSubject.next()
                 fetchProfileSub.subscribe({
                     next: (profiles) => {
-                        this.loadingSubject.next(false);
-                        this.profilesSubject.next(profiles);
+                        this.loadingSubject.next(false)
+                        this.profilesSubject.next(profiles)
                     },
                     error: errorCallback
-                });
+                })
             }
-        });
+        })
     }
 
     getResetEvent(): Observable<void> {
-        return this.resetSubject.asObservable();
+        return this.resetSubject.asObservable()
     }
 
     bindUnaryRefresher(observable: Observable<Profile>): void {
-        this.unaryRefresher?.unsubscribe();
+        this.unaryRefresher?.unsubscribe()
         this.unaryRefresher = 
             observable.subscribe((update) => {
-                const currentProfiles = this.profilesSubject.getValue();
-                const indexToUpdate = currentProfiles.findIndex((p) => p.id === update.id);
-                const finalProfiles = currentProfiles;
-                finalProfiles[indexToUpdate] = update;
-                this.profilesSubject.next(finalProfiles);
-            });
+                const currentProfiles = this.profilesSubject.getValue()
+                const indexToUpdate = currentProfiles.findIndex((p) => p.id === update.id)
+                const finalProfiles = currentProfiles
+                finalProfiles[indexToUpdate] = update
+                this.profilesSubject.next(finalProfiles)
+            })
     }
 }

@@ -1,6 +1,6 @@
-import { Component, ElementRef, Input, OnInit, TemplateRef } from '@angular/core';
-import { CellDefinition } from '../typed/cell-definition.interface';
-import { BehaviorSubject } from 'rxjs';
+import { Component, ElementRef, Input, OnInit, TemplateRef } from '@angular/core'
+import { CellDefinition } from '../typed/cell-definition.interface'
+import { BehaviorSubject } from 'rxjs'
 
 @Component({
   selector: 'shared-dyntable-cell',
@@ -9,25 +9,25 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class CellComponent implements CellDefinition, OnInit {
   @Input()
-  index!: number;
+  index!: number
   @Input()
   context!: {
     value: string
-  };
+  }
   @Input()
-  widthSubject!: BehaviorSubject<number>;
+  widthSubject!: BehaviorSubject<number>
   @Input()
-  template!: TemplateRef<unknown>;
+  template!: TemplateRef<unknown>
 
   constructor(private host: ElementRef) {}
 
   ngOnInit(): void {
     this.widthSubject.subscribe((updatedValue) => {
-      this.host.nativeElement.style.width = updatedValue + 'px';
-    });
+      this.host.nativeElement.style.width = updatedValue + 'px'
+    })
   }
 
   getValue(): string {
-    return this.context.value;
+    return this.context.value
   }
 }

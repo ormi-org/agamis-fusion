@@ -1,5 +1,5 @@
-import { Route } from '@angular/router';
-import { ErrorComponent } from '@shared/pages/error/error.component';
+import { Route } from '@angular/router'
+import { ErrorComponent } from '@shared/pages/error/error.component'
 
 export const appRoutes: Route[] = [
     {
@@ -27,4 +27,4 @@ export const appRoutes: Route[] = [
             text: 'Resource was not found'
         }
     },
-];
+]

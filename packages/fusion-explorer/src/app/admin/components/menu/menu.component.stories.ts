@@ -1,9 +1,9 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { MenuComponent } from './menu.component';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { customViewport } from './.storybook';
-import { SharedModule } from '@shared/shared.module';
-import { ItemComponent } from './item/item.component';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { MenuComponent } from './menu.component'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { customViewport } from './.storybook'
+import { SharedModule } from '@shared/shared.module'
+import { ItemComponent } from './item/item.component'
 
 export default {
   title: 'Admin/Menu',
@@ -23,7 +23,7 @@ export default {
       declarations: [ItemComponent]
     })
   ]
-} as Meta<MenuComponent>;
+} as Meta<MenuComponent>
 
 export const Default = {
   render: (args: MenuComponent) => ({
@@ -32,7 +32,7 @@ export const Default = {
   args: {
     text: "administration"
   }
-};
+}
 
 export const Expanded = {
   render: (args: MenuComponent) => ({
@@ -42,4 +42,4 @@ export const Expanded = {
     text: "administration",
     isCollapsed: false
   }
-};
+}

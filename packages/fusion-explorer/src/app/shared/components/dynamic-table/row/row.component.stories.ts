@@ -1,9 +1,9 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { RowComponent } from './row.component';
-import { DUMMIES } from '../.storybook/.model';
-import { SharedModule } from '@shared/shared.module';
-import { customViewport } from '../.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { RowComponent } from './row.component'
+import { DUMMIES } from '../.storybook/.model'
+import { SharedModule } from '@shared/shared.module'
+import { customViewport } from '../.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
 
 export default {
   title: 'Shared/DynamicTable/Row',
@@ -22,7 +22,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<RowComponent<object>>;
+} as Meta<RowComponent<object>>
 
 export const Default = {
   render: (args: RowComponent<object>) => ({
@@ -33,7 +33,7 @@ export const Default = {
     keys: ["first", "second", "third", "fourth"],
     model: DUMMIES[1]
   },
-};
+}
 
 export const DefaultSelected = {
   render: (args: RowComponent<object>) => ({
@@ -45,4 +45,4 @@ export const DefaultSelected = {
     keys: ["first", "second", "third", "fourth"],
     model: DUMMIES[1]
   },
-};
+}

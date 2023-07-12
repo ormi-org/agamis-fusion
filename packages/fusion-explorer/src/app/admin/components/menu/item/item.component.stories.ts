@@ -1,8 +1,8 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { SharedModule } from '@shared/shared.module';
-import { ItemComponent } from './item.component';
-import { customViewport } from '../.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { SharedModule } from '@shared/shared.module'
+import { ItemComponent } from './item.component'
+import { customViewport } from '../.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
 
 export default {
   title: 'Admin/Menu/Item',
@@ -21,7 +21,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<ItemComponent>;
+} as Meta<ItemComponent>
 
 export const ItemNormal = {  
   render: (args: ItemComponent) => ({
@@ -31,7 +31,7 @@ export const ItemNormal = {
     isActive: false,
     text: "a normal menu item"
   },
-};
+}
 
 export const ItemActive = {
   render: (args: ItemComponent) => ({
@@ -41,4 +41,4 @@ export const ItemActive = {
     isActive: true,
     text: "an active menu item"
   },
-};
+}

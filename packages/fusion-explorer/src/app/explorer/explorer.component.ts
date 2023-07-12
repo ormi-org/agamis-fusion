@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { SplashService } from '@core/services/utils/splash/splash.service';
+import { Component } from '@angular/core'
+import { SplashService } from '@core/services/utils/splash/splash.service'
 
 @Component({
   selector: 'explorer',

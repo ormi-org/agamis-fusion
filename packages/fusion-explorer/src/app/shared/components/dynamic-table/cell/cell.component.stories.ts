@@ -1,9 +1,9 @@
-import { SharedModule } from '@shared/shared.module';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { BehaviorSubject } from 'rxjs';
-import { customViewport } from '../.storybook';
-import { CellComponent } from './cell.component';
+import { SharedModule } from '@shared/shared.module'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { BehaviorSubject } from 'rxjs'
+import { customViewport } from '../.storybook'
+import { CellComponent } from './cell.component'
 
 export default {
   title: 'Shared/DynamicTable/Cell',
@@ -22,7 +22,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<CellComponent>;
+} as Meta<CellComponent>
 
 export const Default = {
   render: (args: CellComponent) => ({
@@ -32,4 +32,4 @@ export const Default = {
     value: "a default test cell",
     widthSubject: new BehaviorSubject(100)
   },
-};
+}

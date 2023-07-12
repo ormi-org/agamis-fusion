@@ -1,8 +1,8 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
-import { StoreModule } from '@ngrx/store';
-import { appStateCoreFeatureKey, appStateReducer } from './states/app-state/app-state.reducers';
+import { NgModule } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { HttpClientModule } from '@angular/common/http'
+import { StoreModule } from '@ngrx/store'
+import { appStateCoreFeatureKey, appStateReducer } from './states/app-state/app-state.reducers'
 
 @NgModule({
   declarations: [],

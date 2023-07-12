@@ -1,15 +1,15 @@
-import { Observable } from "rxjs";
-import LoadingQuery from "./typed/loading-query.interface";
+import { Observable } from "rxjs"
+import LoadingQuery from "./typed/loading-query.interface"
 
 export default interface DataSource<T> {
     /**
      * connect the observable dataset to an observer destination
      */
-    connect(): Observable<T[]>;
+    connect(): Observable<T[]>
     /**
      * destroy the subscription
      */
-    disconnect(): void;
+    disconnect(): void
     /** 
      * load data
      * 
@@ -21,18 +21,18 @@ export default interface DataSource<T> {
      * }
      * @param stack either should stack with already fetched data or not
      */
-    load(query: LoadingQuery, stack: boolean): void;
+    load(query: LoadingQuery, stack: boolean): void
     /**
      * a loading observable to keep track of loading state of the source
      * (be careful to use a BehaviorSubject to emit current value on subscribe)
      */
-    $loading: Observable<boolean>;
+    $loading: Observable<boolean>
     /**
      * a reset event observable to track state
      */
-    getResetEvent(): Observable<void>;
+    getResetEvent(): Observable<void>
     /**
      * a method to bind a reverse refresher for unary data
      */
-    bindUnaryRefresher(observable: Observable<T>): void;
+    bindUnaryRefresher(observable: Observable<T>): void
 }

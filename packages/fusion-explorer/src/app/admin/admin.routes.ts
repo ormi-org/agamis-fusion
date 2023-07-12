@@ -1,9 +1,9 @@
-import { Route } from '@angular/router';
-import { GroupsComponent } from './pages/groups/groups.component';
-import { OrganizationComponent } from './pages/organization/organization.component';
-import { PermissionsComponent } from './pages/permissions/permissions.component';
-import { UsersComponent } from './pages/users/users.component';
-import { ProfileFormComponent } from './pages/users/profile-form/profile-form.component';
+import { Route } from '@angular/router'
+import { GroupsComponent } from './pages/groups/groups.component'
+import { OrganizationComponent } from './pages/organization/organization.component'
+import { PermissionsComponent } from './pages/permissions/permissions.component'
+import { UsersComponent } from './pages/users/users.component'
+import { ProfileFormComponent } from './pages/users/profile-form/profile-form.component'
 
 export const adminRoutes: Route[] = [
     {
@@ -33,4 +33,4 @@ export const adminRoutes: Route[] = [
         pathMatch: 'full',
         component: OrganizationComponent
     },
-];
+]

@@ -1,8 +1,8 @@
-import { Uniquely } from "@shared/components/dynamic-table/typed/uniquely.interface";
-import { Organization } from "./organization.model";
-import { Permission } from "./permission.model";
-import TimeTracked from "../typed/time-tracked";
-import { User } from "./user.model";
+import { Uniquely } from "@shared/components/dynamic-table/typed/uniquely.interface"
+import { Organization } from "./organization.model"
+import { Permission } from "./permission.model"
+import TimeTracked from "../typed/time-tracked"
+import { User } from "./user.model"
 
 export interface Profile extends TimeTracked, Uniquely {
     id: string,

@@ -1,9 +1,9 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { HeadCellComponent } from './head-cell.component';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { customViewport } from '../.storybook';
-import { SharedModule } from '@shared/shared.module';
-import { Ordering } from '@shared/constants/utils/ordering';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { HeadCellComponent } from './head-cell.component'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { customViewport } from '../.storybook'
+import { SharedModule } from '@shared/shared.module'
+import { Ordering } from '@shared/constants/utils/ordering'
 
 export default {
   title: 'Shared/DynamicTable/HeadCell',
@@ -22,7 +22,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<HeadCellComponent>;
+} as Meta<HeadCellComponent>
 
 export const Default = {
   render: (args: HeadCellComponent) => ({
@@ -36,7 +36,7 @@ export const Default = {
       ordering: Ordering.NONE
     }
   },
-};
+}
 
 export const OrderedAscending = {
   render: (args: HeadCellComponent) => ({
@@ -50,7 +50,7 @@ export const OrderedAscending = {
       ordering: Ordering.ASC
     }
   },
-};
+}
 
 export const OrderedDescending = {
   render: (args: HeadCellComponent) => ({
@@ -64,4 +64,4 @@ export const OrderedDescending = {
       ordering: Ordering.DESC
     }
   },
-};
+}

@@ -1,5 +1,5 @@
-import { TemplateRef } from "@angular/core";
-import { BehaviorSubject } from "rxjs";
+import { TemplateRef } from "@angular/core"
+import { BehaviorSubject } from "rxjs"
 
 export class Cell {
     constructor(
@@ -14,5 +14,5 @@ export class Cell {
 }
 
 export function trackByUqId(_: number, el: Cell): string {
-    return el.uqId;
+    return el.uqId
 }

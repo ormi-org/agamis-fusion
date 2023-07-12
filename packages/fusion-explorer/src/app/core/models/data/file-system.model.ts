@@ -1,5 +1,5 @@
-import { Application } from "./application.model";
-import { Organization } from "./organization.model";
+import { Application } from "./application.model"
+import { Organization } from "./organization.model"
 
 export interface FileSystem {
     id: string,

@@ -4,4 +4,4 @@ export enum Ordering {
     ASC = 1
 }
 
-export type DefinedOrdering = Ordering.ASC | Ordering.DESC;
+export type DefinedOrdering = Ordering.ASC | Ordering.DESC

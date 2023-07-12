@@ -1,7 +1,7 @@
-import { Route } from '@angular/router';
-import { ExplorerComponent } from './explorer.component';
-import { BrowserComponent } from './components/browser/browser.component';
-import { preparationDataResolver } from '@core/resolvers/preparation-data/preparation-data.resolver';
+import { Route } from '@angular/router'
+import { ExplorerComponent } from './explorer.component'
+import { BrowserComponent } from './components/browser/browser.component'
+import { preparationDataResolver } from '@core/resolvers/preparation-data/preparation-data.resolver'
 
 export const explorerRoutes: Route[] = [
   {
@@ -34,4 +34,4 @@ export const explorerRoutes: Route[] = [
   //   // Open widget
   //   // path: 'open',
   // },
-];
+]

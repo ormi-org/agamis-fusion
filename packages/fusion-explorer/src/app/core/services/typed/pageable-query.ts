@@ -1,4 +1,4 @@
-import { ProfileQuery } from "@core/external/rest/profile/profile-query.model";
+import { ProfileQuery } from "@core/external/rest/profile/profile-query.model"
 
 export type PageableQuery =
-    ProfileQuery;
+    ProfileQuery

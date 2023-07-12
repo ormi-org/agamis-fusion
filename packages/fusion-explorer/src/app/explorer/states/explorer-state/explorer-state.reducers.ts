@@ -1,6 +1,6 @@
-import { createReducer, on } from "@ngrx/store";
-import * as ExplorerStateActions from './explorer-state.actions';
-import { ExplorerState } from "@explorer/models/states/explorer-state.model";
+import { createReducer, on } from "@ngrx/store"
+import * as ExplorerStateActions from './explorer-state.actions'
+import { ExplorerState } from "@explorer/models/states/explorer-state.model"
 
 export const initialState: ExplorerState = {
     ui: {
@@ -8,9 +8,9 @@ export const initialState: ExplorerState = {
             name: ''
         }
     }
-};
+}
 
-export const explorerStateExplorerFeatureKey = 'explorer';
+export const explorerStateExplorerFeatureKey = 'explorer'
 
 export const explorerStateReducer = createReducer(
     initialState,
@@ -20,4 +20,4 @@ export const explorerStateReducer = createReducer(
             organization: action.organization
         }
     ))
-);
+)

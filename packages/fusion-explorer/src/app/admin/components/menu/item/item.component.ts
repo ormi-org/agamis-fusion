@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { Icon } from '@shared/constants/assets';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core'
+import { Icon } from '@shared/constants/assets'
 
 @Component({
   selector: 'admin-menu-item',
@@ -8,7 +8,7 @@ import { Icon } from '@shared/constants/assets';
 })
 export class ItemComponent implements AfterViewInit {
   @Input()
-  text = "undefined text";
+  text = "undefined text"
   @Input()
   icon: {
     key: Icon,
@@ -16,28 +16,28 @@ export class ItemComponent implements AfterViewInit {
   } = {
     key: Icon.QUESTION_LINE,
     height: '16px',
-  };
+  }
   @Input()
-  link?: string[];
+  link?: string[]
 
-  private nativeElement: HTMLElement;
+  private nativeElement: HTMLElement
 
   constructor(element: ElementRef) {
-    this.nativeElement = element.nativeElement;
+    this.nativeElement = element.nativeElement
   }
 
   @ViewChild('icon')
-  iconInstance!: ElementRef<HTMLElement>;
+  iconInstance!: ElementRef<HTMLElement>
 
   ngAfterViewInit(): void {
-    this.iconInstance.nativeElement.style.height = this.icon.height;
+    this.iconInstance.nativeElement.style.height = this.icon.height
   }
 
   getHeight(): number {
-    return this.nativeElement.offsetHeight;
+    return this.nativeElement.offsetHeight
   }
 
   protected getIcon(): Icon {
-    return this.icon.key;
+    return this.icon.key
   }
 }

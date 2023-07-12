@@ -1,3 +1,3 @@
 export interface CellDefinition {
-  getValue(): string;
+  getValue(): string
 }

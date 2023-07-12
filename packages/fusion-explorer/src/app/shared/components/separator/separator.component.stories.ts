@@ -1,10 +1,10 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { SharedModule } from '@shared/shared.module';
-import { customViewport } from './.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { SeparatorComponent } from './separator.component';
-import { Direction } from './models/enums/direction.enum';
-import { Color } from '@shared/constants/assets';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { SharedModule } from '@shared/shared.module'
+import { customViewport } from './.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { SeparatorComponent } from './separator.component'
+import { Direction } from './models/enums/direction.enum'
+import { Color } from '@shared/constants/assets'
 
 export default {
   title: 'Shared/Separator',
@@ -23,7 +23,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<SeparatorComponent>;
+} as Meta<SeparatorComponent>
 
 export const Vertical = {
   render: (args: SeparatorComponent) => ({
@@ -35,4 +35,4 @@ export const Vertical = {
     color: Color.SECONDARY_ONE,
     bordering: 5,
   },
-};
+}

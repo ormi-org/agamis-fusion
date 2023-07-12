@@ -1,4 +1,4 @@
-import { Icon } from "@shared/constants/assets";
+import { Icon } from "@shared/constants/assets"
 
 export interface HeaderTitleItem {
     text: string,

@@ -1,8 +1,8 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { SharedModule } from '@shared/shared.module';
-import { customViewport } from './.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { SwitchComponent } from './switch.component';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { SharedModule } from '@shared/shared.module'
+import { customViewport } from './.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { SwitchComponent } from './switch.component'
 
 export default {
   title: 'Shared/Switch',
@@ -21,7 +21,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<SwitchComponent>;
+} as Meta<SwitchComponent>
 
 export const Default = {
   render: (args: SwitchComponent) => ({
@@ -29,7 +29,7 @@ export const Default = {
   }),
   args: {
   },
-};
+}
 
 export const YesNo = {
   render: (args: SwitchComponent) => ({
@@ -39,4 +39,4 @@ export const YesNo = {
     trueValue: 'Yes',
     falseValue: 'No',
   },
-};
+}

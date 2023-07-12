@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { CoreModule } from '@core/core.module';
+import { Injectable } from '@angular/core'
+import { CoreModule } from '@core/core.module'
 
 @Injectable({
   providedIn: CoreModule

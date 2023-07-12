@@ -1,4 +1,4 @@
-import { TemplateRef } from "@angular/core";
+import { TemplateRef } from "@angular/core"
 
 export class Row<T> {
     constructor(
@@ -14,5 +14,5 @@ export class Row<T> {
 }
 
 export function trackByUqId(_: number, el: Row<unknown>): string {
-    return el.uqId;
+    return el.uqId
 }

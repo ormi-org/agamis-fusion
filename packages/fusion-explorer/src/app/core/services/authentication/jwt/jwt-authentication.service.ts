@@ -1,25 +1,47 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { CoreModule } from '@core/core.module';
-import { UserInfo } from '@core/models/user-info.model';
-import { selectAppConfig } from '@core/states/app-state/app-state.selectors';
-import { Store } from '@ngrx/store';
-import { Observable, catchError, retry, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http'
+import { Injectable } from '@angular/core'
+import { CoreModule } from '@core/core.module'
+import { UserInfo } from '@core/models/user-info.model'
+import { LocalStorageService } from '@core/services/utils/local-storage/local-storage.service'
+import { selectAppConfig } from '@core/states/app-state/app-state.selectors'
+import { Store } from '@ngrx/store'
+import { Observable, catchError, of, retry, throwError } from 'rxjs'
 
 @Injectable({
   providedIn: CoreModule
 })
 export class JwtAuthenticationService {
 
-  private baseUrl!: string;
+  private baseUrl!: string
 
   constructor(
     private http: HttpClient,
     private readonly store: Store,
+    private readonly localStorageService: LocalStorageService
   ) {
     this.store.select(selectAppConfig).subscribe((conf) => {
-      this.baseUrl = '/'+(conf?.urls.rest.endpoints.AUTH);
-    });
+      this.baseUrl = '/'+(conf?.urls.rest.endpoints.AUTH)
+    })
+  }
+
+  getToken(): Observable<string> {
+    const token = this.localStorageService.get("token")
+    switch(token.result) {
+      case "found":
+        return of(<string>token.item)
+      default:
+        return throwError(() => new Error("Unable to find token in local storage"))
+    }
+  }
+
+  getRefreshToken(): Observable<string> {
+    const token = this.localStorageService.get("refresh-token")
+    switch(token.result) {
+      case "found":
+        return of(<string>token.item)
+      default:
+        return throwError(() => new Error("Unable to find token in local storage"))
+    }
   }
 
   getUserInfo(): Observable<UserInfo> {
@@ -28,12 +50,12 @@ export class JwtAuthenticationService {
       retry(2),
       catchError((error: HttpErrorResponse) => {
         if (error.status === 0) {
-          console.warn('> JwtAuthenticationService#userInfo() >> an error occured on http request:', error.error);
+          console.warn('> JwtAuthenticationService#userInfo() >> an error occured on http request:', error.error)
         } else {
-          console.warn('> JwtAuthenticationService#userInfo() >> server returned code %d with body:', error.status, error.error);
+          console.warn('> JwtAuthenticationService#userInfo() >> server returned code %d with body:', error.status, error.error)
         }
-        const err = new Error('An error occured while verifying token');
-        return throwError(() => err);
+        const err = new Error('An error occured while verifying token')
+        return throwError(() => err)
       })
     )
   }

@@ -13,4 +13,4 @@ export const customViewport = {
       height: '430px',
     },
   },
-};
+}

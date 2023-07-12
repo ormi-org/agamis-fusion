@@ -1,5 +1,5 @@
-import { AfterContentInit, Component, HostBinding, Input } from '@angular/core';
-import { Direction } from './models/enums/direction.enum';
+import { AfterContentInit, Component, HostBinding, Input } from '@angular/core'
+import { Direction } from './models/enums/direction.enum'
 
 @Component({
   selector: 'shared-separator',
@@ -8,40 +8,40 @@ import { Direction } from './models/enums/direction.enum';
 })
 export class SeparatorComponent implements AfterContentInit {
   @Input()
-  direction!: Direction;
+  direction!: Direction
   @Input()
-  thickness!: number;
+  thickness!: number
   @Input()
-  color!: string;
+  color!: string
   @Input()
-  bordering!: number;
+  bordering!: number
 
-  protected paddingTop!: number;
-  protected paddingBot!: number;
-  protected paddingLeft!: number;
-  protected paddingRight!: number;
+  protected paddingTop!: number
+  protected paddingBot!: number
+  protected paddingLeft!: number
+  protected paddingRight!: number
 
   @HostBinding('style.height')
   @HostBinding('style.min-height')
   @HostBinding('style.max-height')
-  protected height!: string;
+  protected height!: string
   @HostBinding('style.width')
   @HostBinding('style.min-width')
   @HostBinding('style.max-width')
-  protected width!: string;
+  protected width!: string
 
   ngAfterContentInit(): void {
     switch (this.direction) {
       case Direction.VERTICAL:
-        this.paddingBot = this.paddingTop = this.bordering;
-        this.height = 100+'%';
-        this.width = this.thickness+'px';
-        break;
+        this.paddingBot = this.paddingTop = this.bordering
+        this.height = 100+'%'
+        this.width = this.thickness+'px'
+        break
       case Direction.HORIZONTAL:
-        this.paddingLeft = this.paddingRight = this.bordering;
-        this.height = this.thickness+'px';
-        this.width = 100+'%';
-        break;
+        this.paddingLeft = this.paddingRight = this.bordering
+        this.height = this.thickness+'px'
+        this.width = 100+'%'
+        break
     } 
   }
 }

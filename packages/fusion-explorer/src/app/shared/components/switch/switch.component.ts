@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Color } from '@shared/constants/assets';
+import { Component, EventEmitter, Input, Output } from '@angular/core'
+import { Color } from '@shared/constants/assets'
 
 @Component({
   selector: 'shared-switch',
@@ -8,22 +8,22 @@ import { Color } from '@shared/constants/assets';
 })
 export class SwitchComponent {
   @Input()
-  trueValue = '';
+  trueValue = ''
   @Input()
-  trueColor = Color.SUCCESS;
+  trueColor = Color.SUCCESS
   @Input()
-  falseValue = '';
+  falseValue = ''
   @Input()
-  falseColor = Color.ERROR;
+  falseColor = Color.ERROR
   @Input()
-  value = false;
+  value = false
 
   @Output()
   // eslint-disable-next-line @angular-eslint/no-output-native
-  change = new EventEmitter<boolean>();
+  change = new EventEmitter<boolean>()
 
   onSwitch(): void {
-    this.value = !this.value;
-    this.change.emit(this.value);
+    this.value = !this.value
+    this.change.emit(this.value)
   }
 }

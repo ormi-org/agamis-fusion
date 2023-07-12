@@ -1,9 +1,9 @@
-import { Meta, moduleMetadata } from '@storybook/angular';
-import { SharedModule } from '@shared/shared.module';
-import { customViewport } from './.storybook';
-import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport';
-import { LoadingBarComponent } from './loading-bar.component';
-import { BehaviorSubject } from 'rxjs';
+import { Meta, moduleMetadata } from '@storybook/angular'
+import { SharedModule } from '@shared/shared.module'
+import { customViewport } from './.storybook'
+import { MINIMAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { LoadingBarComponent } from './loading-bar.component'
+import { BehaviorSubject } from 'rxjs'
 
 export default {
   title: 'Shared/LoadingBar',
@@ -22,7 +22,7 @@ export default {
       imports: [SharedModule]
     })
   ]
-} as Meta<LoadingBarComponent>;
+} as Meta<LoadingBarComponent>
 
 export const Default = {
   render: (args: LoadingBarComponent) => ({
@@ -33,7 +33,7 @@ export const Default = {
     width: 240,
     nextStageSignalSubject: new BehaviorSubject<void>(undefined)
   },
-};
+}
 
 export const FullAutoNext = {
   render: (args: LoadingBarComponent) => ({
@@ -53,7 +53,7 @@ export const FullAutoNext = {
       }
     ]
   },
-};
+}
 
 export const AutoNextFourStages = {
   render: (args: LoadingBarComponent) => ({
@@ -81,7 +81,7 @@ export const AutoNextFourStages = {
       },
     ]
   },
-};
+}
 
 export const AutoNextFourStagesVariableFillDurations = {
   render: (args: LoadingBarComponent) => ({
@@ -112,7 +112,7 @@ export const AutoNextFourStagesVariableFillDurations = {
       },
     ]
   },
-};
+}
 
 export const AutoNextTenStagesVariableFillDurationsVariantA = {
   render: (args: LoadingBarComponent) => ({
@@ -174,7 +174,7 @@ export const AutoNextTenStagesVariableFillDurationsVariantA = {
       },
     ]
   },
-};
+}
 
 export const SplashDefault = {
   render: (args: LoadingBarComponent) => ({
@@ -205,7 +205,7 @@ export const SplashDefault = {
       }
     ]
   },
-};
+}
 
 export const SplashDefaultCut = {
   render: (args: LoadingBarComponent) => ({
@@ -236,7 +236,7 @@ export const SplashDefaultCut = {
       }
     ]
   },
-};
+}
 
 export const SplashDefaultTimeout = {
   render: (args: LoadingBarComponent) => ({
@@ -267,7 +267,7 @@ export const SplashDefaultTimeout = {
       }
     ]
   },
-};
+}
 
 export const AlternativeColors = {
   render: (args: LoadingBarComponent) => ({
@@ -289,4 +289,4 @@ export const AlternativeColors = {
     bgColor: '30f251',
     fillColor: 'fa84d3'
   },
-};
+}
