@@ -1,9 +1,9 @@
 import { Profile } from '@core/models/data/profile.model'
-import { Observable, Subject } from 'rxjs'
+import { Observable, ReplaySubject, Subject } from 'rxjs'
 
 export class ProfileFormService {
 
-  private profileSource: Subject<Profile> = new Subject<Profile>()
+  private profileSource: ReplaySubject<Profile> = new ReplaySubject<Profile>(1)
   private profileOut: Subject<Profile> = new Subject<Profile>()
 
   pushSource(profile: Profile) {

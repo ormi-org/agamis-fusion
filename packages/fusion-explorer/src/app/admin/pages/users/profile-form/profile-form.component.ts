@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core'
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
 import { Profile } from '@core/models/data/profile.model'
 import { ProfilePicService } from '@core/services/profile/picture/profile-pic.service'
@@ -7,7 +7,7 @@ import { selectOrganization } from '@explorer/states/explorer-state/explorer-sta
 import { Store } from '@ngrx/store'
 import { Direction } from '@shared/components/separator/models/enums/direction.enum'
 import { Color, Icon } from '@shared/constants/assets'
-import { BehaviorSubject, combineLatest, map, of, skipWhile, take, tap, zip } from 'rxjs'
+import { BehaviorSubject, Subscription, combineLatest, filter, map, of, skipWhile, switchMap, take, tap, throwError, zip } from 'rxjs'
 import { ProfileFormService } from './profile-form.service'
 
 @Component({
@@ -15,7 +15,7 @@ import { ProfileFormService } from './profile-form.service'
   templateUrl: './profile-form.component.html',
   styleUrls: ['./profile-form.component.scss'],
 })
-export class ProfileFormComponent implements OnInit, AfterViewInit {
+export class ProfileFormComponent implements OnInit, OnDestroy {
   protected Color: typeof Color = Color
   protected Direction: typeof Direction = Direction
   protected Icon: typeof Icon = Icon
@@ -25,6 +25,8 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   protected profilePicUrl: string | undefined
   protected selectedFile: File | null = null
   protected maxAllowedFileSize = 0
+
+  private formModelChangeDetection?: Subscription
 
   @ViewChild('uploadInput', {read: ElementRef})
   private uploadInput!: ElementRef
@@ -38,7 +40,7 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
-    this.profileFormService.getSourceMutationEvent() // detect change in form model
+    this.formModelChangeDetection = this.profileFormService.getSourceMutationEvent() // detect change in form model
       .subscribe((p) => {
         this.profile = p
         // TODO: extract profilePicFile ID
@@ -61,20 +63,27 @@ export class ProfileFormComponent implements OnInit, AfterViewInit {
         map(org => org?.id)
       ),
     ])
-    .subscribe(([ profileId, orgId ]) => {
-      if (this.profile === undefined) {
+    .pipe(
+      take(1),
+      switchMap(([ profileId, orgId ]) => {
         if (profileId && orgId) {
-          this.profileService.fetchProfileById(orgId, profileId)
-          .subscribe((p) => {
-            this.profileFormService.pushSource(p)
-          })
+          if (this.profile === undefined) {
+            return this.profileService.fetchProfileById(orgId, profileId)
+          }
+          return of(undefined)
         }
-      }
+        return throwError(() => new Error("Either profile ID or org ID is not set"))
+      }),
+      skipWhile(p => p === undefined)
+    )
+    .subscribe((p) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.profileFormService.pushSource(p!)
     })
   }
 
-  ngAfterViewInit(): void {
-    return
+  ngOnDestroy(): void {
+    this.formModelChangeDetection?.unsubscribe()
   }
 
   protected deleteProfilePicture(): void {

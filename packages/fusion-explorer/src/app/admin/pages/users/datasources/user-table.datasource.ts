@@ -8,10 +8,10 @@ import LoadingQuery from "@shared/components/dynamic-table/typed/data-source/typ
 import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject, skipWhile, Subject, Subscription, take } from "rxjs"
 
 export class UserTableDatasource implements DataSource<Profile> {
-    private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject()
+    private orgIdSub: ReplaySubject<string | undefined> = new ReplaySubject(1)
     private resetSubject = new Subject<void>()
     private profilesSubject = new BehaviorSubject<Profile[]>([])
-    private loadingSubject = new ReplaySubject<boolean>()
+    private loadingSubject = new ReplaySubject<boolean>(1)
     private unaryRefresher?: Subscription
 
     $loading: Observable<boolean> = this.loadingSubject.asObservable()
