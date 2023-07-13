@@ -1,6 +1,9 @@
+import { AdminModule } from '@admin/admin.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProfileFormComponent } from './profile-form.component';
+import { RouterTestingModule } from '@angular/router/testing';
 import { StoreModule } from '@ngrx/store';
+import { ProfileFormComponent } from './profile-form.component';
+import { CoreModule } from '@core/core.module';
 
 describe('ProfileFormComponent', () => {
   let component: ProfileFormComponent;
@@ -8,7 +11,8 @@ describe('ProfileFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ProfileFormComponent, StoreModule.forRoot({})],
+      imports: [StoreModule.forRoot({}), RouterTestingModule, AdminModule, CoreModule],
+      declarations: [ProfileFormComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileFormComponent);

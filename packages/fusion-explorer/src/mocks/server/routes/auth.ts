@@ -1,4 +1,4 @@
-import { Server } from "miragejs";
+import { Response, Server } from "miragejs";
 import { UserInfo } from "@core/models/user-info.model";
 
 const MOCK_USER: UserInfo = {
@@ -10,9 +10,16 @@ const MOCK_USER: UserInfo = {
 };
 
 const authRoutes = (server: Server) => {[
-    server.get(`/auth/userinfo`, () => (
-        MOCK_USER
-    ))
+    server.get(
+        `/auth/userinfo`,
+        (_schema, request) => {
+            const { Authorization } = request.requestHeaders
+            if (Authorization === undefined) {
+                return new Response(401, {});
+            }
+            return MOCK_USER
+        }
+    )
 ]};
 
 export default authRoutes;

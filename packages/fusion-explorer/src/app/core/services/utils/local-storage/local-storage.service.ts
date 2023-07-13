@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core'
-import { CoreModule } from '@core/core.module'
 import { LocalStorageResult } from '@core/models/local-storage/local-storage-result.model'
 
-@Injectable({
-  providedIn: CoreModule,
-})
+@Injectable()
 export class LocalStorageService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,9 +18,15 @@ export class LocalStorageService {
           error: `could not find item with key:#${localStorageKey}`,
         }
       }
+      let result;
+      try {
+        result = JSON.parse(res);
+      } catch (error) {
+        result = '' + res;
+      }
       return {
         result: 'found',
-        item: JSON.parse(res),
+        item: result,
       }
     })()
   }
