@@ -4,13 +4,13 @@ import { rest } from 'msw';
 
 const collection = profiles.org_profiles_sample_with_user
 
-const DEFAULT_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16'
+const MOCKED_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16'
 
 const EXCLUDED_FIELDS = ['emails', 'permissions', 'organization', 'user']
 
 const profilesRoutes = [
     rest.get(
-      `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profiles`,
+      `/api/organizations/${MOCKED_ORGANIZATION_ID}/profiles`,
       (req, res, ctx) => {
         const limit = req.url.searchParams.get('limit');
         const offset = req.url.searchParams.get('offset');
@@ -75,7 +75,7 @@ const profilesRoutes = [
       }
     ),
     rest.get(
-      `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
+      `/api/organizations/${MOCKED_ORGANIZATION_ID}/profiles/:id`,
       (req, res, ctx) => {
         const { id } = req.params;
         // return dynamic result
@@ -96,7 +96,7 @@ const profilesRoutes = [
       }
     ),
     rest.put(
-      `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
+      `/api/organizations/${MOCKED_ORGANIZATION_ID}/profiles/:id`,
       async (req, res, ctx) => {
         const { id } = req.params;
         return await lastValueFrom(from(req.json<{

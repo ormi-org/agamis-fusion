@@ -8,7 +8,7 @@ import { CoreModule } from '@core/core.module'
 import { Profile } from '@core/models/data/profile.model'
 import { selectAppConfig } from '@core/states/app-state/app-state.selectors'
 import { Store } from '@ngrx/store'
-import { Observable, catchError, map, of, retry, throwError } from 'rxjs'
+import { Observable, catchError, map, of, throwError } from 'rxjs'
 import { ProfileQuery } from './types/profile-query.model'
 
 @Injectable({
@@ -99,7 +99,7 @@ export class ProfileService {
       return of()
     }
     return this.http
-      .get<Profile>(`${this.orgBaseUrl}/${orgId}/profile/${profileId}`)
+      .get<Profile>(`${this.orgBaseUrl}/${orgId}/profiles/${profileId}`)
       .pipe(
         map((p) => {
           p.lastLogin = new Date(p.lastLogin)
@@ -133,7 +133,7 @@ export class ProfileService {
       return of()
     }
     return this.http
-      .put<Profile>(`${this.orgBaseUrl}/${orgId}/profile/${profile.id}`, {
+      .put<Profile>(`${this.orgBaseUrl}/${orgId}/profiles/${profile.id}`, {
         alias: profile.alias,
         lastName: profile.lastName,
         firstName: profile.firstName,

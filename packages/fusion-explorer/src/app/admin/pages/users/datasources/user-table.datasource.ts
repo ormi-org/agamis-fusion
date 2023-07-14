@@ -12,7 +12,7 @@ export class UserTableDatasource implements DataSource<Profile> {
     private resetSubject = new Subject<void>()
     private profilesSubject = new BehaviorSubject<Profile[]>([])
     private loadingSubject = new ReplaySubject<boolean>(1)
-    private unaryRefresher?: Subscription
+    private unitaryRefresher?: Subscription
 
     $loading: Observable<boolean> = this.loadingSubject.asObservable()
 
@@ -104,9 +104,9 @@ export class UserTableDatasource implements DataSource<Profile> {
         return this.resetSubject.asObservable()
     }
 
-    bindUnaryRefresher(observable: Observable<Profile>): void {
-        this.unaryRefresher?.unsubscribe()
-        this.unaryRefresher = 
+    bindUnitaryRefresher(observable: Observable<Profile>): void {
+        this.unitaryRefresher?.unsubscribe()
+        this.unitaryRefresher = 
             observable.subscribe((update) => {
                 const currentProfiles = this.profilesSubject.getValue()
                 const indexToUpdate = currentProfiles.findIndex((p) => p.id === update.id)

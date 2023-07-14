@@ -8,12 +8,16 @@
         "executor": "nx:run-commands",
         "defaultConfiguration": "rest-api-v1",
         "options": {
+          "cwd": "packages/fusion-api-doc",
           "color": true,
           "parallel": true
         },
         "configurations": {
-          "rest-api-v1": {
-            "command": "aglio -i src/rest.v1.apib -o dist/rest.v1.html"
+          "rest-api": {
+            "commands": [
+              "mkdir -p dist",
+              "aglio -i src/rest.apib -o dist/rest.html"
+            ]
           }
         }
       }

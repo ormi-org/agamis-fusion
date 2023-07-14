@@ -3,9 +3,9 @@
         "rest": {
             "endpoints": {
                 "AUTH": "auth",
-                "USERS": "api/v1/users",
-                "PROFILES": "api/v1/profiles",
-                "ORGANIZATIONS": "api/v1/organizations"
+                "USERS": "api/users",
+                "PROFILES": "api/profiles",
+                "ORGANIZATIONS": "api/organizations"
             }
         }
     }

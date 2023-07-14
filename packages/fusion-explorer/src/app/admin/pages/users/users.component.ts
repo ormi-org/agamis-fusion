@@ -108,7 +108,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     // initial fetch
     this.datasourceQuerySubject.next([this.query, false])
     // bind refresher for table on profile update
-    this.tableDatasource.bindUnaryRefresher(this.profileFormService.getOutput())
+    this.tableDatasource.bindUnitaryRefresher(this.profileFormService.getOutput())
   }
 
   ngAfterViewInit(): void {

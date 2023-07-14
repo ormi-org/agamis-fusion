@@ -32,7 +32,7 @@ export default interface DataSource<T> {
      */
     getResetEvent(): Observable<void>
     /**
-     * a method to bind a reverse refresher for unary data
+     * a method to bind a reverse refresher for unitary data
      */
-    bindUnaryRefresher(observable: Observable<T>): void
+    bindUnitaryRefresher(observable: Observable<T>): void
 }
