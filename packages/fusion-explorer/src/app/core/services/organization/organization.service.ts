@@ -25,7 +25,6 @@ export class OrganizationService {
   getOrganizationById(id: string): Observable<Organization> {
     return this.http.get<Organization>(this.baseUrl + '/' + id)
     .pipe(
-      retry(2),
       catchError((err: HttpErrorResponse) => {
         if (err.status === 0) {
           console.warn('> OrganizationService#getOrganizationById(string) >> an error occured on http request:', err.error)

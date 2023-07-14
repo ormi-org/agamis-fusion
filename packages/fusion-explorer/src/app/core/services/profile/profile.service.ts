@@ -62,7 +62,6 @@ export class ProfileService {
         ),
       })
       .pipe(
-        retry(2),
         map((data) => {
           return data.map((p) => {
             p.lastLogin = new Date(p.lastLogin)
@@ -102,7 +101,6 @@ export class ProfileService {
     return this.http
       .get<Profile>(`${this.orgBaseUrl}/${orgId}/profile/${profileId}`)
       .pipe(
-        retry(2),
         map((p) => {
           p.lastLogin = new Date(p.lastLogin)
           p.updatedAt = new Date(p.updatedAt)
@@ -141,7 +139,6 @@ export class ProfileService {
         firstName: profile.firstName,
         isActive: profile.isActive
       }).pipe(
-        retry(2),
         map((p) => {
           p.lastLogin = new Date(p.lastLogin)
           p.updatedAt = new Date(p.updatedAt)

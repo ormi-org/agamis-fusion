@@ -67,6 +67,7 @@ export const preparationDataResolver: ResolveFn<Subscription | undefined> = (rou
           catchError((err: HttpErrorResponse) => {
             if (err.status === 404) {
               router.navigateByUrl('/error', { state: { code: 404, title: 'not found', text: $localize`:@@client.messages.errors.data.organization.not-found:organization was not found` } })
+              console.warn('> preparationDataResolver() >> organization was not found:', err.error)
               splashService.complete()
               return of(undefined)
             }

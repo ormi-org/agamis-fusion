@@ -1,15 +1,23 @@
-import { Response, Server } from "miragejs";
+import { rest } from "msw";
 import { default as organizations } from "../../data/dist/organizations.json";
 
-const organizationsRoutes = (server: Server) => {[
-    server.get(`/api/v1/organizations/:orgId`, (_, request) => {
-        const id = request.params["orgId"];
-        const org = organizations.organizations_sample.find(org => org.id === id);
+const organizationsRoutes = [
+    rest.get(`/api/v1/organizations/:orgId`, (req, res, ctx) => {
+        const { orgId } = req.params;
+        const org = organizations.organizations_sample.find(org => org.id === orgId);
         if (org === undefined) {
-            return new Response(404, {}, { errors: [`organization not found with id:#${id}`] });
+            return res(
+                ctx.status(404),
+                ctx.json({
+                    erros: [`organization not found with id:#${orgId}`]
+                })
+            )
         }
-        return org;
-    }, { timing: 1000 })
-]};
+        return res(
+            ctx.status(200),
+            ctx.json(org)
+        )
+    })
+];
 
 export default organizationsRoutes;

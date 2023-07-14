@@ -1,0 +1,34 @@
+FORMAT: 1A
+# Rest v1 [/api/v1]
+## Profiles [/organizations/{id}/]
+Resources related to profiles in the API. Nested inside organization resource.
+
+### Collection [/profiles{?order_by}{?offset}{?limit}{?include}]
+#### List profiles among organization inner collection [GET]
+
++ Request (application/json)
+
+    + Headers
+
+        headers-request
+
+    + Parameters
+        + order_by (string, required) - field name to sort on
+        + offset (number, required) - number of items to skip
+        + limit (number, required) - number of items to retrieve
+        + include (enum[string], optional) - optional fields to eagerly fetch
+
++ Response status-code (media-type-response)
+
+    + Headers
+
+        headers-response
+
+    + Body
+
+        body-response
+
+
+
+
+

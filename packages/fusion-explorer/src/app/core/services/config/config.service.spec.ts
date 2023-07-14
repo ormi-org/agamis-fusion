@@ -20,7 +20,7 @@ const DEFAULT_ENDPOINTS = {
 describe('ConfigService', () => {
   let service: ConfigService;
   let store: Store<AppState>;
-  let httpMock: HttpTestingController;
+  let httpTest: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -31,7 +31,7 @@ describe('ConfigService', () => {
       ]
     });
     store = TestBed.inject(Store);
-    httpMock = TestBed.inject(HttpTestingController);
+    httpTest = TestBed.inject(HttpTestingController);
     service = TestBed.inject(ConfigService);
   });
 
@@ -54,6 +54,12 @@ describe('ConfigService', () => {
       const storeSpy = spyOn(store, 'dispatch');
       expect(storeSpy).toHaveBeenCalledWith(loadConfig({ config: expected }));
 
+      const mockRequest = httpTest.expectOne('/assets/config/dev.conf.json');
+      expect(mockRequest.request.method).toEqual('GET');
+      mockRequest.flush(expected);
+
+      httpTest.verify();
+
       store
       .pipe(
         select(selectAppConfig),
@@ -63,8 +69,6 @@ describe('ConfigService', () => {
         expect(conf).toBe(expected);
       });
     });
-    const mockRequest = httpMock.expectOne('./assets/config/dev.conf.json');
-    mockRequest.flush(expected);
   });
 
   it('should load default conf to store when file is not found', () => {
@@ -79,6 +83,15 @@ describe('ConfigService', () => {
       }
     }
     service.load().subscribe(() => {
+      const mockRequest = httpTest.expectOne('/assets/config/dev.conf.json');
+      expect(mockRequest.request.method).toEqual('GET');
+      mockRequest.flush({}, {
+        status: 404,
+        statusText: "Not Found"
+      });
+
+      httpTest.verify();
+
       store
       .pipe(
         select(selectAppConfig),
@@ -87,11 +100,6 @@ describe('ConfigService', () => {
       .subscribe((conf) => {
         expect(conf).toBe(expected)
       });
-    });
-    const mockRequest = httpMock.expectOne('./assets/config/dev.conf.json');
-    mockRequest.flush({}, {
-      status: 404,
-      statusText: "Not Found"
     });
   });
 });

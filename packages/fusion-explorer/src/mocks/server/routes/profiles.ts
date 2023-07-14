@@ -1,23 +1,32 @@
-import { Response, Server } from 'miragejs';
+import { from, lastValueFrom, of, switchMap } from 'rxjs';
 import { default as profiles } from '../../data/dist/profiles.json';
+import { rest } from 'msw';
 
-const DEFAULT_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16';
+const collection = profiles.org_profiles_sample_with_user
 
-const EXCLUDED_FIELDS = ['emails', 'permissions', 'organization', 'user'];
+const DEFAULT_ORGANIZATION_ID = '958b761d-abe5-f6d0-069d-c102cf310a16'
 
-const profilesRoutes = (server: Server) => {
-  [
-    server.db.createCollection('profiles', profiles.org_profiles_sample_with_user),
-    server.get(
+const EXCLUDED_FIELDS = ['emails', 'permissions', 'organization', 'user']
+
+const profilesRoutes = [
+    rest.get(
       `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profiles`,
-      (schema, request) => {
-        const { offset, limit, order_by, include } = request.queryParams;
-        const splitOrdered = order_by.split(',');
+      (req, res, ctx) => {
+        const limit = req.url.searchParams.get('limit');
+        const offset = req.url.searchParams.get('offset');
+        const order_by = req.url.searchParams.get('order_by');
+        const include = req.url.searchParams.get('include');
+        const splitOrdered = order_by ? order_by.split(',') : [];
         const order = [splitOrdered[0], splitOrdered[1]];
-        const includedFields = include.split(',');
+        const includedFields = include ? include.split(',') : [];
         const excluded = EXCLUDED_FIELDS.filter(
           (f) => !includedFields.includes(f)
         );
+        if (!offset || !limit || !order_by || order_by.length < 1) {
+          return res(
+            ctx.status(400)
+          )
+        }
         let sortingFn: (a, b) => number;
         switch (order[0]) {
           case 'lastLogin':
@@ -48,51 +57,86 @@ const profilesRoutes = (server: Server) => {
             sortingFn = (a, b) => a[order[0]] - b[order[0]] * Number.parseInt(order[1]);
         }
         // return dynamic result
-        return schema.db['profiles']
-        .sort(sortingFn)
-        .slice(Number.parseInt(offset), Number.parseInt(limit))
-        .map((p) => {
-          excluded.forEach((exc) => {
-            p[exc] = undefined;
-          });
-          return p;
-        });
-      }, { timing: 1000 }
+        return res(
+          ctx.delay(200),
+          ctx.status(200),
+          ctx.json(
+            collection
+              .sort(sortingFn)
+              .slice(Number.parseInt(offset), Number.parseInt(limit))
+              .map((p) => {
+                excluded.forEach((exc) => {
+                  p[exc] = undefined;
+                });
+                return p;
+            })
+          )
+        )
+      }
     ),
-    server.get(
+    rest.get(
       `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
-      (_, request) => {
-        const { id } = request.params;
+      (req, res, ctx) => {
+        const { id } = req.params;
         // return dynamic result
-        const fetched = profiles
-        .org_profiles_sample_with_user
+        const fetched = collection
         .find(p => p.id === id);
 
         if (!fetched) {
-          return new Response(404, {});
+          return res(
+            ctx.delay(200),
+            ctx.status(404)
+          );
         }
-        return fetched;
-      }, { timing: 1000 }
+        return res(
+          ctx.delay(200),
+          ctx.status(200),
+          ctx.json(fetched)
+        )
+      }
     ),
-    server.put(
+    rest.put(
       `/api/v1/organizations/${DEFAULT_ORGANIZATION_ID}/profile/:id`,
-      (schema, request) => {
-        const { id } = request.params;
-        const body = JSON.parse(request.requestBody);
-
-        const {
-          alias,
-          lastName,
-          firstName,
-          isActive
-        } = body;
-
-        return schema.db['profiles'].update({ id: id }, {
-          alias, lastName, firstName, isActive, updatedAt: new Date().toISOString()
-        })[0];
-      }, { timing: 1000 }
+      async (req, res, ctx) => {
+        const { id } = req.params;
+        return await lastValueFrom(from(req.json<{
+          alias: string,
+          lastName: string,
+          firstName: string,
+          isActive: boolean
+        }>())
+        .pipe(
+          switchMap((body) => {
+            const {
+              alias,
+              lastName,
+              firstName,
+              isActive
+            } = body;
+            const index = collection.findIndex((p) => p.id === id)
+            if (index === -1) {
+              return of(res(
+                ctx.status(404)
+              ))
+            }
+            const updated = {
+              ...collection[index],
+              alias,
+              lastName,
+              firstName,
+              isActive,
+              updatedAt: new Date().toISOString()
+            }
+            collection[index] = updated
+            return of(res(
+              ctx.delay(200),
+              ctx.status(200),
+              ctx.json(updated)
+            ))
+          })
+        ))
+      }
     ),
-  ];
-};
+]
 
-export default profilesRoutes;
+export default profilesRoutes

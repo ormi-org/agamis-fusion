@@ -21,9 +21,8 @@ export class ConfigService {
     } else {
       env = 'dev'
     }
-    return this.http.get<AppConfig>('./assets/config/' + env + '.conf.json')
+    return this.http.get<AppConfig>('/assets/config/' + env + '.conf.json')
     .pipe(
-      retry(2),
       catchError((error) => {
         if (error.status === 0) {
           console.warn('> ConfigService#load(AppConfig) >> an error occured on http request:', error.error)

@@ -1,6 +1,5 @@
-import { Component, OnInit, enableProdMode, isDevMode } from '@angular/core'
+import { Component, OnInit, enableProdMode } from '@angular/core'
 import { environment } from '@environments/environment'
-import { v1 as mockRestServerV1, seedLocalStorage } from '@mocks/server/rest'
 
 @Component({
   selector: 'app-root',
@@ -12,13 +11,6 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     if (environment.production === true) {
       enableProdMode()
-    }
-    if (isDevMode()) {
-      if (environment.enableMock === true) {
-        // enable mocking rest server
-        seedLocalStorage()
-        mockRestServerV1()
-      }
     }
   }
 }
