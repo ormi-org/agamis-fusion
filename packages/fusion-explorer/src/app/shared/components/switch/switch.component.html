@@ -1,0 +1,12 @@
+<div class="container">
+    <span [ngClass]="{ 'disabled': value }">{{ falseValue }}</span>
+    <div class="switch"
+         (click)="onSwitch()"
+         [ngStyle]="{
+            'background-color': '#' + (value ? trueColor : falseColor),
+         }">
+        <span [ngClass]="{ 'switch-point': true, 'active': value }">
+        </span>
+    </div>
+    <span [ngClass]="{ 'disabled': !value }">{{ trueValue }}</span>
+</div>

@@ -1,0 +1,9 @@
+<div [ngClass]="{'explorer-container': true}">
+    <div [ngClass]="{'header': true}">
+        <shared-header/>
+    </div>
+    <div [ngClass]="{'view-container': true}">
+        <shared-splash *ngIf="(splashService.$loading | async)"/>
+        <router-outlet/>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+{
+    "urls": {
+        "rest": {
+            "endpoints": {
+                "AUTH": "auth",
+                "USERS": "api/users",
+                "PROFILES": "api/profiles",
+                "ORGANIZATIONS": "api/organizations"
+            }
+        }
+    }
+}

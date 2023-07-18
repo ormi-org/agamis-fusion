@@ -1,0 +1,13 @@
+allOf:
+  - type: object
+    properties:
+      id:
+        $ref: "../generics/id.yaml"
+      label:
+        type: string
+        example: The stonk foundation
+      type:
+        type: string
+      queryable:
+        type: boolean
+        example: true

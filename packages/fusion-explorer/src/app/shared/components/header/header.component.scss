@@ -1,0 +1,40 @@
+@import "constants/variables";
+@import 'base';
+
+.header-container {
+    margin-left: 6px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: flex;
+
+    > .fusion-icon {
+        width: 24px;
+        height: 29px;
+    }
+
+    > .title-container {
+        margin-left: 9px;
+        display: flex;
+        align-items: center;
+
+        > .title-item {
+            margin-left: 3px;
+            > .item-icon {
+                height: 22px;
+                width: 22px;
+            }
+            > .item-text {
+                @include setColor(primary-three);
+                font-family: 'Poppins', sans-serif;
+                font-size: 14px;
+            }
+        }
+
+        > :not(:last-child).title-item {
+            ::after {
+                content: '>';
+            }
+        }
+
+    }
+}

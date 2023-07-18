@@ -1,0 +1,48 @@
+@import "constants/variables";
+
+div.head-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(100% - 20px);
+    padding: 10px 20px 10px 20px;
+    font-size: 14px;
+    // region text overflow start
+    > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    // region text overflow end
+
+    > img {
+        display: none;
+        height: 8px;
+        &.asc, &.desc {
+            display: block;
+        }
+        &.asc {
+            transform: rotate(-180deg);
+        }
+    }
+
+    > div.resize-box {
+        position: absolute;
+        display: none;
+        right: -5px;
+        cursor: ew-resize;
+        width: 10px;
+        height: 100%;
+        z-index: 2;
+
+        &.active {
+            display: block;
+        }
+    }
+
+    &:hover {
+        @include setBgColor(secondary-two);
+    }
+    cursor: pointer;
+}

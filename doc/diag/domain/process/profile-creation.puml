@@ -1,0 +1,18 @@
+@startuml 
+(*) --> "create user start" as startd
+startd --> "get user data" as get
+"%reduce%" as red --> get
+"<from profile request> IN" --> red
+"<from user api request> IN" --> red
+get --> if "origin" as origin then
+-->[user api supplied] "create user" as c1
+else
+-right->[profile request supplied] if "user" then
+-->[exists] "create & link profile" as p
+else
+-->[!exists] "create user" as c2
+--> p
+c1 --> (*)
+p --> (*)
+endif
+@enduml

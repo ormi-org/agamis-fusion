@@ -1,0 +1,51 @@
+@import "constants/variables";
+@import 'base';
+
+$header-size: 30px;
+
+div.menu-container {
+    display: flex;
+    flex-direction: column;
+    transition: height .2s cubic-bezier(.27,.1,.12,.97);
+
+    &.collapsed {
+        height: $header-size !important;
+    }
+}
+
+div.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    height: calc($header-size - 12px);
+    > .header-title {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    > img {
+        height: 16px;
+        &.tail-icon {
+            transition: transform .1s linear;
+            height: 7px;
+        }
+    }
+    @include setBgColor(secondary-one);
+    cursor: pointer;
+    padding: 6px 23px 6px 23px;
+}
+
+div.menu-body {
+    overflow: hidden;
+    transition: max-height .2s cubic-bezier(.27,.1,.12,.97);
+}
+
+div.collapsed {
+    > div.menu-header > img.tail-icon {
+        transform: rotate(-90deg);
+    }
+    > div.menu-body {
+        max-height: 0 !important;
+    }
+}

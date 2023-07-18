@@ -1,0 +1,70 @@
+# Generics
+ID:
+  $ref: "./generics/id.yaml"
+
+Identifiable:
+  $ref: "./generics/identifiable.yaml"
+
+Timed:
+  $ref: "./generics/timed.yaml"
+
+Locale:
+  $ref: "./generics/locale.yaml"
+
+DateFilter:
+  $ref: "./generics/date-filter.yaml"
+
+# Types
+UserDto:
+  $ref: "./types/0.user-dto.yaml"
+
+User:
+  $ref: "./types/0.user.yaml"
+
+UserWithRelations:
+  $ref: "./types/0.user-with-relations.yaml"
+
+ProfileDto:
+  $ref: "./types/1.profile-dto.yaml"
+
+Profile:
+  $ref: "./types/1.profile.yaml"
+
+ProfileWithRelations:
+  $ref: "./types/1.profile-with-relations.yaml"
+  
+OrganizationDto:
+  $ref: "./types/2.organization-dto.yaml"
+
+Organization:
+  $ref: "./types/2.organization.yaml"
+
+OrganizationWithRelations:
+  $ref: "./types/2.organization-with-relations.yaml"
+
+OrganizationTypeDto:
+  $ref: "./types/3.organization-type-dto.yaml"
+
+OrganizationType:
+  $ref: "./types/3.organization-type.yaml"
+
+OrganizationTypeWithRelations:
+  $ref: "./types/3.organization-type-with-relations.yaml"
+
+PermissionDto:
+  $ref: "./types/4.permission-dto.yaml"
+
+Permission:
+  $ref: "./types/4.permission.yaml"
+
+PermissionWithRelations:
+  $ref: "./types/4.permission-with-relations.yaml"
+
+ApplicationDto:
+  $ref: "./types/5.application-dto.yaml"
+
+Application:
+  $ref: "./types/5.application.yaml"
+
+ApplicationWithRelations:
+  $ref: "./types/5.application-with-relations.yaml"

@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/app/admin/menu/.storybook.ts"],
+  "compilerOptions": {
+    "types": ["jest", "node"]
+  }
+}

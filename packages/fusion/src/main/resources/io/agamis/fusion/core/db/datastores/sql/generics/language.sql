@@ -1,0 +1,1 @@
+SELECT language_id, language_code, language_label FROM $schema.LANGUAGE

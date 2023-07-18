@@ -1,0 +1,20 @@
+<div [ngClass]="{'head-cell': true}"
+    (click)="switchOrdering()"
+>
+  <span>
+    {{ getValue() | capitalizeFirst }}
+  </span>
+  <img
+    [ngClass]="{
+        'tail-icon': true,
+        'asc': (associatedColumn.ordering === orderingEnum.ASC),
+        'desc': (associatedColumn.ordering === orderingEnum.DESC),
+    }"
+    src="{{ orderingIcon | iconify }}"
+    alt="head cell ordering icon"
+  />
+  <div [ngClass]="{'resize-box': true, 'active': associatedColumn.resizable}"
+       (mousedown)="onResizeBoxMousedown($event)"
+       (click)="$event.stopPropagation()">
+  </div>
+</div>

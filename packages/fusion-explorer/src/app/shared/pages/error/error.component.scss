@@ -1,0 +1,51 @@
+@import 'constants/variables';
+@import 'base';
+
+.main-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    > div.error-container {
+        opacity: 20%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        > img {
+            width: 163px;
+            height: 201px;
+            user-select: none;
+        }
+        > span {
+            font-size: 62px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            line-height: 62px;
+            height: 62px;
+            margin-top: 6px;
+            height: fit-content;
+            @include setColor(primary-one);
+            user-select: none;
+        }
+    }
+    > div.error-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        > .title, > .text {
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: 800;
+            line-height: 62px;
+            @include setColor(primary-one);
+        }
+
+        > .title {
+            margin-top: 30px;
+            font-size: 40px;
+        }
+        > .text {
+            font-size: 34px;
+        }
+    }
+}

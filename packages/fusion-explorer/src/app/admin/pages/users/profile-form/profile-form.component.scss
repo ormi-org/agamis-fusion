@@ -1,0 +1,197 @@
+@import "constants/variables";
+@import 'base';
+
+:host {
+    min-width: 400px;
+    width: 20%;
+    height: 100%;
+    align-self: flex-start;
+    overflow-x: visible;
+    border-left: 1px solid map-get($colors, "secondary-one");
+}
+
+div.container {
+    height: 100%;
+    width: 100%;
+    > h1 {
+        font-size: 14px;
+        font-weight: 400;
+        padding-left: 20px;
+        margin-top: 10px;
+        margin-bottom: 17px;
+    }
+
+    .content {
+        padding-left: 20px;
+        padding-right: 20px;
+        width: 100%;
+        box-sizing: border-box;
+        > .profile-pic-head {
+            padding-left: 6px;
+            padding-bottom: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            gap: 35px;
+            > .pic-zone {
+                .pic-container {
+                    position: relative;
+                    height: 64px;
+                    width: 64px;
+                    > img {
+                        border-radius: 100%;
+                        height: 100%;
+                        width: 100%;
+                        border: 1px solid map-get($colors, "primary-one");
+                    }
+                    > button {
+                        border-radius: 100%;
+                        @include setBgColor("error");
+                        position: absolute;
+                        border: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 15px;
+                        width: 15px;
+                        cursor: pointer;
+                        bottom: -2px;
+                        right: -2px;
+                    }
+                }
+            }
+            > .pic-upload {
+                min-width: 0;
+                overflow: hidden;
+                > h2 {
+                    font-weight: 600;
+                    font-size: 12px;
+                    margin: 0;
+                    margin-bottom: 7px;
+                }
+                > div {
+                    width: 100%;
+                    display: flex;
+                    overflow: hidden;
+                    flex-direction: row;
+                    align-items: center;
+                    flex: 1;
+                    gap: 17px;
+                    margin-bottom: 7px;
+                    > input#upload-button {
+                        display: none;
+                    }
+                    > label.upload-button {
+                        white-space: nowrap;
+                        cursor: pointer;
+                        display: inline-block;
+                        font-size: 12px;
+                        padding: 3px 10px 3px 10px;
+                        border: 1px solid #D4CEBF;
+                        border-radius: 35px;
+                    }
+                    > div.upload-info {
+                        display: flex;
+                        flex: 1;
+                        overflow: hidden;
+                        font-size: 12px;
+                        > span:nth-child(1)::after {
+                            content: ":";
+                        }
+                        > span.file-name {
+                            margin-left: 4px;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
+                        }
+                    }
+                }
+                > span.max-size-hint {
+                    @include setColor('primary-modal');
+                    font-size: 10px;
+                    font-weight: 500;
+                    font-style: italic;
+                }
+            }
+        }
+        > section.main-form {
+            font-size: 12px;
+            margin-bottom: 25px;
+            padding-right: 20px;
+            box-sizing: border-box;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            > * {
+                flex: 1 1 0;
+                > :nth-child(1) {
+                    flex: 1;
+                    white-space: nowrap;
+                    min-width: 100px;
+                }
+                > :nth-child(2) {
+                    flex: 4;
+                }
+            }
+            > div.form-field {
+                display: flex;
+                flex-direction: row;
+                position: relative;
+                > label {
+                    font-weight: 600;
+                }
+                > input {
+                    border: 1px solid map-get($colors, 'secondary-one');
+                    @include setBgColor('primary-three');
+                }
+                > div.alias-icon {
+                    display: flex;
+                    position: absolute;
+                    right: -25px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    margin-left: 6px;
+                    text-align: center;
+                    justify-content: center;
+                    align-items: center;
+                    > div.text {
+                        font-size: 12px;
+                        display: flex;
+                        position: absolute;
+                        color: white;
+                        z-index: 1;
+                    }
+                }
+            }
+            > div.raw-field {
+                display: flex;
+                flex-direction: row;
+                > span:nth-child(1) {
+                    font-weight: 600;
+                }
+            }
+        }
+        > button.submit {
+            border: 1px solid map-get($colors, 'input-borders-light');
+            border-radius: 2px;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            &.active {
+                @include setBgColor(success);
+                cursor: pointer;
+            }
+
+            &.processing {
+                @include setBgColor(outline-fade);
+                cursor: progress;
+            }
+
+            @include setColor(primary-three);
+            width: fit-content;
+            padding: 7px 14px 7px 14px;
+            font-weight: 500;
+        }
+    }
+}

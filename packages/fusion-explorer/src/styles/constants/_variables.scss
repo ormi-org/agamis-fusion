@@ -1,0 +1,26 @@
+$colors: (
+    primary-one: #1E1E1E,
+    primary-two: #EF4343,
+    primary-three: #F5F1E4,
+    primary-modal: #52575C,
+    secondary-one: #C8C3B2,
+    secondary-two: #C8C3B27B,
+    secondary-three: #505050,
+    input-borders-light: #D4CEBF,
+    outline-fade: #C8C3B2,
+    gray: #929292,
+    success: #57AA4F,
+    error: #CB2828
+);
+
+@mixin setColor($colorName) {
+    color: map-get($colors, $colorName);
+}
+
+@mixin setDecorationColor($colorName) {
+    text-decoration-color: map-get($colors, $colorName);
+}
+
+@mixin setBgColor($colorName) {
+    background-color: map-get($colors, $colorName);
+}

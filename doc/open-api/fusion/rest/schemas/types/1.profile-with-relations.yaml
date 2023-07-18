@@ -1,0 +1,10 @@
+allOf:
+  - $ref: "./1.profile.yaml"
+  - type: object
+    properties:
+      permissions:
+        type: array
+        items:
+          $ref: "./4.permission.yaml"
+      organization:
+        $ref: "./2.organization.yaml"

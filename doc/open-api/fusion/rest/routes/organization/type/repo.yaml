@@ -1,0 +1,85 @@
+get:
+  tags:
+    - OrganizationType
+  summary: Returns list of organization types
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+    - $ref: '../../../parameters/pagination-offset.yaml'
+    - $ref: '../../../parameters/pagination-size.yaml'
+    - $ref: '../../../parameters/created_at-filter.yaml'
+    - $ref: '../../../parameters/updated_at-filter.yaml'
+    - in: query
+      name: label
+      example: non-profit
+      schema:
+        type: string
+      description: Partial or full label on which the result must be filtered
+  responses:
+    200:
+      description: A JSON array of types
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../../schemas/types/3.organization-type-with-relations.yaml'
+    400:
+      description: Bad request for organization types fetching
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: limit and offset parameters are codependent and must be both or none provided
+    401:
+      $ref: '../../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../../responses/forbidden.yaml'
+    404:
+      description: Organization type(s) not found
+      content:
+        text:
+          schema:
+            type: string
+            example: No organization type could be found with specified filters
+    500:
+      $ref: '../../../responses/internal-server-error.yaml'
+
+post:
+  tags:
+    - OrganizationType
+  summary: Creates a new organization type
+  parameters:
+    - $ref: '../../../parameters/authorization.yaml'
+  requestBody:
+    description: A JSON representation of input organization type data
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../../schemas/types/3.organization-type-dto.yaml'
+  responses:
+    200:
+      description: JSON of created organization type
+      content:
+        application/json:
+          schema:
+            $ref: '../../../schemas/types/3.organization-type.yaml'
+    400:
+      description: Bad request for organization type creation
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: 'Creating an organization type requires providing : label, queryable'
+    401:
+      $ref: '../../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../../responses/forbidden.yaml'
+    500:
+      $ref: '../../../responses/internal-server-error.yaml'

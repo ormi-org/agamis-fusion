@@ -1,0 +1,7 @@
+{
+    "files.watcherExclude": {
+        "**/target": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "prettier.prettierPath": "./node_modules/prettier"
+}

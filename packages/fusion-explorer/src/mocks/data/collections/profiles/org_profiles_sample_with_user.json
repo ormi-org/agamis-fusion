@@ -1,0 +1,86 @@
+{
+    "type": "array",
+    "length": {
+        "type": "number",
+        "subtype": "u64",
+        "constant": 500
+    },
+    "content": {
+        "type": "object",
+        "id": {
+            "type": "string",
+            "uuid": {}
+        },
+        "alias": {
+            "type": "one_of",
+            "variants": [
+                {
+                    "weight": 0.6,
+                    "type": "string",
+                    "faker": {
+                        "generator": "username"
+                    }
+                },
+                {
+                    "weight": 0.4,
+                    "type": "null",
+                    "optional": true
+                }
+            ]
+        },
+        "lastName": {
+            "type": "string",
+            "faker": {
+                "generator": "last_name"
+            }
+        },
+        "firstName": {
+            "type": "string",
+            "faker": {
+                "generator": "first_name"
+            }
+        },
+        "isActive": {
+            "type": "bool",
+            "frequency": 0.7
+        },
+        "lastLogin": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time",
+            "begin": "2023-06-20 00:00:00",
+            "end": "2023-06-22 23:59:59"
+        },
+        "userId": {
+            "type": "same_as",
+            "ref": "org_profiles_sample_with_user.content.user.id"
+        },
+        "user": {
+            "type": "object",
+            "id": {
+                "type": "string",
+                "uuid": {}
+            },
+            "username": {
+                "type": "string",
+                "faker": {
+                    "generator": "username"
+                }
+            }
+        },
+        "createdAt": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time",
+            "begin": "2022-06-22 00:00:00",
+            "end": "2023-06-22 00:00:00"
+        },
+        "updatedAt": {
+            "type": "date_time",
+            "format": "%Y-%m-%d %H:%M:%S",
+            "subtype": "naive_date_time",
+            "begin": "2022-06-22 00:00:00",
+            "end": "2023-06-22 00:00:00"
+        }
+    }
+}

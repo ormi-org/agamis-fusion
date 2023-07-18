@@ -1,0 +1,27 @@
+// @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;1,600&display=swap');
+// @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,800;1,600&display=swap');
+@import './constants/variables';
+
+@font-face {
+    font-family: 'Noto Sans';
+    font-weight: 400;
+    src: url('../assets/fonts/NotoSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 400;
+    src: url('../assets/fonts/Poppins-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 600;
+    src: url('../assets/fonts/Poppins-SemiBold.ttf');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 800;
+    src: url('../assets/fonts/Poppins-ExtraBold.ttf');
+}

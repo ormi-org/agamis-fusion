@@ -1,0 +1,15 @@
+@import 'constants/variables';
+@import 'base';
+
+.global-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    @include setBgColor(primary-three);
+}
+
+* {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 400;
+    @include setColor(primary-one);
+}
