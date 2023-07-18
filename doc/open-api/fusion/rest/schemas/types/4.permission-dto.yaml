@@ -1,0 +1,16 @@
+allOf:
+  - type: object
+    properties:
+      id:
+        $ref: "../generics/id.yaml"
+      key:
+        type: string
+        example: application.api.example.get.all
+      labels:
+        type: array
+        items:
+          $ref: "../generics/locale.yaml"
+      descriptions:
+        type: array
+        items:
+          $ref: "../generics/locale.yaml"

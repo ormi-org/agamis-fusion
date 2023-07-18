@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="fr-FR">
+    <body>
+      <trans-unit id="ui.classic.admin.menu.users" datatype="html">
+        <source>users</source><target state="new">utilisateurs</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context><context context-type="linenumber">19</context></context-group></trans-unit><trans-unit id="ui.classic.admin.menu.groups" datatype="html">
+        <source>groups</source><target state="new">groupes</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context><context context-type="linenumber">25</context></context-group></trans-unit><trans-unit id="ui.classic.admin.menu.permissions" datatype="html">
+        <source>permissions</source><target state="new">permissions</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context><context context-type="linenumber">31</context></context-group></trans-unit><trans-unit id="ui.classic.admin.menu.organization" datatype="html">
+        <source>organization</source><target state="new">organisation</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/components/menu/menu.component.html</context><context context-type="linenumber">37</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.title:details" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{ &quot;Details&quot; | capitalizeFirst }}"/></source><target state="new"><x id="INTERPOLATION" equiv-text="{{ &quot;Details&quot; | capitalizeFirst }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.pic-upload.title:upload another avatar" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;upload another avatar&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;upload another avatar&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">20</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.pic-upload.upload-button:details" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;choose file&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;choose file&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">25</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.pic-upload.file:file" datatype="html">
+        <source>file</source><target state="new">file</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">31</context></context-group></trans-unit><trans-unit id="ui.classic.const.word.none:none" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;none&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;none&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">37</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.pic-upload.size-hint:Maximum file size allowed : %sKB" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ (&quot;Maximum file size allowed : %sKB&quot; | capitalizeFirst).replace(&quot;%s&quot;, maxAllowedFileSize.toString()) }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ (&quot;Maximum file size allowed : %sKB&quot; | capitalizeFirst).replace(&quot;%s&quot;, maxAllowedFileSize.toString()) }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">44</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.username:username" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;username&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;username&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">52</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.firstname:firstname" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;firstname&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;firstname&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">70</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.lastname:lastname" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;lastname&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;lastname&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">81</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.active:active" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;active&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;active&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">92</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.last-seen:last-seen" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;last seen&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;last seen&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">105</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.last-updated:last-updated" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">114</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.created-on:created-on" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">123</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.save:save" datatype="html">
+        <source>Save</source><target state="new">Save</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context>
+          <context context-type="linenumber">132</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.admin.pages.users.table.col.username" datatype="html">
+        <source>username</source><target state="new">nom d'utilisateur</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">8</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.firstname" datatype="html">
+        <source>firstname</source><target state="new">prénom</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">23</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.lastname" datatype="html">
+        <source>lastname</source><target state="new">nom</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">29</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.active" datatype="html">
+        <source>active</source><target state="new">actif</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">37</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.last-seen" datatype="html">
+        <source>last seen</source><target state="new">dernière visite</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">49</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.last-updated" datatype="html">
+        <source>last updated</source><target state="new">dernière modification</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">57</context></context-group></trans-unit>
+      <trans-unit id="ui.classic.admin.pages.users.table.col.created-on" datatype="html">
+        <source>created on</source><target state="new">créé le</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.html</context><context context-type="linenumber">64</context></context-group></trans-unit><trans-unit id="ui.classic.const.word.yes" datatype="html">
+        <source>yes</source><target state="new">oui</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.ts</context><context context-type="linenumber">57</context></context-group></trans-unit><trans-unit id="ui.classic.const.word.no" datatype="html">
+        <source>no</source><target state="new">non</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/users.component.ts</context><context context-type="linenumber">60</context></context-group></trans-unit><trans-unit id="ui.classic.explorer.browser.admin-menu.title" datatype="html">
+        <source>administration</source><target state="new">administration</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/explorer/components/browser/browser.component.html</context><context context-type="linenumber">19</context></context-group></trans-unit><trans-unit id="client.messages.errors.input.no-organization-id" datatype="html">
+        <source>no organization identifier provided</source><target state="new">no organization identifier provided</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/core/resolvers/preparation-data/preparation-data.resolver.ts</context><context context-type="linenumber">33</context></context-group></trans-unit><trans-unit id="client.messages.errors.generics.unrecoverable" datatype="html">
+        <source>an irrecoverable error occured</source><target state="new">an irrecoverable error occured</target>
+        
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/core/resolvers/preparation-data/preparation-data.resolver.ts</context><context context-type="linenumber">43</context></context-group><context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/core/resolvers/preparation-data/preparation-data.resolver.ts</context><context context-type="linenumber">80</context></context-group></trans-unit><trans-unit id="client.messages.errors.data.organization.not-found" datatype="html">
+        <source>organization was not found</source><target state="new">l'organisation n'a pas été trouvée</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/core/resolvers/preparation-data/preparation-data.resolver.ts</context><context context-type="linenumber">69</context></context-group></trans-unit><trans-unit id="ui.classic.shared.dynamic-table.empty-hint.default" datatype="html">
+        <source>No data</source><target state="new">aucune donnée</target>
+        
+      <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/shared/components/dynamic-table/dynamic-table.component.ts</context><context context-type="linenumber">32</context></context-group></trans-unit><trans-unit id="ui.classic.shared.const.date.more-than-a-year" datatype="html">
+        <source>more than a year</source><target state="new">il y a plus d'un an</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.one-year-ago" datatype="html">
+        <source>1 year ago</source><target state="new">il y a un an</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.a-month-ago" datatype="html">
+        <source>last month</source><target state="new">le mois dernier</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.n-months-ago" datatype="html">
+        <source>%n-months% months ago</source><target state="new">il y a %n-months% mois</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.a-week-ago" datatype="html">
+        <source>last week</source><target state="new">la semaine dernière</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.n-weeks-ago" datatype="html">
+        <source>%n-weeks% weeks ago</source><target state="new">il y a %n-weeks% semaines</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">32</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.a-day-ago" datatype="html">
+        <source>yesterday</source><target state="new">hier</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.n-days-ago" datatype="html">
+        <source>%n-days% days ago</source><target state="new">il y a %n-days% jours</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.an-hour-ago" datatype="html">
+        <source>an hour ago</source><target state="new">il y a une heure</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.n-hours-ago" datatype="html">
+        <source>%n-hours% hours ago</source><target state="new">il y a %n-hours% heures</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.n-minutes-ago" datatype="html">
+        <source>%n-minutes% minutes ago</source><target state="new">il y a %n-minutes% minutes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit><trans-unit id="ui.classic.shared.const.date.a-minute-ago" datatype="html">
+        <source>a minute ago</source><target state="new">il y a une minute</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">packages/fusion-explorer/src/app/shared/constants/utils/date-formatter.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

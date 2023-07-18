@@ -1,0 +1,10 @@
+Authorization:
+  $ref: "./authorization.yaml"
+PaginationOffset:
+  $ref: "./pagination-offset.yaml"
+PaginationSize:
+  $ref: "./pagination-size.yaml"
+CreatedAtFilter:
+  $ref: "./created_at-filter.yaml"
+UpdatedAtFilter:
+  $ref: "./updated_at-filter.yaml"

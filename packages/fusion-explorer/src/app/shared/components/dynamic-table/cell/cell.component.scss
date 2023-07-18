@@ -1,0 +1,23 @@
+@import "constants/variables";
+@import 'base';
+
+// for debugging
+// :host {
+//     border-right: solid red 1px;
+// }
+
+div.cell {
+    display: flex;
+    align-items: center;
+    align-self: baseline;
+    box-sizing: border-box;
+    padding: 9px 8px 9px 8px;
+    font-size: 12px;
+    // region text overflow start
+    > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    // region text overflow end
+}

@@ -1,0 +1,13 @@
+<div [ngClass]="{'loading-splash': true}">
+    <div [ngClass]="{'splash-container': true}">
+        <img src="{{fusionIcon | iconify}}" alt="fusion logo" draggable="false"/>
+        <span>fusion</span>
+        <shared-loading-bar
+            [height]="5"
+            [width]="240"
+            [stages]="loadingBarStages"
+            [nextStageSignalSubject]="splashService.getNextStageObserver()"
+            [loadingStateObserver]="splashService.$loading"
+            />
+    </div>
+</div>

@@ -1,0 +1,12 @@
+@import "constants/variables";
+@import 'base';
+
+.sep-container {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    > .sep-body {
+        height: 100%;
+        width: 100%;
+    }
+}

@@ -1,0 +1,12 @@
+<div ngClass="frame" [ngStyle]="{
+    'height.px': height,
+    'width': width !== 0 ? width+'px' : '100%',
+    'background-color': '#' + bgColor
+}">
+    <div [ngClass]="{'animation': true }" [ngStyle]="{
+        'height.px': height,
+        'width.%': fill,
+        'background-color': '#' + fillColor,
+        'transition-duration.ms': fillDuration,
+    }"></div>
+</div>

@@ -1,0 +1,5 @@
+allOf:
+  - $ref: "./2.organization.yaml"
+    properties:
+      type:
+        $ref: "./3.organization-type.yaml"

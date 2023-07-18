@@ -1,0 +1,100 @@
+get:
+  tags:
+    - User
+  summary: Returns list of users
+  parameters:
+    - $ref: '../../parameters/authorization.yaml'
+    - $ref: '../../parameters/pagination-offset.yaml'
+    - $ref: '../../parameters/pagination-size.yaml'
+    - $ref: '../../parameters/created_at-filter.yaml'
+    - $ref: '../../parameters/updated_at-filter.yaml'
+    - $ref: '../../parameters/include.yaml'
+    - in: query
+      name: username
+      example: cvs
+      schema:
+        type: array
+        items:
+          type: string
+      description: Partial or full username on which the result must be filtered
+  responses:
+    200:
+      description: A JSON array of users
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '../../schemas/types/0.user-with-relations.yaml'
+              status:
+                $ref: '../../schemas/generics/status.yaml'
+    400:
+      description: Bad request for users fetching
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: username must be a single word
+                - type: string
+                  example: limit and offset parameters are codependent and must be both or none provided
+    401:
+      $ref: '../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../responses/forbidden.yaml'
+    404:
+      description: User(s) not found
+      content:
+        text:
+          schema:
+            type: string
+            example: No user could be found with specified filters
+    500:
+      $ref: '../../responses/internal-server-error.yaml'
+
+post:
+  tags:
+    - User
+  summary: Creates a new user
+  parameters:
+    - $ref: '../../parameters/authorization.yaml'
+  requestBody:
+    description: A JSON representation of input user data
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/types/0.user-dto.yaml'
+  responses:
+    200:
+      description: JSON of created user
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                $ref: '../../schemas/types/0.user.yaml'
+              status:
+                $ref: '../../schemas/generics/status.yaml'
+    400:
+      description: Bad request for users fetching
+      content:
+        text:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - type: string
+                  example: 'Creating a user requires providing : username, password'
+    401:
+      $ref: '../../responses/authentication-required.yaml'
+    403:
+      $ref: '../../responses/forbidden.yaml'
+    500:
+      $ref: '../../responses/internal-server-error.yaml'

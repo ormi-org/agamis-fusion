@@ -1,0 +1,14 @@
+allOf:
+  - $ref: "../generics/identifiable.yaml"
+  - type: object
+    properties:
+      alias:
+        type: string
+        example: "IamChauncey"
+      lastName:
+        type: string
+        example: Von Stonks
+      firstName:
+        type: string
+        example: Chauncey
+  - $ref: "../generics/timed.yaml"
