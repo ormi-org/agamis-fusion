@@ -57,6 +57,8 @@ lazy val fusion = (project in file("."))
       // Mockito
       "org.scalatestplus" %% "mockito-4-6" % "3.2.15.0" % "test",
       // Bcrypt 
-      "at.favre.lib" % "bcrypt" % "0.9.0"
+      "at.favre.lib" % "bcrypt" % "0.9.0",
+      // JAVET
+      "com.caoccao.javet" % "javet" % "2.2.1"
     )
   )

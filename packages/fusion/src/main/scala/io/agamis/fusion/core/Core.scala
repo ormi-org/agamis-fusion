@@ -88,6 +88,7 @@ object Core {
                     if (cluster.selfMember.hasRole("fusion-node-app")) {
                         // TODO
                         // Node type for spawning embeded applications backend and serving frontend client
+                        // val TypeKey = EntityTypeKey[]
                     }
                     if (cluster.selfMember.hasRole("fusion-node-rest-v1")) {
                         // Node type for serving v1 rest api endpoint
