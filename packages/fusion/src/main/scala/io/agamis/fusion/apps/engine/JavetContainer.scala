@@ -14,12 +14,18 @@ import com.caoccao.javet.interop.executors.IV8Executor
 import io.agamis.fusion.apps.common.enums
 import java.util.concurrent.atomic.AtomicBoolean
 import io.agamis.fusion.apps.engine.exceptions.InstantiateException
+import com.caoccao.javet.values.reference.V8ValueObject
 
 class JavetContainer(implicit _logger: Logger, config: JavetEngineConfig) {
     private var logger: JavetLogger = new JavetLogger()
     config.setJavetLogger(logger)
     private var _running: AtomicBoolean = new AtomicBoolean(false)
     private var _runtime: NodeRuntime = V8Host.getNodeInstance().createV8Runtime()
+
+    // Intercept calls to slf4j to log on scala side to provided logger
+    val v8ValueObject: V8ValueObject = _runtime.createV8ValueObject()
+    _runtime.getGlobalObject().set("slf4j", v8ValueObject)
+    v8ValueObject.bind(logger)
 
     def runtime: NodeRuntime = _runtime
 

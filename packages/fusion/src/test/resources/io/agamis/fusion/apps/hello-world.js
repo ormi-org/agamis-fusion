@@ -1,5 +1,4 @@
 const main = () => {
-    console.info("Hello, world")
+    slf4j.info("Hello, world")
 }
-
 main()
