@@ -1,0 +1,38 @@
+@startuml emby-life-cycle
+actor user
+boundary client
+control "HttpServer (A)" as server
+collections AkkaHttpRoutes as routes
+control "ContainerRegistry (SA)" as reg
+control "Container (A)" as app
+database FusionFS as fs
+
+user -> client : launch application
+client -> server : HTTP Request (/api/<version>/app/<appId>/bootstrap)
+server -> routes : route request
+routes -> reg : Boostrap app with Id(<appId>)
+group "Application bootstrap process"
+    create app
+    reg -> app : boostrap an app
+    activate app
+    app -> app : run emby
+    activate app
+    reg <-- app : notif back to registry
+    reg -> reg : register app instance
+    server <-- reg : notify back server
+    server -> routes : clone & update routes to include app instance
+    client <- server : HTTP Response
+    server -> server : update behavior
+end
+client -> client : redirect to app
+
+user -> client : interact with app
+client -> server : HTTP Request (/api/<version>/app/routing/<sessionId>/...{internal_route})
+server -> server : extract raw request & transform to local request
+server -> routes : route local request
+routes -> reg : get ActorRef
+routes <-- reg : ActorRef
+routes -> app : forward local request ({internal_route})
+server <-- app : response
+client <-- server : HTTP Response
+@enduml

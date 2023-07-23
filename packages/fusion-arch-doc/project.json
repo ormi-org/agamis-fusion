@@ -1,0 +1,24 @@
+{
+    "name": "fusion-arch-doc",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "doc",
+    "sourceRoot": "packages/fusion-arch-doc",
+    "targets": {
+      "gen-uml": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "packages/fusion-arch-doc",
+          "color": true,
+          "parallel": true
+        },
+        "configurations": {
+          "process-emby-life-cycle": {
+            "commands": [
+              "mkdir -p dist/process",
+              "cat src/process/emby-life-cycle.puml | java -jar /root/bin/plantuml/plantuml.jar -tsvg -pipe > dist/process/emby-life-cycle.svg"
+            ]
+          }
+        }
+      }
+    }
+  }
