@@ -1,4 +1,4 @@
-@startuml emby-life-cycle
+@startuml emby-start
 actor user
 boundary client
 control "HttpServer (A)" as server
@@ -8,13 +8,15 @@ control "Container (A)" as app
 database FusionFS as fs
 
 user -> client : launch application
-client -> server : HTTP Request (/api/<version>/app/<appId>/bootstrap)
+client -> server : HTTP Request\n(/api/app/<appId>/bootstrap)
 server -> routes : route request
 routes -> reg : Boostrap app with Id(<appId>)
 group "Application bootstrap process"
     create app
     reg -> app : boostrap an app
     activate app
+    app -> fs : get app files
+    app <-- fs : app files
     app -> app : run emby
     activate app
     reg <-- app : notif back to registry
@@ -25,14 +27,62 @@ group "Application bootstrap process"
     server -> server : update behavior
 end
 client -> client : redirect to app
+@enduml
+
+@startuml emby-classic-interact
+actor user
+boundary client
+control "HttpServer (A)" as server
+collections AkkaHttpRoutes as routes
+control "ContainerRegistry (SA)" as reg
+control "Container (A)" as app
+collections "SessionManager (SA)" as session
+database FusionFS as fs
+
+activate session
+activate reg
+activate app
 
 user -> client : interact with app
-client -> server : HTTP Request (/api/<version>/app/routing/<sessionId>/...{internal_route})
+client -> server : HTTP Request\n(/api/app/routing/<sessionId>/...{internal_route})
 server -> server : extract raw request & transform to local request
 server -> routes : route local request
 routes -> reg : get ActorRef
 routes <-- reg : ActorRef
-routes -> app : forward local request ({internal_route})
+routes -> app : forward local request\n(/{internal_route})
+app -> app : forward local request\nto local app server
+activate app
+app --> session : [optionaly] save session state
+session --> fs : flush to file
 server <-- app : response
+deactivate app
 client <-- server : HTTP Response
+user <-- client : Update display
+@enduml
+
+@startuml emby-terminate
+actor user
+boundary client
+control "HttpServer (A)" as server
+collections AkkaHttpRoutes as routes
+control "ContainerRegistry (SA)" as reg
+control "Container (A)" as app
+
+activate app
+activate reg
+
+user -> client : terminate application
+client -> server : HTTP Request\n(/api/app/<appId>/terminate)
+server -> routes : route request
+routes -> reg : Stop app with Id(<appId>)
+note right of reg : User must own app instance\nor have authorization\nto end any instance
+reg -> app : Stop app
+destroy app
+reg <-- app : notif back to registry
+deactivate reg
+reg -> reg : update behavior with new ActorRefs list
+activate reg
+server <-- reg : notify back server
+client <- server : HTTP Response
+client -> client : redirect to app
 @enduml
