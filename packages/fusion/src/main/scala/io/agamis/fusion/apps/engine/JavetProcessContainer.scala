@@ -3,7 +3,7 @@ package io.agamis.fusion.apps.engine
 import org.slf4j.Logger
 import com.caoccao.javet.interop.engine.JavetEngineConfig
 
-protected class JavetProcessContainer(implicit _logger: Logger, config: JavetEngineConfig) extends JavetContainer {
+class JavetProcessContainer protected[engine](implicit _logger: Logger, config: JavetEngineConfig) extends JavetContainer {
     def run(lambda: () => Unit): Unit = {
         val thread = new Thread(() => {
             try {

@@ -16,7 +16,7 @@ import io.agamis.fusion.apps.engine.exceptions.InstantiateException
 import com.caoccao.javet.values.reference.V8ValueObject
 import com.caoccao.javet.interop.V8Runtime
 
-protected class JavetContainer[T](implicit _logger: Logger, config: JavetEngineConfig) {
+class JavetContainer[T] protected[engine](implicit _logger: Logger, config: JavetEngineConfig) {
     private var logger: JavetLogger = new JavetLogger()
     config.setJavetLogger(logger)
     protected var _running: AtomicBoolean = new AtomicBoolean(false)

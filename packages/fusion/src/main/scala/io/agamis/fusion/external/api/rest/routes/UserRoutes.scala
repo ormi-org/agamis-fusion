@@ -3,35 +3,35 @@ package io.agamis.fusion.external.api.rest.routes
 import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.ShardingEnvelope
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.cluster.sharding.typed.scaladsl.EntityRef
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.agamis.fusion.core.actors.data.DataActor
 import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
+import io.agamis.fusion.core.services.UserService
+import io.agamis.fusion.external.api.rest.common.marshalling.StringArrayUnmarshaller
+import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
+import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
 import io.agamis.fusion.external.api.rest.dto.user.UserApiJsonSupport
 import io.agamis.fusion.external.api.rest.dto.user.UserApiResponse
 import io.agamis.fusion.external.api.rest.dto.user.UserDto
+import io.agamis.fusion.external.api.rest.dto.user.UserMutation
 import io.agamis.fusion.external.api.rest.dto.user.UserQuery
+import spray.json._
 
+import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
-import io.agamis.fusion.external.api.rest.dto.user.UserMutation
-import spray.json._
-import akka.http.scaladsl.server.Directives
-import io.agamis.fusion.external.api.rest.dto.profile.ProfileDto
-import io.agamis.fusion.external.api.rest.dto.organization.OrganizationDto
-import java.time.Instant
-import akka.cluster.sharding.typed.scaladsl.EntityRef
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
-import io.agamis.fusion.core.services.UserService
-import akka.http.scaladsl.model.headers.Location
-import io.agamis.fusion.external.api.rest.common.marshalling.StringArrayUnmarshaller
 
 /** Class User Routes
   *

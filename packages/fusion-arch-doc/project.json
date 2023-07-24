@@ -15,7 +15,7 @@
           "process-emby-life-cycle": {
             "commands": [
               "mkdir -p dist/process",
-              "cat src/process/emby-life-cycle.puml | java -jar /root/bin/plantuml/plantuml.jar -tsvg -pipe > dist/process/emby-life-cycle.svg"
+              "java -jar /root/bin/plantuml/plantuml.jar src/process/emby-life-cycle.puml -tsvg -o ../../dist/process/emby-life-cycle"
             ]
           }
         }
