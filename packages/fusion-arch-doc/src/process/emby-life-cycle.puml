@@ -45,19 +45,21 @@ activate app
 
 user -> client : interact with app
 client -> server : HTTP Request\n(/api/app/routing/<sessionId>/...{internal_route})
-server -> server : extract raw request & transform to local request
+server -> routes : receive request and route it
+' server -> server : extract raw request & transform to local request
 server -> routes : route local request
 routes -> reg : get ActorRef
 routes <-- reg : ActorRef
-routes -> app : forward local request\n(/{internal_route})
-app -> app : forward local request\nto local app server
+routes -> app : get corresponding endpoint from sessionId and url
+routes <-- app : port
+routes -> app : forward local request\nto local app server
 activate app
 app --> session : [optionaly] save session state
 session --> fs : flush to file
-server <-- app : response
+server <-- app : Proxied HTTP Response
 deactivate app
 client <-- server : HTTP Response
-user <-- client : Update display
+user <-- client : Update state
 @enduml
 
 @startuml emby-terminate

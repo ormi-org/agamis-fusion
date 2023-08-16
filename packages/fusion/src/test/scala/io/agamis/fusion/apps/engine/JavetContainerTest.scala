@@ -61,10 +61,10 @@ class JavetContainerTest extends AnyWordSpec {
     }
     
     "A JavetContainer" when {
-        // run node scripts for bundling
         val resourcePath = getClass().getResource("").getPath
         "run single file nodejs w/modules bundled program" should {
             "succeed" in {
+                // run node scripts for bundling
                 Process("npm i", new File(resourcePath + "hello-world.express")) !;
                 Process("npx webpack", new File(resourcePath + "hello-world.express")) !;
                 val helloWorldExpressBundle = new File(getClass().getResource("./hello-world.express/dist/app.bundle.js").getPath)

@@ -8,9 +8,11 @@ import akka.cluster.sharding.typed.scaladsl.Entity
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.agamis.fusion.core.actors.data.DataActor
+import io.agamis.fusion.core.services.UserService
 import io.agamis.fusion.external.api.rest.routes.AuthenticationRoutes
 import io.agamis.fusion.external.api.rest.routes.FileRoutes
 import io.agamis.fusion.external.api.rest.routes.FileSystemRoutes
@@ -20,11 +22,10 @@ import io.agamis.fusion.external.api.rest.routes.OrganizationTypeRoutes
 import io.agamis.fusion.external.api.rest.routes.PermissionRoutes
 import io.agamis.fusion.external.api.rest.routes.ProfileRoutes
 import io.agamis.fusion.external.api.rest.routes.UserRoutes
+import io.agamis.fusion.external.api.rest.routes.apps.AppRoutes
+import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Future
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import io.agamis.fusion.core.services.UserService
 
 object Server {
 
@@ -58,28 +59,23 @@ object Server {
           ),
           pathPrefix("api")(
             concat(
-              path("v1")(
-                concat(
-                  get {
-                    complete("Fusion API v1 Route")
-                  }
-                )
+              get {
+                complete("Fusion API Route")
+              },
+              pathPrefix("auth")(
+                new AuthenticationRoutes().routes
               ),
-              pathPrefix("v1")(
-                concat(
-                  pathPrefix("auth")(
-                    new AuthenticationRoutes().routes
-                  ),
-                  new FileSystemRoutes().routes,
-                  new FileRoutes().routes,
-                  new GroupRoutes().routes,
-                  new OrganizationRoutes().routes,
-                  new OrganizationTypeRoutes().routes,
-                  new PermissionRoutes().routes,
-                  new ProfileRoutes().routes,
-                  new UserRoutes().routes
-                )
-              )
+              pathPrefix("app")(
+                new AppRoutes().routes
+              ),
+              new FileSystemRoutes().routes,
+              new FileRoutes().routes,
+              new GroupRoutes().routes,
+              new OrganizationRoutes().routes,
+              new OrganizationTypeRoutes().routes,
+              new PermissionRoutes().routes,
+              new ProfileRoutes().routes,
+              new UserRoutes().routes
             )
           )
         )

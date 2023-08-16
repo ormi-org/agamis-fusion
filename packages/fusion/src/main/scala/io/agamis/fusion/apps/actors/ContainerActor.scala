@@ -27,8 +27,8 @@ object ContainerActor {
     final case class Idle() extends Command
     final case class Start()(val replyTo: ActorRef[StartResponse]) extends Command
     final case class Recover(sessionId: String)(val replyTo: ActorRef[Start]) extends Command
-    final case class Stop()(val replyTo: ActorRef[Start]) extends Command
-    final case class Request()(val replyTo: ActorRef[Start]) extends Command
+    final case class Stop()(val replyTo: ActorRef[_]) extends Command
+    final case class Request()(val replyTo: ActorRef[_]) extends Command
     trait Response
     // errors
     trait StartResponse extends Response
@@ -102,12 +102,13 @@ object ContainerActor {
                     case process: JavetProcessContainer => {
                         process.close()
                     }
-                    case script: JavetContainer[_] =>
+                    case script: JavetContainer[_] => ctx.log.warn("<< ContainerActor:RunningBehavior#Stop > pre-requisites check failed : script containers cannot be stopped")
                 }
                 return IdleBehavior(shard, state)
             }
             case (ctx: ActorContext[_], _: Request) => {
                 // Handle request
+                
                 Behaviors.same
             }
         }
@@ -144,12 +145,5 @@ object ContainerActor {
         )
 
         Behaviors.receivePartial(IdleBehavior(shard, state))
-
-    // Behaviors.receivePartial(
-    //     IdleBehavior(shard)
-    //     .orElse(StartupBehavior(shard))
-    //     .orElse(RunningBehavior(shard))
-    //     .orElse(ShutdownBehavior(shard))
-    // )
     }
 }

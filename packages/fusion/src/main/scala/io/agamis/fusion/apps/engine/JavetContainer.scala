@@ -16,11 +16,32 @@ import io.agamis.fusion.apps.engine.exceptions.InstantiateException
 import com.caoccao.javet.values.reference.V8ValueObject
 import com.caoccao.javet.interop.V8Runtime
 
+/** 
+  * An object to take care of NodeJs Applications lifecycle inside Javet V8 engine
+  *
+  * @param _logger the logger the container should use
+  * @param config the config to use for Javet engine
+  */
 class JavetContainer[T] protected[engine](implicit _logger: Logger, config: JavetEngineConfig) {
     private var logger: JavetLogger = new JavetLogger()
     config.setJavetLogger(logger)
     protected var _running: AtomicBoolean = new AtomicBoolean(false)
     private var _runtime: NodeRuntime = new JavetEnginePool(config).getEngine().getV8Runtime()
+
+    sealed case class ServicePort(
+        port: Int,
+        serviceId: String,
+        description: String
+    )
+    private var _ports: List[ServicePort] = List.empty
+    def ports: List[ServicePort] = _ports
+
+    sealed case class AppIdentifier(
+        humanReadable: String,
+        id: String
+    )
+    private var _identifier: Option[AppIdentifier] = Option.empty
+    def identifier: Option[AppIdentifier] = _identifier
 
     // Intercept calls to slf4j to log on scala side to provided logger
     val v8ValueObject: V8ValueObject = _runtime.createV8ValueObject()
@@ -37,6 +58,9 @@ class JavetContainer[T] protected[engine](implicit _logger: Logger, config: Jave
 }
 
 object JavetContainer {
+    // available ports range for nodejs applications
+    val PORT_RANGE = (49152, 65535)
+
     /**
       * Instantiate a new container running nodejs script meant to return provided type
       *
@@ -70,6 +94,16 @@ object JavetContainer {
         return container
     }
 
+    /**
+      * Instantiate a new container running nodejs process (eg: web server)
+      *
+      * @param script the script file to run
+      * @param returnType return type (default is VOID)
+      * @param _logger a slf4j logger instance
+      * @param config a JavetEngine configuration
+      * @return container of a javet instance running provided script
+      * @throws InstantiateException 
+      */
     def ofProcessFile(process: File)(implicit _logger: Logger, config: JavetEngineConfig): JavetProcessContainer = {
         val infoMsg = ">> JavetContainer#ofProcessFile(File) > Running NodeJS process from file:`%s`"
         val errMsg = "<< JavetContainer#ofProcessFile(File) > Failed running NodeJS process from file:`%s`"
