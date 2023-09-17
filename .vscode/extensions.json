@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "angular.ng-template"
+        "angular.ng-template",
+        "jebbs.plantuml"
     ]
 }

@@ -11,7 +11,7 @@ import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
 import akka.cluster.typed.Cluster
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import scala.concurrent.ExecutionContextExecutor
-import io.agamis.fusion.external.api.rest.Server
+import io.agamis.fusion.api.rest.Server
 import scala.concurrent.Future
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.Config
@@ -88,6 +88,7 @@ object Core {
                     if (cluster.selfMember.hasRole("fusion-node-app")) {
                         // TODO
                         // Node type for spawning embeded applications backend and serving frontend client
+                        // val TypeKey = EntityTypeKey[]
                     }
                     if (cluster.selfMember.hasRole("fusion-node-rest-v1")) {
                         // Node type for serving v1 rest api endpoint

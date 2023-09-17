@@ -3,5 +3,13 @@
         "**/target": true
     },
     "typescript.tsdk": "node_modules/typescript/lib",
-    "prettier.prettierPath": "./node_modules/prettier"
+    "prettier.prettierPath": "./node_modules/prettier",
+    "plantuml.jar": "/root/bin/plantuml/plantuml.jar",
+    "editor.formatOnSave": true,
+    "[scala]": {
+        "editor.defaultFormatter": "scalameta.metals"
+    },
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+    }
 }
