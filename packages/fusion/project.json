@@ -19,6 +19,14 @@
           "color": true,
           "parallel": true
         }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "commands": [
+            "sbt test"
+          ]
+        }
       }
     }
   }

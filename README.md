@@ -1,4 +1,4 @@
-# OGDT Fusion / Fusion File System
+# Agamis Fusion / Fusion File System
 
 Fusion is a network appliance designed to serve as data layer for OGDT Ecosystem.
 It is based on :

@@ -27,7 +27,7 @@ import scala.util.Failure
 import scala.util.Success
 import akka.util.Timeout
 import io.agamis.fusion.core.actors.common.CachePolicy
-import io.agamis.fusion.external.api.rest.dto.user.UserDto
+import io.agamis.fusion.api.rest.model.dto.user.UserDto
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonSubTypes
 

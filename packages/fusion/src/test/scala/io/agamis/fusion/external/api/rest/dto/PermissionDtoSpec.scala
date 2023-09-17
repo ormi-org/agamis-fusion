@@ -1,9 +1,9 @@
-package io.agamis.fusion.external.api.rest.dto
+package io.agamis.fusion.api.rest.model.dto
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.agamis.fusion.external.api.rest.dto.permission.PermissionDto
+import io.agamis.fusion.api.rest.model.dto.permission.PermissionDto
 import java.util.UUID
 import java.time.Instant
 import java.io.FileNotFoundException
@@ -11,7 +11,7 @@ import java.io.InputStream
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.databind.JsonNode
-import io.agamis.fusion.external.api.rest.dto.common.typed.LanguageMapping
+import io.agamis.fusion.api.rest.model.dto.common.typed.LanguageMapping
 import org.scalatestplus.mockito.MockitoSugar
 
 class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
