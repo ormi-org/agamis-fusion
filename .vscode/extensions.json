@@ -2,6 +2,11 @@
     "recommendations": [
         "angular.ng-template",
         "jebbs.plantuml",
-        "nrwl.angular-console"
+        "nrwl.angular-console",
+        "orta.vscode-jest",
+        "firsttris.vscode-jest-runner",
+        "dbaeumer.vscode-eslint",
+        "scalameta.metals",
+        "esbenp.prettier-vscode"
     ]
 }
