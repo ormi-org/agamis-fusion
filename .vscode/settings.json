@@ -12,5 +12,5 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true,
     },
-    "metals.javaHome": "/usr/lib/jvm/java-17-openjdk-amd64"
+    "metals.javaHome": "/usr/lib/jvm/java-1.17.0-openjdk-amd64"
 }
