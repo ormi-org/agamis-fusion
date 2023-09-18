@@ -16,7 +16,6 @@ import io.agamis.fusion.core.data.security.models.AsymmetricEncryption
 import io.agamis.fusion.core.data.security.datastores.AsymmetricEncryptionStore
 
 // Date & Timer 
-import java.time.Instant
 import java.util.Date
 
 object SystemSettings {
@@ -26,10 +25,10 @@ object SystemSettings {
     def insertKeyPair(privateKey: String, publicKey: String)(implicit wrapper: ReactiveMongoWrapper, ec: ExecutionContext): Future[Unit] = {
         val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("RSA")
         kpg.initialize(2048)
-        val kp: KeyPair = kpg.generateKeyPair()
+        kpg.generateKeyPair()
         new AsymmetricEncryptionStore()
             .insert(new AsymmetricEncryption(BSONObjectID.generate(),privateKey,publicKey, new Date().toString())).transformWith({
-                case Success(result) => Future.unit
+                case Success(_) => Future.unit
                 case Failure(cause) => Future.failed(new Exception("Cannot generate key", cause)) // TODO : changer pour une custom
             })
     }

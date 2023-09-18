@@ -1,7 +1,6 @@
 package io.agamis.fusion.core.data.security.models
 
 import reactivemongo.api.bson.BSONObjectID
-import reactivemongo.api.bson.BSONValue
 import reactivemongo.api.bson.BSONDocument
 import reactivemongo.api.bson.BSONDocumentReader
 import reactivemongo.api.bson.BSONDocumentWriter

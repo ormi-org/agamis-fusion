@@ -1,9 +1,6 @@
 package io.agamis.fusion.api.rest.routes
 
-import scala.util.Success
-import scala.util.Failure
 import scala.concurrent.duration._
-import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import akka.util.Timeout
 import akka.http.scaladsl.server.Directives._
@@ -18,8 +15,6 @@ import io.agamis.fusion.api.rest.model.dto.filesystem.{FileSystemJsonSupport, Fi
   */
 class FileSystemRoutes(implicit system: ActorSystem[_]) extends FileSystemJsonSupport {
     
-    import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-    import akka.actor.typed.scaladsl.AskPattern.Askable
 
     implicit val timeout = Timeout(3.seconds)
 
@@ -33,7 +28,7 @@ class FileSystemRoutes(implicit system: ActorSystem[_]) extends FileSystemJsonSu
             },
             // create fileSystem
             post {
-              entity(as[FileSystemDto]) { fileSystem =>
+              entity(as[FileSystemDto]) { _ =>
                 complete(StatusCodes.NotImplemented)
               }
             },
@@ -43,21 +38,21 @@ class FileSystemRoutes(implicit system: ActorSystem[_]) extends FileSystemJsonSu
           concat(
             //get by id
             get {
-              path(Segment) { id: String =>
+              path(Segment) { _: String =>
                 complete(StatusCodes.NotImplemented)
               }
             },
             // update fileSystem
             put {
-              path(Segment) { id: String =>
-                entity(as[FileSystemDto]) { fileSystem =>
+              path(Segment) { _: String =>
+                entity(as[FileSystemDto]) { _ =>
                   complete(StatusCodes.NotImplemented)
                 }
               }
             },
             // delete fileSystem
             delete {
-              path(Segment) { id: String =>
+              path(Segment) { _: String =>
                 complete(StatusCodes.NotImplemented)
               }
             }

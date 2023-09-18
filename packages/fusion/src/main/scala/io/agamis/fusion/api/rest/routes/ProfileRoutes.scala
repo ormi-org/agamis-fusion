@@ -31,7 +31,7 @@ class ProfileRoutes(implicit system: ActorSystem[_]) extends ProfileJsonSupport 
           },
           // create profile
           post {
-            entity(as[ProfileDto]) { profile =>
+            entity(as[ProfileDto]) { _ =>
               complete(StatusCodes.NotImplemented)
             }
           },
@@ -41,21 +41,21 @@ class ProfileRoutes(implicit system: ActorSystem[_]) extends ProfileJsonSupport 
         concat(
           //get by id
           get {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           },
           // update profile
           put {
-            path(Segment) { id: String =>
-              entity(as[ProfileDto]) { profile =>
+            path(Segment) { _: String =>
+              entity(as[ProfileDto]) { _ =>
                 complete(StatusCodes.NotImplemented)
               }
             }
           },
           // delete profile
           delete {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           }

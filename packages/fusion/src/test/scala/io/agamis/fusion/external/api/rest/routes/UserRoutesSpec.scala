@@ -1,34 +1,29 @@
 package io.agamis.fusion.api.rest.routes
 
-import scala.concurrent.duration._
-import org.scalatest.matchers.should.Matchers
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import org.scalatest.BeforeAndAfterAll
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
-import org.scalatest.wordspec.AnyWordSpecLike
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.scalatest.wordspec.AnyWordSpec
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
-import scala.concurrent.Future
-import org.scalatestplus.mockito.MockitoSugar
-import org.mockito.Mockito._
-import io.agamis.fusion.core.services.UserService
+import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import io.agamis.fusion.api.rest.model.dto.profile.ProfileDto
 import io.agamis.fusion.api.rest.model.dto.user.UserDto
 import io.agamis.fusion.api.rest.model.dto.user.UserJsonSupport
-import java.util.UUID
-import io.agamis.fusion.api.rest.model.dto.profile.ProfileDto
-import java.time.Instant
 import io.agamis.fusion.api.rest.model.dto.user.UserMutation
-import scala.util.Success
-import io.agamis.fusion.core.db.models.sql.User
-import akka.http.scaladsl.model.headers.Location
-import org.scalatest.PrivateMethodTester
-import akka.http.scaladsl.model.AttributeKey
 import io.agamis.fusion.api.rest.routes.UserRoutes
+import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
+import io.agamis.fusion.core.services.UserService
+import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.PrivateMethodTester
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class UserRoutesSpec
     extends AnyWordSpec
@@ -39,40 +34,40 @@ class UserRoutesSpec
     with UserJsonSupport
     with PrivateMethodTester {
 
-    val testKit = ActorTestKit()
+    val testKit                             = ActorTestKit()
     implicit val testSystem: ActorSystem[_] = testKit.system
-    implicit val timeout = RouteTestTimeout(5.seconds)
-    implicit val ta = TildeArrow.injectIntoRoute
-    implicit val userService: UserService = mock[UserService]
-    val userRoutes: UserRoutes = new UserRoutes
+    implicit val timeout                    = RouteTestTimeout(5.seconds)
+    implicit val ta                         = TildeArrow.injectIntoRoute
+    implicit val userService: UserService   = mock[UserService]
+    val userRoutes: UserRoutes              = new UserRoutes
 
     override def afterAll(): Unit = testKit.shutdownTestKit()
 
     private val BASE_DTO: UserDto = UserDto(
-        Some(UUID.fromString("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3")),
-        "chauncey.vonsnuffles",
-        Some(
-          List(
-            ProfileDto(
-              Some(UUID.fromString("10157d43-eaea-415d-be66-d81312394cc6")),
-              Some("ItsmeChauncey"),
-              "Von snuffles",
-              "Chauncey",
-              "chauncey@tyria.world",
-              None,
-              None,
-              None,
-              true,
-              Instant.parse("2023-02-14T23:31:54.081426541Z"),
-              "4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3",
-              None,
-              Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
-              Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
-            )
+      Some(UUID.fromString("4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3")),
+      "chauncey.vonsnuffles",
+      Some(
+        List(
+          ProfileDto(
+            Some(UUID.fromString("10157d43-eaea-415d-be66-d81312394cc6")),
+            Some("ItsmeChauncey"),
+            "Von snuffles",
+            "Chauncey",
+            "chauncey@tyria.world",
+            None,
+            None,
+            None,
+            true,
+            Instant.parse("2023-02-14T23:31:54.081426541Z"),
+            "4e6482dc-fafe-4268-8bc3-7fcbb9a7f6a3",
+            None,
+            Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
+            Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
           )
-        ),
-        Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
-        Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
+        )
+      ),
+      Some(Instant.parse("2023-02-14T23:31:54.081426541Z")),
+      Some(Instant.parse("2023-02-14T23:31:54.081426541Z"))
     )
 
     private val TEST_USERS: List[UserDto] = List(
@@ -120,21 +115,29 @@ class UserRoutesSpec
 
     "excludeFields" should {
         "return a user dto with no profiles field WHEN profiles field is None" in {
-          val excludeFieldsPrivateMethod = PrivateMethod[UserDto](Symbol("excludeFields"))
-          val processedDto = userRoutes invokePrivate excludeFieldsPrivateMethod(BASE_DTO.copy(profiles = None))
-          processedDto.profiles shouldBe (None)
+            val excludeFieldsPrivateMethod =
+                PrivateMethod[UserDto](Symbol("excludeFields"))
+            val processedDto =
+                userRoutes invokePrivate excludeFieldsPrivateMethod(
+                  BASE_DTO.copy(profiles = None)
+                )
+            processedDto.profiles shouldBe (None)
         }
 
         "return a user dto with excluded field WHEN profiles field is Some dto" in {
-          val excludeFieldsPrivateMethod = PrivateMethod[UserDto](Symbol("excludeFields"))
-          val processedDto = userRoutes invokePrivate excludeFieldsPrivateMethod(BASE_DTO)
-          val expected = 
-              BASE_DTO.profiles.get(0).copy(
-                emails = None,
-                organization = None,
-                permissions = None
-              )
-          processedDto.profiles.get(0) shouldBe (expected)
+            val excludeFieldsPrivateMethod =
+                PrivateMethod[UserDto](Symbol("excludeFields"))
+            val processedDto =
+                userRoutes invokePrivate excludeFieldsPrivateMethod(BASE_DTO)
+            val expected =
+                BASE_DTO.profiles
+                    .get(0)
+                    .copy(
+                      emails = None,
+                      organization = None,
+                      permissions = None
+                    )
+            processedDto.profiles.get(0) shouldBe (expected)
         }
     }
 

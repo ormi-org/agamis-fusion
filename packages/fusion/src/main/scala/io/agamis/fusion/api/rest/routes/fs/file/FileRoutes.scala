@@ -1,14 +1,11 @@
 package io.agamis.fusion.api.rest.routes
 
-import scala.util.Success
-import scala.util.Failure
 import scala.concurrent.duration._
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.ActorSystem
 import akka.util.Timeout
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.HttpResponse
 import io.agamis.fusion.api.rest.model.dto.fs.file.FileDto
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
@@ -18,8 +15,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   */
 class FileRoutes(implicit system: ActorSystem[_]) {
 
-  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-  import akka.actor.typed.scaladsl.AskPattern.Askable
   import io.agamis.fusion.api.rest.model.dto.fs.file.FileDtoJsonProtocol._
 
   implicit val timeout: Timeout = Timeout(3.seconds)
@@ -49,10 +44,10 @@ class FileRoutes(implicit system: ActorSystem[_]) {
       pathPrefix("list")(
         get {
           concat(
-            parameter("path".as[String]) { path =>
+            parameter("path".as[String]) { _ =>
               complete(StatusCodes.NotImplemented)
             },
-            parameter("id".as[String]) { path =>
+            parameter("id".as[String]) { _ =>
               // muste verify id is a BSONObjectID
               complete(StatusCodes.NotImplemented)
             }
@@ -61,7 +56,7 @@ class FileRoutes(implicit system: ActorSystem[_]) {
       ),
       pathPrefix("make")(
         post {
-          entity(as[FileDto]) { file =>
+          entity(as[FileDto]) { _ =>
             complete(StatusCodes.NotImplemented)
           }
         }
@@ -69,10 +64,10 @@ class FileRoutes(implicit system: ActorSystem[_]) {
       pathPrefix("remove")(
         get {
           concat(
-            parameter("path".as[String]) { path =>
+            parameter("path".as[String]) { _ =>
               complete(StatusCodes.NotImplemented)
             },
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           )

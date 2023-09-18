@@ -12,7 +12,6 @@ import spray.json._
 import io.agamis.fusion.core.db.models.sql.Profile
 import io.agamis.fusion.core.db.models.sql.Organization
 import io.agamis.fusion.core.db.models.sql.User
-import io.agamis.fusion.core.db.models.sql.generics.Email
 
 /**
   * Profile DTO with JSON support

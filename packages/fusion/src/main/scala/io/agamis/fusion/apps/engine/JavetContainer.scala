@@ -8,13 +8,10 @@ import io.agamis.fusion.apps.common.JavetLogger
 import org.slf4j.Logger
 
 import java.io.File
-import com.caoccao.javet.interop.V8Host
 import io.agamis.fusion.apps.common.enums.NodeReturnType._
-import com.caoccao.javet.interop.executors.IV8Executor
 import java.util.concurrent.atomic.AtomicBoolean
 import io.agamis.fusion.apps.engine.exceptions.InstantiateException
 import com.caoccao.javet.values.reference.V8ValueObject
-import com.caoccao.javet.interop.V8Runtime
 
 /** 
   * An object to take care of NodeJs Applications lifecycle inside Javet V8 engine

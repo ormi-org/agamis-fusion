@@ -14,7 +14,6 @@ import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import java.sql.Timestamp
 
 object ProfileDataBehavior {
   

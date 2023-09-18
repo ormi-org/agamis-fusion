@@ -1,20 +1,12 @@
 package io.agamis.fusion.core.db.datastores.sql
 
 import io.agamis.fusion.core.db.common.Utils
-import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.DuplicateOrganizationException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotFoundException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotPersistedException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.DuplicateOrganizationtypeException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizationtypes.OrganizationtypeNotFoundException
-import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.QueryEntity
 
 import java.sql.Timestamp
 import java.util.UUID
@@ -448,9 +440,7 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper)
     makeTransaction match {
       case Success(tx) =>
         val fileSystemStore = new FileSystemStore()
-        val fileSystemRelationCache
-            : IgniteCache[String, FilesystemOrganization] =
-          wrapper.getCache[String, FilesystemOrganization](
+        wrapper.getCache[String, FilesystemOrganization](
             fileSystemStore.cache
           )
         Future

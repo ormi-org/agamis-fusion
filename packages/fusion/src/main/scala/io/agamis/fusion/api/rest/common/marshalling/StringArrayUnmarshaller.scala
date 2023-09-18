@@ -6,7 +6,7 @@ import scala.concurrent.Future
 
 object StringArrayUnmarshaller {
     def commaSeparatedUnmarshaller: Unmarshaller[String, List[String]] = {
-        new StringArrayParameter().withMaterializer((ec) => (mat) => (param) => {
+        new StringArrayParameter().withMaterializer((_) => (_) => (param) => {
             Future.successful(param.split(",").toList)
         })
     }

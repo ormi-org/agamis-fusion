@@ -2,10 +2,7 @@ package io.agamis.fusion.core.db.models.sql.typed
 
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Success
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
-import io.agamis.fusion.core.db.datastores.typed.SqlStore
 import java.sql.Timestamp
 import org.apache.ignite.cache.query.annotations.QuerySqlField
 import java.time.Instant

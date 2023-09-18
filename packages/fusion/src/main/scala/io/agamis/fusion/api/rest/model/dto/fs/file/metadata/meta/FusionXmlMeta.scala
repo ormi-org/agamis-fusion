@@ -1,7 +1,6 @@
 package io.agamis.fusion.api.rest.model.dto.fs.file.metadata.meta
 
 import io.agamis.fusion.core.db.models.documents.file.metadata.meta.FusionXmlMeta
-import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util.UUID
