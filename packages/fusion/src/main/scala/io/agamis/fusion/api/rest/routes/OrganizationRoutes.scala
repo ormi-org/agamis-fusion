@@ -1,20 +1,16 @@
 package io.agamis.fusion.api.rest.routes
 
-import scala.util.Success
-import scala.util.Failure
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
-import java.util.UUID
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
+import akka.http.scaladsl.model.StatusCodes
 
 import akka.util.Timeout
 
-import akka.actor.typed.{ActorSystem, ActorRef}
+import akka.actor.typed.ActorSystem
 
 import io.agamis.fusion.api.rest.model.dto.organization.{OrganizationDto, OrganizationJsonSupport}
 
@@ -26,8 +22,6 @@ import io.agamis.fusion.api.rest.model.dto.organization.{OrganizationDto, Organi
 class OrganizationRoutes(implicit system: ActorSystem[_])
     extends OrganizationJsonSupport {
 
-  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-  import akka.actor.typed.scaladsl.AskPattern.Askable
 
   // asking someone requires a timeout and a scheduler, if the timeout hits without response
   // the ask is failed with a TimeoutException
@@ -43,7 +37,7 @@ class OrganizationRoutes(implicit system: ActorSystem[_])
           },
           // create organization
           post {
-            entity(as[OrganizationDto]) { organization =>
+            entity(as[OrganizationDto]) { _ =>
               complete(StatusCodes.NotImplemented)
             }
           }
@@ -53,21 +47,21 @@ class OrganizationRoutes(implicit system: ActorSystem[_])
         concat(
           // get by id
           get {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           },
           // update organization
           put {
-            path(Segment) { id: String =>
-              entity(as[OrganizationDto]) { organization =>
+            path(Segment) { _: String =>
+              entity(as[OrganizationDto]) { _ =>
                 complete(StatusCodes.NotImplemented)
               }
             }
           },
           // delete organization
           delete {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           }

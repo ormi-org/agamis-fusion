@@ -1,6 +1,5 @@
 package io.agamis.fusion.api.rest.model.dto.fs.file.metadata
 
-import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters.InstantFormat
 import io.agamis.fusion.api.rest.model.dto.fs.file.metadata.meta.FusionXmlMetaDto
 import io.agamis.fusion.api.rest.model.dto.fs.file.metadata.meta.FusionXmlMetaDtoJsonProtocol._
 import io.agamis.fusion.core.db.models.documents.file.metadata.Metadata

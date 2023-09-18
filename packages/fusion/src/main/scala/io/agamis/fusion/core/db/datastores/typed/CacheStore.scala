@@ -2,13 +2,8 @@ package io.agamis.fusion.core.db.datastores.typed
 
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
-import org.apache.ignite.lang.IgniteFuture
-import scala.concurrent.Promise
-import scala.util.Try
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
-import scala.util.Success
-import scala.util.Failure
 import scala.language.postfixOps
 import io.agamis.fusion.core.db.common.Utils
 

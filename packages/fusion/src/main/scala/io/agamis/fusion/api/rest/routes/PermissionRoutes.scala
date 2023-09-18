@@ -29,7 +29,7 @@ class PermissionRoutes(implicit system: ActorRef[_]) extends PermissionJsonSuppo
           },
           // create permission
           post {
-            entity(as[PermissionDto]) { permission =>
+            entity(as[PermissionDto]) { _ =>
               complete(StatusCodes.NotImplemented)
             }
           }
@@ -39,21 +39,21 @@ class PermissionRoutes(implicit system: ActorRef[_]) extends PermissionJsonSuppo
         concat(
           // get by id
           get {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           },
           // update permission
           put {
-            path(Segment) { id: String =>
-              entity(as[PermissionDto]) { permission =>
+            path(Segment) { _: String =>
+              entity(as[PermissionDto]) { _ =>
                 complete(StatusCodes.NotImplemented)
               }
             }
           },
           // delete permission
           delete {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           }

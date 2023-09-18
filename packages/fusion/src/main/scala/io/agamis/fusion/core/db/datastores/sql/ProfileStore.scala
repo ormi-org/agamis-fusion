@@ -1,23 +1,22 @@
 package io.agamis.fusion.core.db.datastores.sql
 
 import io.agamis.fusion.core.db.common.Utils
+import io.agamis.fusion.core.db.datastores.sql.common.Filter
+import io.agamis.fusion.core.db.datastores.sql.common.Pagination
+import io.agamis.fusion.core.db.datastores.sql.common.Placeholder
+import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidComparisonOperatorException
+import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidOrderingOperatorException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.NoEntryException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.DuplicateOrganizationException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.organizations.OrganizationNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.DuplicateProfileException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileNotPersistedException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.ProfileQueryExecutionException
 import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.profiles.StillAttachedOrganizationException
-import io.agamis.fusion.core.db.datastores.sql.exceptions.typed.users.UserNotFoundException
 import io.agamis.fusion.core.db.datastores.sql.generics.EmailStore
-import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.emails.EmailNotFoundException
-import io.agamis.fusion.core.db.datastores.sql.generics.exceptions.texts.TextNotFoundException
 import io.agamis.fusion.core.db.datastores.typed.SqlMutableStore
 import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.Profile
-import io.agamis.fusion.core.db.models.sql.generics.Email
 import io.agamis.fusion.core.db.models.sql.generics.Language
 import io.agamis.fusion.core.db.models.sql.relations.ProfileEmail
 import io.agamis.fusion.core.db.models.sql.relations.ProfileGroup
@@ -27,6 +26,7 @@ import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.QueryEntity
+import org.apache.ignite.transactions.Transaction
 
 import java.sql.Timestamp
 import java.util.UUID
@@ -37,13 +37,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import io.agamis.fusion.core.db.datastores.sql.common.Filter
-import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidComparisonOperatorException
-import io.agamis.fusion.core.db.datastores.sql.common.Placeholder
-import io.agamis.fusion.core.db.datastores.sql.common.exceptions.InvalidOrderingOperatorException
-import io.agamis.fusion.core.db.datastores.sql.common.Pagination
-import io.agamis.fusion.core.db.datastores.sql.generics.LanguageStore
-import org.apache.ignite.transactions.Transaction
 
 class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
     extends SqlMutableStore[UUID, Profile] {
@@ -84,7 +77,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
   def makeProfilesQuery(
       queryFilters: ProfileStore.ProfilesFilters
   ): SqlStoreQuery = {
-    var baseQueryString = queryString.replace("$schema", schema)
+    val baseQueryString = queryString.replace("$schema", schema)
     val queryArgs: ListBuffer[String] = ListBuffer()
     val whereStatements: ListBuffer[String] = ListBuffer()
     queryFilters.filters.foreach({ filter =>
@@ -215,7 +208,7 @@ class ProfileStore(implicit wrapper: IgniteClientNodeWrapper)
   )(implicit ec: ExecutionContext): Future[List[Profile]] = {
     executeQuery(makeProfilesQuery(queryFilters)).transformWith({
       case Success(rows) =>
-        val entityReflections = rows.groupBy(_.head)
+        rows.groupBy(_.head)
         val profiles = rows.map({ row =>
           (for (
             profile <- Right(

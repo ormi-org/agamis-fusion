@@ -13,9 +13,7 @@ import scala.concurrent.duration._
 import io.agamis.fusion.apps.actors.enums.ContainerType._
 import io.agamis.fusion.apps.engine.JavetContainer
 import java.io.File
-import io.agamis.fusion.fs.lib.Tree
 import org.slf4j.Logger
-import org.apache.ignite.internal.util.scala.impl
 import com.caoccao.javet.interop.engine.JavetEngineConfig
 import com.caoccao.javet.enums.JSRuntimeType
 import io.agamis.fusion.apps.engine.JavetProcessContainer
@@ -104,11 +102,11 @@ object ContainerActor {
                     case process: JavetProcessContainer => {
                         process.close()
                     }
-                    case script: JavetContainer[_] => ctx.log.warn("<< ContainerActor:RunningBehavior#Stop > pre-requisites check failed : script containers cannot be stopped")
+                    case _: JavetContainer[_] => ctx.log.warn("<< ContainerActor:RunningBehavior#Stop > pre-requisites check failed : script containers cannot be stopped")
                 }
                 return IdleBehavior(shard, state)
             }
-            case (ctx: ActorContext[_], _: Request) => {
+            case (_: ActorContext[_], _: Request) => {
                 // Handle request
 
                 Behaviors.same
@@ -122,8 +120,7 @@ object ContainerActor {
         appId: String,
         containerType: ContainerType
     ): Behavior[Command] = Behaviors.setup { context =>
-        val ec: ExecutionContext =
-            context.system.dispatchers.lookup(
+        context.system.dispatchers.lookup(
               DispatcherSelector.fromConfig("emby-runtime-dispatcher")
             )
 
@@ -133,7 +130,7 @@ object ContainerActor {
             if (appContainerTimeout > 0)
                 context.setReceiveTimeout(appContainerTimeout.seconds, Idle())
         } catch {
-            case nfe: NumberFormatException => {
+            case _: NumberFormatException => {
                 context.log.error(
                   "<< ContainerActor#apply(ActorRef, String) > could not get a valid timeout configuration from `fusion.app.instance.timeout` : must be an integer"
                 )

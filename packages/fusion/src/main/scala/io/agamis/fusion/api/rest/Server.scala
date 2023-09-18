@@ -1,17 +1,12 @@
 package io.agamis.fusion.api.rest
 
-import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
-import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import akka.cluster.sharding.typed.scaladsl.Entity
-import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import io.agamis.fusion.core.actors.data.DataActor
 import io.agamis.fusion.core.services.UserService
 import io.agamis.fusion.api.rest.routes.AuthenticationRoutes
 import io.agamis.fusion.api.rest.routes.FileRoutes

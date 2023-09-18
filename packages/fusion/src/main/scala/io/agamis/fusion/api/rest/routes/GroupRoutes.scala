@@ -1,21 +1,16 @@
 package io.agamis.fusion.api.rest.routes
 
-import scala.util.Success
-import scala.util.Failure
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
 
-import java.util.UUID
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{HttpEntity, ContentTypes, StatusCodes}
+import akka.http.scaladsl.model.StatusCodes
 
 import akka.util.Timeout
 
-import akka.actor.typed.{ActorSystem, ActorRef}
+import akka.actor.typed.ActorSystem
 
 import io.agamis.fusion.api.rest.model.dto.group.{GroupDto, GroupJsonSupport}
 
@@ -26,8 +21,6 @@ import io.agamis.fusion.api.rest.model.dto.group.{GroupDto, GroupJsonSupport}
   */
 class GroupRoutes(implicit system: ActorSystem[_]) extends GroupJsonSupport {
 
-  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-  import akka.actor.typed.scaladsl.AskPattern.Askable
 
   // asking someone requires a timeout and a scheduler, if the timeout hits without response
   // the ask is failed with a TimeoutException
@@ -43,7 +36,7 @@ class GroupRoutes(implicit system: ActorSystem[_]) extends GroupJsonSupport {
           },
           // create group
           post {
-            entity(as[GroupDto]) { group =>
+            entity(as[GroupDto]) { _ =>
               complete(StatusCodes.NotImplemented)
             }
           },
@@ -53,21 +46,21 @@ class GroupRoutes(implicit system: ActorSystem[_]) extends GroupJsonSupport {
         concat(
           //get by id
           get {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           },
           // update group
           put {
-            path(Segment) { id: String =>
-              entity(as[GroupDto]) { group =>
+            path(Segment) { _: String =>
+              entity(as[GroupDto]) { _ =>
                 complete(StatusCodes.NotImplemented)
               }
             }
           },
           // delete group
           delete {
-            path(Segment) { id: String =>
+            path(Segment) { _: String =>
               complete(StatusCodes.NotImplemented)
             }
           }

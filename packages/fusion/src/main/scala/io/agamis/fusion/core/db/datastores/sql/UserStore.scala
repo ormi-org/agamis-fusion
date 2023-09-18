@@ -17,8 +17,6 @@ import io.agamis.fusion.core.db.datastores.typed.sql.SqlStoreQuery
 import io.agamis.fusion.core.db.models.sql.User
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.apache.ignite.IgniteCache
-import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMode
 
 import java.sql.Timestamp
 import java.util.UUID

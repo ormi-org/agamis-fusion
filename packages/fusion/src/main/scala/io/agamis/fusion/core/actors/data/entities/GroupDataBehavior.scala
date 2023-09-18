@@ -5,22 +5,10 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.Behaviors
 import io.agamis.fusion.core.actors.data.DataActor
-import io.agamis.fusion.core.actors.data.entities.common.Identifiable
-import io.agamis.fusion.core.actors.data.entities.common.Pageable
-import io.agamis.fusion.core.actors.data.entities.common.Timetracked
 import io.agamis.fusion.core.db.datastores.sql.GroupStore
-import io.agamis.fusion.core.db.models.sql.Group
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
-import io.agamis.fusion.core.db.datastores.sql.common.Filter
-import io.agamis.fusion.core.db.datastores.typed.sql.EntityQueryParams
 
-import java.sql.Timestamp
-import java.time.Instant
-import java.util.UUID
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 
 object GroupDataBehavior {
 

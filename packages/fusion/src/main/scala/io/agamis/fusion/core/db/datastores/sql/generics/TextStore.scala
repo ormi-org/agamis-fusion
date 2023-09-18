@@ -22,7 +22,6 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
 import io.agamis.fusion.core.db.models.sql.generics.Text
-import java.util.UUID
 
 class TextStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlStore[String, Text] {
 
@@ -63,7 +62,7 @@ class TextStore(implicit wrapper: IgniteClientNodeWrapper) extends SqlStore[Stri
         Utils.igniteToScalaFuture(igniteCache.putAsync(
             s"${text.id}:${text.relatedLanguage.get.id}", text
         )).transformWith({
-            case Success(value) => Future.unit
+            case Success(_) => Future.unit
             case Failure(cause) => Future.failed(TextNotPersistedException(cause))
         })
     }
