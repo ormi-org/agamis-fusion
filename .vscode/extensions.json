@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "angular.ng-template",
-        "jebbs.plantuml"
+        "jebbs.plantuml",
+        "nrwl.angular-console"
     ]
 }

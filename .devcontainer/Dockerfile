@@ -11,7 +11,7 @@ ARG NODEJS_VERSION=18
 ARG SHELL=/bin/bash
 
 # Install JDK & dependencies
-RUN apt update && apt install -y openjdk-17-jdk graphviz
+RUN apt update && apt install -y openjdk-17-jdk graphviz ca-certificates curl gnupg git
 # Install NODE
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
