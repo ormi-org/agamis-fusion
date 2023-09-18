@@ -3,8 +3,6 @@ package io.agamis.fusion.api.rest.routes.apps
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.server.Directives._
 
-import scala.concurrent.ExecutionContext
-
 /** Class User Routes
   *
   * @param system
@@ -12,11 +10,7 @@ import scala.concurrent.ExecutionContext
   */
 class AppRoutes()(implicit system: ActorSystem[_]) {
 
-
-
-
     system.executionContext
-
 
     val routes =
         concat(

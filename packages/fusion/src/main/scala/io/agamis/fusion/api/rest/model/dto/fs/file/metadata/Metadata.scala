@@ -7,7 +7,6 @@ import io.agamis.fusion.core.db.models.documents.file.metadata.meta.FusionXmlMet
 import spray.json._
 
 import java.time.Instant
-import scala.language.implicitConversions
 
 final case class MetadataDto(
     size: Option[Int],

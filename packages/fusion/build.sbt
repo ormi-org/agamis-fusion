@@ -23,7 +23,8 @@ lazy val fusion = (project in file("."))
         "-language:existentials",
         "-unchecked",
         "-Xlint",
-        "-Ywarn-unused"
+        "-Ywarn-unused:imports",
+        "-Xlint:-unused,_"
       ),
       javaOptions ++= Seq(
         "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",

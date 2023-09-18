@@ -1,28 +1,28 @@
 package io.agamis.fusion.core.actors.data
 
+import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
 import akka.actor.typed.DispatcherSelector
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.Behaviors
-import io.agamis.fusion.core.actors.serialization.JsonSerializable
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import io.agamis.fusion.core.actors.common.CachePolicy
+import io.agamis.fusion.core.actors.data.entities.ApplicationDataBehavior
+import io.agamis.fusion.core.actors.data.entities.EmailDataBehavior
+import io.agamis.fusion.core.actors.data.entities.FileSystemDataBehavior
+import io.agamis.fusion.core.actors.data.entities.GroupDataBehavior
+import io.agamis.fusion.core.actors.data.entities.LanguageDataBehavior
+import io.agamis.fusion.core.actors.data.entities.OrganizationDataBehavior
+import io.agamis.fusion.core.actors.data.entities.OrganizationTypeDataBehavior
+import io.agamis.fusion.core.actors.data.entities.PermissionDataBehavior
+import io.agamis.fusion.core.actors.data.entities.ProfileDataBehavior
+import io.agamis.fusion.core.actors.data.entities.TextDataBehavior
 import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
+import io.agamis.fusion.core.actors.serialization.JsonSerializable
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import io.agamis.fusion.env.EnvContainer
 
 import scala.concurrent.ExecutionContext
-import io.agamis.fusion.core.actors.data.entities.ProfileDataBehavior
-import io.agamis.fusion.core.actors.data.entities.PermissionDataBehavior
-import io.agamis.fusion.core.actors.data.entities.OrganizationTypeDataBehavior
-import io.agamis.fusion.core.actors.data.entities.OrganizationDataBehavior
-import io.agamis.fusion.core.actors.data.entities.GroupDataBehavior
-import io.agamis.fusion.core.actors.data.entities.FileSystemDataBehavior
-import io.agamis.fusion.core.actors.data.entities.ApplicationDataBehavior
-import io.agamis.fusion.core.actors.data.entities.TextDataBehavior
-import io.agamis.fusion.core.actors.data.entities.LanguageDataBehavior
-import io.agamis.fusion.core.actors.data.entities.EmailDataBehavior
-import io.agamis.fusion.env.EnvContainer
-import io.agamis.fusion.core.actors.common.CachePolicy
-import akka.actor.typed.ActorRef
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import scala.concurrent.duration._
 
 object DataActor {
@@ -58,6 +58,7 @@ object DataActor {
       case CachePolicy.ALWAYS => EnvContainer.getString("fusion.cache.sql.ttl").toInt
       case CachePolicy.ON_READ => EnvContainer.getString("fusion.cache.sql.ttl").toInt
       case CachePolicy.NEVER  => 0
+      case _ => 0
     }
 
     if (cachingTimeToLive > 0) context.setReceiveTimeout(cachingTimeToLive.seconds, Idle())

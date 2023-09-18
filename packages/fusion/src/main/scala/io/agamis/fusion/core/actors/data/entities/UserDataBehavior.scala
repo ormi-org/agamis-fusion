@@ -129,7 +129,7 @@ object UserDataBehavior {
         msg: String = "An unhandled exception occured"
     ) extends Status
 
-    sealed trait State extends Response {
+    trait State extends Response {
         def status: Status
     }
     final case class SingleUserState(
@@ -153,12 +153,9 @@ object UserDataBehavior {
         wrapper: IgniteClientNodeWrapper,
         cachingPolicy: CachePolicy.Value,
         ttl: Int
-    ): PartialFunction[
-      (ActorContext[UserDataBehavior.Command], UserDataBehavior.Command),
-      Behavior[UserDataBehavior.Command]
-    ] = {
+    ): Behavior[UserDataBehavior.Command] = {
         implicit val store = new UserStore
-        return {
+        Behaviors.receive {
             case (ctx: ActorContext[Command], wstate: WrappedState) => {
                 // Send resulting state to original sender
                 wstate.replyTo ! wstate.state.asInstanceOf[State]
@@ -168,192 +165,199 @@ object UserDataBehavior {
                     ctx.log.debug(
                       s"Caching result of entity{${state.entityId}} for ${ttl} seconds"
                     )
-                    Behaviors.receivePartial(apply(wstate.state))
+                    apply(wstate.state)
                 } else {
                     Behaviors.same
                 }
             }
             case (ctx: ActorContext[Command], eqy: ExecuteQuery) => {
-                if (
-                  (state match {
-                      case _: DataActor.EmptyState => true
-                      case s: State => {
-                          s.status match {
-                              case _: Ok => false
-                              case _     => true
-                          }
-                      }
-                  })
-                ) {
-                    // Set query and its parameters
-                    val query = eqy.query
-                    val filters = UserStore
-                        .UserQueryParams()
-                        .copy(
-                          filters = List(
-                            UserStore
-                                .UsersFilter()
-                                .copy(
-                                  id = if (query.id.nonEmpty) query.id.map {
-                                      _.toString
-                                  }
-                                  else List(),
-                                  username =
-                                      if (query.username.nonEmpty)
-                                          query.username
-                                              .map((Filter.Type.Like, _))
-                                      else List(),
-                                  createdAt =
-                                      if (query.createdAt.nonEmpty)
-                                          query.createdAt.map { c =>
-                                              (c._1, Timestamp.from(c._2))
-                                          }
-                                      else List(),
-                                  updatedAt =
-                                      if (query.updatedAt.nonEmpty)
-                                          query.updatedAt.map { u =>
-                                              (u._1, Timestamp.from(u._2))
-                                          }
-                                      else List()
-                                )
-                          ),
-                          orderBy =
-                              if (query.orderBy.nonEmpty)
-                                  query.orderBy.map({ o =>
-                                      (
-                                        o._1 match {
-                                            case Field.ID =>
-                                                UserStore.Column.ID()
-                                        },
-                                        o._2
-                                      )
-                                  })
-                              else List((UserStore.Column.ID(), 1)),
-                          pagination = (query.limit, query.offset) match {
-                              case (Some(limit), Some(offset)) =>
-                                  Some(
-                                    EntityQueryParams.Pagination(limit, offset)
+                state match {
+                    case DataActor.EmptyState(_) => {
+                        // Set query and its parameters
+                        val query = eqy.query
+                        val filters = UserStore
+                            .UserQueryParams()
+                            .copy(
+                              filters = List(
+                                UserStore
+                                    .UsersFilter()
+                                    .copy(
+                                      id =
+                                          if (query.id.nonEmpty)
+                                              query.id.map(_.toString)
+                                          else List(),
+                                      username =
+                                          if (query.username.nonEmpty)
+                                              query.username
+                                                  .map((Filter.Type.Like, _))
+                                          else List(),
+                                      createdAt =
+                                          if (query.createdAt.nonEmpty)
+                                              query.createdAt.map { c =>
+                                                  (c._1, Timestamp.from(c._2))
+                                              }
+                                          else List(),
+                                      updatedAt =
+                                          if (query.updatedAt.nonEmpty)
+                                              query.updatedAt.map { u =>
+                                                  (u._1, Timestamp.from(u._2))
+                                              }
+                                          else List()
+                                    )
+                              ),
+                              orderBy =
+                                  if (
+                                    query.orderBy
+                                        .find(o =>
+                                            Field.values
+                                                .exists(o._1 == _.toString)
+                                        )
+                                        .nonEmpty
                                   )
-                              case _ => None
-                          }
-                        )
-                    // Check if it must use cache
-                    val mustCache: Boolean =
-                        CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
-                    // Pipe future as a WrappedState message to this behavior
-                    ctx.pipeToSelf(store.getUsers(filters)) {
-                        case Success(userList) =>
-                            val newState = MultiUserState(
-                              state.entityId,
-                              userList.map(UserDto.from(_)),
-                              Ok()
+                                      throw new IllegalArgumentException("")
+                                  else if (query.orderBy.nonEmpty)
+                                      query.orderBy.map({ o =>
+                                          (
+                                            UserStore.Column.ID(),
+                                            o._2
+                                          )
+                                      })
+                                  else List((UserStore.Column.ID(), 1)),
+                              pagination = (query.limit, query.offset) match {
+                                  case (Some(limit), Some(offset)) =>
+                                      Some(
+                                        EntityQueryParams
+                                            .Pagination(limit, offset)
+                                      )
+                                  case _ => None
+                              }
                             )
-                            WrappedState(newState, eqy.replyTo, mustCache)
-                        case Failure(exception) =>
-                            exception match {
-                                case UserQueryExecutionException(
-                                      msg,
-                                      cause @ _
-                                    ) =>
-                                    val newState = MultiUserState(
-                                      state.entityId,
-                                      List(),
-                                      InternalException(msg)
-                                    )
-                                    ctx.log.error(msg, cause)
-                                    WrappedState(
-                                      newState,
-                                      eqy.replyTo,
-                                      mustCache
-                                    )
-                                case default: Throwable =>
-                                    val newState = MultiUserState(
-                                      state.entityId,
-                                      List(),
-                                      InternalException(default.getMessage())
-                                    )
-                                    WrappedState(
-                                      newState,
-                                      eqy.replyTo,
-                                      mustCache
-                                    )
-                            }
+                        // Check if it must use cache
+                        val mustCache: Boolean =
+                            CachePolicy.atLeast(
+                              cachingPolicy,
+                              CachePolicy.ON_READ
+                            )
+                        // Pipe future as a WrappedState message to this behavior
+                        ctx.pipeToSelf(store.getUsers(filters)) {
+                            case Success(userList) =>
+                                val newState = MultiUserState(
+                                  state.entityId,
+                                  userList.map(UserDto.from(_)),
+                                  Ok()
+                                )
+                                WrappedState(newState, eqy.replyTo, mustCache)
+                            case Failure(exception) =>
+                                exception match {
+                                    case UserQueryExecutionException(
+                                          msg,
+                                          cause @ _
+                                        ) =>
+                                        val newState = MultiUserState(
+                                          state.entityId,
+                                          List(),
+                                          InternalException(msg)
+                                        )
+                                        ctx.log.error(msg, cause)
+                                        WrappedState(
+                                          newState,
+                                          eqy.replyTo,
+                                          mustCache
+                                        )
+                                    case default: Throwable =>
+                                        val newState = MultiUserState(
+                                          state.entityId,
+                                          List(),
+                                          InternalException(
+                                            default.getMessage()
+                                          )
+                                        )
+                                        WrappedState(
+                                          newState,
+                                          eqy.replyTo,
+                                          mustCache
+                                        )
+                                }
+                        }
                     }
-                } else {
-                    ctx.log.debug(
-                      s"Providing result using cache on entity{${state.entityId}}"
-                    )
-                    eqy.replyTo ! state.asInstanceOf[State]
+                    case _ =>
+                        ctx.log.debug(
+                          s"Providing result using cache on entity{${state.entityId}}"
+                        )
+                        eqy.replyTo ! state.asInstanceOf[State]
                 }
                 Behaviors.same
             }
             case (ctx: ActorContext[Command], qry: GetUserById) => {
-                if (
-                  state match {
-                      case _: DataActor.EmptyState => true
-                      case s: State => {
-                          s.status match {
-                              case _: Ok => false
-                              case _     => true
-                          }
-                      }
-                  }
-                ) {
-                    val mustCache: Boolean =
-                        CachePolicy.atLeast(cachingPolicy, CachePolicy.ON_READ)
-                    ctx.pipeToSelf(store.getUserById(qry.id.toString())) {
-                        case Success(u) =>
-                            val newState = SingleUserState(
-                              state.entityId,
-                              Some(UserDto.from(u)),
-                              Ok()
+                state match {
+                    case _: DataActor.EmptyState => {
+                        val mustCache: Boolean =
+                            CachePolicy.atLeast(
+                              cachingPolicy,
+                              CachePolicy.ON_READ
                             )
-                            WrappedState(newState, qry.replyTo, mustCache)
-                        case Failure(exception) => {
-                            exception match {
-                                case UserNotFoundException(msg, cause @ _) =>
-                                    val newState =
-                                        SingleUserState(
+                        ctx.pipeToSelf(store.getUserById(qry.id.toString())) {
+                            case Success(u) =>
+                                val newState = SingleUserState(
+                                  state.entityId,
+                                  Some(UserDto.from(u)),
+                                  Ok()
+                                )
+                                WrappedState(newState, qry.replyTo, mustCache)
+                            case Failure(exception) => {
+                                exception match {
+                                    case UserNotFoundException(
+                                          msg,
+                                          cause @ _
+                                        ) =>
+                                        val newState =
+                                            SingleUserState(
+                                              state.entityId,
+                                              None,
+                                              NotFound(msg)
+                                            )
+                                        WrappedState(
+                                          newState,
+                                          qry.replyTo,
+                                          mustCache
+                                        )
+                                    case DuplicateUserException(
+                                          msg,
+                                          cause @ _
+                                        ) =>
+                                        val newState = SingleUserState(
                                           state.entityId,
                                           None,
-                                          NotFound(msg)
+                                          InternalException(msg)
                                         )
-                                    WrappedState(
-                                      newState,
-                                      qry.replyTo,
-                                      mustCache
-                                    )
-                                case DuplicateUserException(msg, cause @ _) =>
-                                    val newState = SingleUserState(
-                                      state.entityId,
-                                      None,
-                                      InternalException(msg)
-                                    )
-                                    ctx.log.error(msg, cause)
-                                    WrappedState(
-                                      newState,
-                                      qry.replyTo,
-                                      mustCache
-                                    )
-                                case default: Throwable =>
-                                    val newState = SingleUserState(
-                                      state.entityId,
-                                      None,
-                                      InternalException(default.getMessage())
-                                    )
-                                    WrappedState(
-                                      newState,
-                                      qry.replyTo,
-                                      mustCache
-                                    )
+                                        ctx.log.error(msg, cause)
+                                        WrappedState(
+                                          newState,
+                                          qry.replyTo,
+                                          mustCache
+                                        )
+                                    case default: Throwable =>
+                                        val newState = SingleUserState(
+                                          state.entityId,
+                                          None,
+                                          InternalException(
+                                            default.getMessage()
+                                          )
+                                        )
+                                        WrappedState(
+                                          newState,
+                                          qry.replyTo,
+                                          mustCache
+                                        )
+                                }
                             }
                         }
                     }
-                } else {
-                    ctx.log.debug(
-                      s"Providing result using cache on entity{${state.entityId}}"
-                    )
-                    qry.replyTo ! state.asInstanceOf[State]
+                    case _ =>
+                        ctx.log.debug(
+                          s"Providing result using cache on entity{${state.entityId}}"
+                        )
+                        qry.replyTo ! state.asInstanceOf[State]
                 }
                 Behaviors.same
             }
