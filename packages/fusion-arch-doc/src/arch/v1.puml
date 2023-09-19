@@ -1,0 +1,60 @@
+@startuml emby-start
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+Person(user, "User", "A generic user")
+System_Boundary(browser, "User's web browser") {
+
+Container(appclient, "Web Application", "Javascript Rich Client", "Allow users to interact with Fusion via HMI")
+Rel(user, appclient, "Interact with")
+}
+Rel(user, browser, "Uses")
+
+System_Boundary(fusiondata, "Fusion <Data>") {
+
+Component(userrep, "User Repository", "Distributed Data", "distribute users data globally")
+Component(trep, "Email Repository", "Distributed Data", "Hold emails")
+Component(trep, "Text Repository", "Distributed Data", "Hold texts")
+Component(lrep, "Language Repository", "Distributed Data", "Hold languages")
+Component(arep, "Application Repository", "Distributed Data", "Hold applications")
+Component(arep, "Permission Repository", "Distributed Data", "Hold permissions")
+Component(otrep, "Organization Type Repository", "Distributed Data", "Hold organization types")
+Component(org, "Organization", "Sharded Actors", "Hold organization root")
+Component(prep, "Profile Repository", "Distributed Data", "Hold organization profiles")
+Rel(org, prep, "own")
+Component(grep, "Group Repository", "Distributed Data", "Hold organization groups")
+Rel(org, grep, "own")
+}
+
+System_Boundary(fusionapi, "Fusion <API>") {
+System(http, "HTTP Server", "V1")
+Component(routes, "HTTP Routes")
+Component(rest, "Rest API")
+Rel(http, routes, "expose")
+Rel(routes, rest, "serve")
+Rel(routes, appclient, "serve")
+Rel(appclient, rest, "consume")
+}
+Rel(routes, fusiondata, "consume")
+
+System_Boundary(fusionapp, "Fusion <App>") {
+System_Boundary(containeractor, "Container") {
+Container(appserv, "Web Application Server", "NodeJS server / Javet process", "Allow users to interact with Fusion")
+Rel(routes, appserv, "consume <HTTP>")
+}
+Component(appreg, "Container Registry", "Singleton Actor", "Hold references of Containers/Web application servers")
+Rel(routes, appreg, "Request")
+}
+
+System_Boundary(fusionfs, "Fusion <Filesystem>") {
+Component(fs, "Filesystem", "Sharded Actors", "Allow manipulation of Filesystems and associated trees")
+Component(fsr, "Filesystem Repository", "Distributed Data", "Hold filesystems")
+Rel(routes, fs, "consume")
+Rel(routes, fsr, "consume")
+}
+
+System_Boundary(fusionsession, "Fusion <Session>") {
+Component(sman, "SessionManager", "Singleton", "Allow manipulation of Filesystems and associated trees")
+Component(session, "Session", "Sharded Actors", "Allow manipulation of Filesystems and associated trees")
+}
+@enduml
