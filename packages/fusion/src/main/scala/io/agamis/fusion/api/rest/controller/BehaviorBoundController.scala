@@ -2,9 +2,8 @@ package io.agamis.fusion.api.rest.controller
 
 import io.agamis.fusion.api.rest.model.dto.ModelDto
 import io.agamis.fusion.api.rest.model.dto.common.ApiResponse
-import io.agamis.fusion.core.actors.data.entities.common.DataActorResponse
 
-/** @param R
+/** @param C
   *   Response type from corresponding actor
   * @param AR
   *   Resulting ApiResponse
@@ -12,10 +11,10 @@ import io.agamis.fusion.core.actors.data.entities.common.DataActorResponse
   *   Main model dto
   */
 trait BehaviorBoundController[
-    R <: DataActorResponse,
+    C <: Any,
     AR <: ApiResponse,
     M <: ModelDto
 ] {
-    protected def mapToApiResponse(r: R): AR
+    protected def mapToApiResponse(c: C): AR
     protected def excludeFields(user: M): M
 }

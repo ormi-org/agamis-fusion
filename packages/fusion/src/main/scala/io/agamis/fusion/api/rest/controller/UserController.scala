@@ -13,7 +13,6 @@ import io.agamis.fusion.api.rest.model.dto.user.UserDto
 import io.agamis.fusion.api.rest.model.dto.user.UserMutation
 import io.agamis.fusion.api.rest.model.dto.user.UserQuery
 import io.agamis.fusion.api.rest.model.dto.user.UserQueryResponse
-import io.agamis.fusion.api.rest.model.dto.user.UserErrorResponse
 import io.agamis.fusion.core.actors.data.entities.UserDataBehavior
 import io.agamis.fusion.core.services.UserService
 

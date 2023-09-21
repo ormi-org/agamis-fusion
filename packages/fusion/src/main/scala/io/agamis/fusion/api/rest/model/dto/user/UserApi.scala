@@ -22,9 +22,8 @@ final case class UserQueryResponse(
 ) extends UserApiResponse
 
 final case class UserErrorResponse(
-    result: Null = null,
     status: ApiStatus
-) extends UserApiResponse
+) extends ApiResponse
 
 trait UserApiJsonSupport
     extends SprayJsonSupport
@@ -36,9 +35,6 @@ trait UserApiJsonSupport
         jsonFormat2(SingleUserResponse)
     implicit val uqResponseFormat: RootJsonFormat[UserQueryResponse] =
         jsonFormat2(UserQueryResponse)
-
-    // implicit val errResponseFormat: RootJsonFormat[UserErrorResponse] =
-    //     jsonFormat2(UserErrorResponse)
 }
 
 object UserApiJsonProtocol extends UserApiJsonSupport
