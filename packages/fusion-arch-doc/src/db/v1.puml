@@ -1,0 +1,227 @@
+@startuml fusion-sql-db
+!define primary_key(x) <b><color:#b8861b><&key></color> x</b>
+!define foreign_key(x) <color:#aaaaaa><&key></color> x
+!define column(x) <color:#4f4f4f><&media-record></color> x
+!define table(x) entity x << (T, white) >>
+
+package "organization" {
+    table(ORGANIZATION) {
+        primary_key(_key): UUID
+        column(_value): Organization
+        --
+        column(id): UUID = _key
+        column(label): VARCHAR(255)
+        column(queryable): VARCHAR(255)
+        --
+        foreign_key(organizationtype_id): UUID <<FK>>
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    table(ORGANIZATIONTYPE) {
+        primary_key(id): UUID
+        --
+        column(id): UUID
+        column(label_text_id): UUID
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    ORGANIZATION }|--|| ORGANIZATIONTYPE
+}
+
+table(USER) {
+    primary_key(_key): UUID
+    column(_value): User
+    --
+    column(id): UUID = _key
+    column(username): VARCHAR(255)
+    column(password): VARCHAR(255)
+    --
+    column(created_at): TIMESTAMP
+    column(updated_at): TIMESTAMP
+}
+
+package "group" {
+    table(GROUP) {
+        primary_key(_key): UUID
+        column(_value): Group
+        --
+        column(id): UUID = _key
+        column(name): VARCHAR(255)
+        --
+        foreign_key(organization_id): UUID <<FK>>
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    table(GROUP_PERMISSION) {
+        column(name): VARCHAR(255)
+        --
+        foreign_key(permission_id): UUID <<FK>>
+        foreign_key(group_id): UUID <<FK>>
+    }
+
+    GROUP ||--|{ GROUP_PERMISSION
+}
+
+table(EMAIL) {
+    primary_key(_key): UUID
+    column(_value): Email
+    --
+    column(id): UUID = _key
+    column(address): VARCHAR(255)
+}
+
+package "application" {
+    table(APPLICATION) {
+        primary_key(_key): UUID
+        column(_value): Application
+        --
+        column(id): UUID = _key
+        column(app_universal_id): VARCHAR(255)
+        column(version): VARCHAR(255)
+        column(status): ENUM(NOT_INSTALLED, INSTALLED)
+        column(manifest_url): VARCHAR(255)
+        column(store_url): VARCHAR(255)
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    table(ORGANIZATION_APPLICATION) {
+        column(status): ENUM(DISABLED, ENABLED)
+        column(license_file_id): VARCHAR(255)
+        --
+        foreign_key(organization_id): UUID <<FK>>
+        foreign_key(application_id): UUID <<FK>>
+        foreign_key(license_file_fs_id): UUID <<FK>>
+    }
+
+    APPLICATION ||--|{ ORGANIZATION_APPLICATION
+    ORGANIZATION_APPLICATION }|--|| ORGANIZATION
+}
+
+table(PERMISSION) {
+    primary_key(_key): UUID
+    column(_value): Permission
+    --
+    column(id): UUID = _key
+    column(key): VARCHAR(255)
+    column(editable): BOOLEAN
+    --
+    foreign_key(label_text_id): UUID <<FK>>
+    foreign_key(description_text_id): UUID <<FK>>
+    foreign_key(application_id): UUID <<FK>>
+    --
+    column(created_at): TIMESTAMP
+    column(updated_at): TIMESTAMP
+}
+
+APPLICATION ||--|{ PERMISSION
+GROUP_PERMISSION }|--|| PERMISSION
+
+package "profile" {
+    table(PROFILE) {
+        primary_key(_key): UUID
+        column(_value): Profile
+        --
+        column(id): UUID = _key
+        column(firstname): VARCHAR(255)
+        column(lastname): VARCHAR(255)
+        column(last_login): TIMESTAMP
+        column(is_active): BOOLEAN
+        --
+        foreign_key(user_id): UUID <<FK>>
+        foreign_key(organization_id): UUID <<FK>>
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    USER ||--|{ PROFILE
+    PROFILE }|--|| ORGANIZATION
+
+    table(PROFILE_GROUP) {
+        foreign_key(group_id): UUID <<FK>>
+        foreign_key(profile_id): UUID <<FK>>
+    }
+
+    PROFILE ||--|{ PROFILE_GROUP
+    PROFILE_GROUP }|--|| GROUP
+
+    table(PROFILE_EMAIL) {
+        column(is_main): BOOLEAN
+        --
+        foreign_key(profile_id): UUID <<FK>>
+        foreign_key(email_id): UUID <<FK>>
+    }
+
+    PROFILE ||--|{ PROFILE_EMAIL
+    PROFILE_EMAIL }|--|| EMAIL
+
+    table(PROFILE_PERMISSION) {
+        column(name): VARCHAR(255)
+        --
+        foreign_key(profile_id): UUID <<FK>>
+        foreign_key(permission_id): UUID <<FK>>
+    }
+
+    PROFILE ||--|{ PROFILE_PERMISSION
+    PROFILE_PERMISSION }|--|| PERMISSION
+}
+
+package "filesystem" {
+    table(FILESYSTEM) {
+        primary_key(_key): UUID
+        column(_value): Filesystem
+        --
+        column(id): UUID = _key
+        column(rootdir_id): VARCHAR(24)
+        column(label): VARCHAR(255)
+        column(shared): BOOLEAN
+        --
+        column(created_at): TIMESTAMP
+        column(updated_at): TIMESTAMP
+    }
+
+    table(FILESYSTEM_ORGANIZATION) {
+        column(is_default): BOOLEAN
+        --
+        foreign_key(filesystem_id): UUID <<FK>>
+        foreign_key(organization_id): UUID <<FK>>
+    }
+
+    FILESYSTEM ||--|{ FILESYSTEM_ORGANIZATION
+}
+
+package "wording" {
+    table(TEXT) {
+        primary_key(_key): UUID
+        column(_value): Text
+        --
+        column(id): UUID = _key
+        column(content): VARCHAR(255)
+        --
+        foreign_key(Language_id): UUID
+    }
+
+    TEXT ||--|{ PERMISSION
+    TEXT ||--|{ ORGANIZATIONTYPE
+
+    table(LANGUAGE) {
+        primary_key(_key): UUID
+        column(_value): Language
+        --
+        column(id): UUID = _key
+        column(code): VARCHAR(5)
+        column(label): VARCHAR(255)
+    }
+
+    TEXT }|--|| LANGUAGE
+}
+
+@enduml

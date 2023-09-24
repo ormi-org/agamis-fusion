@@ -13,7 +13,7 @@ import io.agamis.fusion.apps.actors.enums.PROCESS
 import io.agamis.fusion.apps.actors.enums.SEQUENTIAL_SCRIPT
 import io.agamis.fusion.apps.engine.JavetContainer
 import io.agamis.fusion.apps.engine.JavetProcessContainer
-import io.agamis.fusion.core.actors.serialization.JsonSerializable
+import io.agamis.fusion.core.actor.serialization.JsonSerializable
 import io.agamis.fusion.env.EnvContainer
 import org.slf4j.Logger
 

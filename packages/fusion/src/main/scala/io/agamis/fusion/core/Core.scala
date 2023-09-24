@@ -15,7 +15,6 @@ import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import com.typesafe.config.Config
 import io.agamis.fusion.api.rest.Server
-import io.agamis.fusion.core.actors.data.DataActor
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.slf4j
 
@@ -89,23 +88,23 @@ object Core {
                     ) {
                         // Node type for handling datastore operations, resolving and caching queries results
                         // Start database connection at startup (only on data node; excluding proxies)
-                        implicit var wrapper: IgniteClientNodeWrapper = null
-                        if (cluster.selfMember.hasRole("fusion-node-data")) {
-                            wrapper = IgniteClientNodeWrapper(context.system)
-                        }
-                        // Check role
-                        val TypeKey = EntityTypeKey[DataActor.Command](
-                          DataActor.DataShardName
-                        )
-                        ClusterSharding(context.system).init(
-                          Entity(TypeKey)(createBehavior =
-                              ctx => DataActor(ctx.shard, ctx.entityId)
-                          )
-                              .withSettings(
-                                ClusterShardingSettings(context.system)
-                                    .withRole("fusion-node-data")
-                              )
-                        )
+                        // implicit var wrapper: IgniteClientNodeWrapper = null
+                        // if (cluster.selfMember.hasRole("fusion-node-data")) {
+                        //     wrapper = IgniteClientNodeWrapper(context.system)
+                        // }
+                        // // Check role
+                        // val TypeKey = EntityTypeKey[DataActor.Command](
+                        //   DataActor.DataShardName
+                        // )
+                        // ClusterSharding(context.system).init(
+                        //   Entity(TypeKey)(createBehavior =
+                        //       ctx => DataActor(ctx.shard, ctx.entityId)
+                        //   )
+                        //       .withSettings(
+                        //         ClusterShardingSettings(context.system)
+                        //             .withRole("fusion-node-data")
+                        //       )
+                        // )
                     }
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {
                         // TODO
