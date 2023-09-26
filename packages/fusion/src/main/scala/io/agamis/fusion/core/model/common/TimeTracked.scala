@@ -1,8 +1,8 @@
 package io.agamis.fusion.core.model.common
 
-import java.sql.Timestamp
+import java.time.LocalDateTime
 
 trait TimeTracked {
-    def createdAt: Timestamp
-    def updatedAt: Timestamp
+    def createdAt: LocalDateTime
+    def updatedAt: LocalDateTime
 }

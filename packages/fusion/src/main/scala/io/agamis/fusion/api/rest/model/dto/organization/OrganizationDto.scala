@@ -2,11 +2,11 @@ package io.agamis.fusion.api.rest.model.dto.organization
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters._
+import io.agamis.fusion.api.rest.model.dto.common.ModelDto
 import io.agamis.fusion.core.model.Organization
 import spray.json._
-import io.agamis.fusion.api.rest.model.dto.common.ModelDto
 
-import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 /** Organization DTO with JSON
@@ -24,21 +24,21 @@ import java.util.UUID
   * @param updatedAt
   */
 final case class OrganizationDto(
-    id: Option[UUID],
+    id: UUID,
     label: String,
     queryable: Boolean,
-    createdAt: Option[Instant],
-    updatedAt: Option[Instant]
+    createdAt: LocalDateTime,
+    updatedAt: LocalDateTime
 ) extends ModelDto
 
 object OrganizationDto {
     def from(o: Organization): OrganizationDto = {
         OrganizationDto(
-          Some(o.id),
+          o.id,
           o.label,
           o.queryable,
-          Some(o.createdAt.toInstant),
-          Some(o.updatedAt.toInstant)
+          o.createdAt,
+          o.updatedAt
         )
     }
 }

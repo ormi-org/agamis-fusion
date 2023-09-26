@@ -7,6 +7,8 @@ import reactivemongo.api.bson.BSONObjectID
 import reactivemongo.api.bson.BSONString
 import reactivemongo.api.bson.collection.BSONCollection
 
+import scala.annotation.nowarn
+
 object GetFileChildrenFromId extends PipelineWrapper {
 
     class GetFileChildrenFromIdPipeline(
@@ -27,6 +29,7 @@ object GetFileChildrenFromId extends PipelineWrapper {
             this
         }
 
+        @nowarn
         def get: List[_collection.AggregationFramework.PipelineOperator] = {
 
             import _collection.AggregationFramework.{

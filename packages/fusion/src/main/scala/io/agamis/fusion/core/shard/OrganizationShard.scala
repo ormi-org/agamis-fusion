@@ -19,7 +19,7 @@ object OrganizationShard {
         )
     }
 
-    def get(
+    def ref(
         orgId: String
     )(implicit system: ActorSystem[_]): EntityRef[Organization.Command] = {
         ClusterSharding(system).entityRefFor(Organization.TypeKey, orgId)

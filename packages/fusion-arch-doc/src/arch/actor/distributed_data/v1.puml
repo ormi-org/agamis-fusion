@@ -1,0 +1,20 @@
+@startuml fusion-dd-v1
+
+state New <<sdlreceive>>
+
+[*] --> New : create
+
+New --> Validated
+New --> Rejected : Error on validating relationships
+Rejected --> Idle
+
+Validated --> Persisted : persist success
+Validated --> Idle : persist [Retry 3]
+Persisted --> Idle
+
+Idle --> Updated
+Updated --> Validated
+
+Idle --> [*] : deallocate
+
+@enduml

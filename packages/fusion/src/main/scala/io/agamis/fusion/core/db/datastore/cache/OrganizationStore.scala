@@ -10,27 +10,37 @@ import org.apache.ignite.cache.query.ScanQuery
 import org.apache.ignite.lang.IgniteBiPredicate
 
 import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
-class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper)
-    extends CacheStore[UUID, Organization] {
+import io.agamis.fusion.core.db.datastore.cache.exceptions.NotFoundException
+import io.agamis.fusion.core.db.datastore.cache.exceptions.DuplicateEntityException
+
+class OrganizationStore(implicit
+    wrapper: IgniteClientNodeWrapper,
+    ec: ExecutionContext
+) extends CacheStore[UUID, Organization] {
 
     override val schema: String = "FUSION"
     override val cache: String  = s"SQL_${schema}_ORGANIZATION"
 
     override protected var igniteCache: IgniteCache[UUID, Organization] =
-        if (wrapper.cacheExists(cache)) {
-            wrapper.getCache[UUID, Organization](cache)
-        } else {
-            wrapper.createCache[UUID, Organization](
-              wrapper
-                  .makeCacheConfig[UUID, Organization]
-                  .setCacheMode(CacheMode.PARTITIONED)
-                  .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
-                  .setDataRegionName("Fusion")
-                  .setName(cache)
-                  .setSqlSchema(schema)
-                  .setIndexedTypes(classOf[UUID], classOf[Organization])
-            )
+        wrapper.cacheExists(cache) match {
+            case true =>
+                wrapper.getCache[UUID, Organization](cache).withKeepBinary()
+            case false =>
+                wrapper
+                    .createCache[UUID, Organization](
+                      wrapper
+                          .makeCacheConfig[UUID, Organization]
+                          .setCacheMode(CacheMode.PARTITIONED)
+                          .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
+                          .setDataRegionName("Fusion")
+                          .setName(cache)
+                          .setSqlSchema(schema)
+                          .setIndexedTypes(classOf[UUID], classOf[Organization])
+                    )
+                    .withKeepBinary()
         }
 
     protected def key(subject: Organization): UUID = {
@@ -42,10 +52,23 @@ class OrganizationStore(implicit wrapper: IgniteClientNodeWrapper)
       * @param id
       *   to filter on
       */
-    def getById(id: String): Any = {
+    def getById(id: UUID): Future[Organization] = {
         val filter: IgniteBiPredicate[UUID, Organization] = (k, o) => {
-            o.id.equals(UUID.fromString(id))
+            k.equals(id)
         }
-        this.igniteCache.query(new ScanQuery(filter))
+        Future {
+            val result = this.igniteCache.query(new ScanQuery(filter)).getAll
+            result.size match {
+                case 0 =>
+                    throw NotFoundException(
+                      s"Organisation ${id} not found"
+                    )
+                case 1 => result.get(0).getValue()
+                case size =>
+                    throw DuplicateEntityException(
+                      s"Found ${size} organisation with ${id}"
+                    )
+            }
+        }
     }
 }

@@ -237,7 +237,8 @@ class FileStore(collectionSuffix: String)(implicit
 
                     val bulkDeleteResult =
                         Future.sequence(deletes).flatMap { ops =>
-                            deleteBuilder.many(ops.asInstanceOf)
+                            deleteBuilder
+                                .many(ops.asInstanceOf[Seq[col.DeleteElement]])
                         }
                     bulkDeleteResult.transformWith({
                         case Success(result) =>

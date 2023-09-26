@@ -1,12 +1,12 @@
 package io.agamis.fusion.api.rest.model.dto.user
 
-import java.util.UUID
-import java.time.Instant
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters._
-import spray.json._
 import io.agamis.fusion.core.model.User
+import spray.json._
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 /** User DTO with JSON support
   *
@@ -17,10 +17,10 @@ import io.agamis.fusion.core.model.User
   * @param updatedAt
   */
 final case class UserDto(
-    id: Option[UUID],
+    id: UUID,
     username: String,
-    createdAt: Option[Instant],
-    updatedAt: Option[Instant]
+    createdAt: LocalDateTime,
+    updatedAt: LocalDateTime
 )
 
 object UserDto {
@@ -31,10 +31,10 @@ object UserDto {
       */
     def from(user: User): UserDto = {
         UserDto(
-          Some(user.id),
+          user.id,
           user.username,
-          Some(user.createdAt.toInstant),
-          Some(user.updatedAt.toInstant)
+          user.createdAt,
+          user.updatedAt
         )
     }
 }

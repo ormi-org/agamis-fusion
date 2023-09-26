@@ -5,17 +5,12 @@ import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.sharding.typed.ClusterShardingSettings
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import akka.cluster.sharding.typed.scaladsl.Entity
-import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.cluster.typed.Cluster
 import akka.event.slf4j.Logger
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import com.typesafe.config.Config
 import io.agamis.fusion.api.rest.Server
-import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 import org.slf4j
 
 import scala.concurrent.ExecutionContext
@@ -23,6 +18,7 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
+import scala.annotation.nowarn
 
 object Core {
 
@@ -140,6 +136,7 @@ object Core {
 
         private case object RestEndpoint {
             sealed trait V1
+            @nowarn
             def apply[V1](interface: String, port: Int)(implicit
                 system: ActorSystem[_],
                 log: slf4j.Logger
