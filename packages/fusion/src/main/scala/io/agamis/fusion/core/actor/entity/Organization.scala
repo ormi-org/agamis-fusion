@@ -24,6 +24,7 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 
 object Organization {
     trait Command
@@ -45,6 +46,15 @@ object Organization {
     final case class WrappedUpdateResult(
         replyTo: ActorRef[UpdateResult],
         result: UpdateResult
+    ) extends Command
+
+    final case class Delete(replyTo: ActorRef[DeleteResult]) extends Command
+    sealed trait DeleteResult
+    final case class DeleteSuccess() extends DeleteResult
+    final case class DeleteFailure() extends DeleteResult
+    final case class WrappedDeleteResult(
+        replyTo: ActorRef[DeleteResult],
+        result: DeleteResult
     ) extends Command
 
     private final case class Init(initialValue: model.Organization)
@@ -74,6 +84,7 @@ object Organization {
       *   behavior of existing organization to
       */
     def apply(
+        shard: ActorRef[ClusterSharding.ShardCommand],
         entityId: String
     )(implicit wrapper: IgniteClientNodeWrapper): Behavior[Command] = {
 
@@ -88,6 +99,7 @@ object Organization {
                       DispatcherSelector.fromConfig(Dispatcher.DB_OP)
                     )
                 new Organization(
+                  shard,
                   ctx,
                   buffer,
                   entityId,
@@ -99,6 +111,7 @@ object Organization {
 }
 
 class Organization(
+    shard: ActorRef[ClusterSharding.ShardCommand],
     ctx: ActorContext[Organization.Command],
     buffer: StashBuffer[Organization.Command],
     entityId: String,
@@ -172,6 +185,9 @@ class Organization(
                   updatedAt = LocalDateTime.now()
                 )
                 updated(replyTo, newState)
+            case Passivate =>
+                shard ! ClusterSharding.Passivate(ctx.self)
+                Behaviors.same
             case other =>
                 // stash other msg while waiting for initial update
                 buffer.stash(other)
@@ -187,8 +203,12 @@ class Organization(
       * @return
       */
     private def shadow(o: model.Organization): Behavior[Command] = {
-        Behaviors.receive { case other =>
-            Behaviors.same
+        Behaviors.receiveMessage {
+            case Passivate =>
+                shard ! ClusterSharding.Passivate(ctx.self)
+                Behaviors.same
+            case other =>
+                Behaviors.same
         }
     }
 
@@ -218,6 +238,11 @@ class Organization(
                     updatedAt = LocalDateTime.now()
                   )
                 )
+            case Delete(replyTo) =>
+                deleted(replyTo, o)
+            case Passivate =>
+                shard ! ClusterSharding.Passivate(ctx.self)
+                Behaviors.same
             case other =>
                 log.warn(
                   "-- Organization#queryable > Received an unhandled message while being in Queryable state"
@@ -243,17 +268,44 @@ class Organization(
                 // return final result
                 replyTo ! result
                 result match {
-                    case UpdateSuccess(o) =>
+                    case UpdateSuccess(_) | UpdateFailure() =>
                         // transition to a stable state and unstash
                         buffer.unstashAll(
                           if (o.queryable) queryable(o) else shadow(o)
                         )
-                    case UpdateFailure() =>
-                        // stay on idle state
-                        Behaviors.same
                 }
             case other =>
                 // stash other msg while updating
+                buffer.stash(other)
+                Behaviors.same
+        }
+    }
+
+    private def deleted(
+        replyTo: ActorRef[DeleteResult],
+        o: model.Organization
+    ): Behavior[Command] = {
+        ctx.pipeToSelf(store.delete(o)) {
+            case Failure(exception) =>
+                WrappedDeleteResult(replyTo, DeleteFailure())
+            case Success(_) =>
+                WrappedDeleteResult(replyTo, DeleteSuccess())
+        }
+        Behaviors.receiveMessage {
+            case WrappedDeleteResult(replyTo, result) =>
+                replyTo ! result
+                result match {
+                    case DeleteSuccess() =>
+                        ctx.self ! Passivate
+                        buffer.unstashAll(
+                          idle()
+                        )
+                    case DeleteFailure() =>
+                        buffer.unstashAll(
+                          if (o.queryable) queryable(o) else shadow(o)
+                        )
+                }
+            case other =>
                 buffer.stash(other)
                 Behaviors.same
         }

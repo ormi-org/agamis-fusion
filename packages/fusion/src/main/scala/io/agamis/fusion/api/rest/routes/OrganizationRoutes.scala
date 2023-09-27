@@ -2,12 +2,17 @@ package io.agamis.fusion.api.rest.routes
 
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Location
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationDto
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationJsonSupport
+import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation
+import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutationJsonSupport
+import io.agamis.fusion.core.shard.OrganizationShard
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 /** Class Organization Routes
@@ -16,7 +21,10 @@ import scala.concurrent.duration._
   * @param system
   */
 class OrganizationRoutes(implicit system: ActorSystem[_])
-    extends OrganizationJsonSupport {
+    extends OrganizationJsonSupport
+    with OrganizationMutationJsonSupport {
+
+    import io.agamis.fusion.core.actor.entity.Organization._
 
     // asking someone requires a timeout and a scheduler, if the timeout hits without response
     // the ask is failed with a TimeoutException
@@ -32,8 +40,27 @@ class OrganizationRoutes(implicit system: ActorSystem[_])
               },
               // create organization
               post {
-                  entity(as[OrganizationDto]) { _ =>
-                      complete(StatusCodes.NotImplemented)
+                  entity(as[OrganizationMutation]) { mut =>
+                      onSuccess(
+                        OrganizationShard
+                            .ref(UUID.randomUUID.toString)
+                            .ask(Update(_, mut))
+                      ) {
+                          case UpdateFailure() =>
+                              complete(StatusCodes.InternalServerError)
+                          case UpdateSuccess(o) =>
+                              extractRequest { request =>
+                                  val baseUrl =
+                                      request.uri.scheme + "://" + request.uri.authority.host.address
+                                  respondWithHeader(
+                                    Location(
+                                      s"${baseUrl}/api/organization/${o.id.toString}"
+                                    )
+                                  ) {
+                                      complete(StatusCodes.Created)
+                                  }
+                              }
+                      }
                   }
               }
             )
@@ -42,22 +69,46 @@ class OrganizationRoutes(implicit system: ActorSystem[_])
             concat(
               // get by id
               get {
-                  path(Segment) { _: String =>
-                      complete(StatusCodes.NotImplemented)
+                  path(Segment) { id: String =>
+                      onSuccess(
+                        OrganizationShard.ref(id).ask(Get(_))
+                      ) {
+                          case Queryable(org) =>
+                              complete(
+                                StatusCodes.OK,
+                                OrganizationDto.from(org)
+                              )
+                          case Shadow() =>
+                              complete(StatusCodes.Forbidden)
+                      }
                   }
               },
               // update organization
               put {
-                  path(Segment) { _: String =>
-                      entity(as[OrganizationDto]) { _ =>
-                          complete(StatusCodes.NotImplemented)
+                  path(Segment) { id: String =>
+                      entity(as[OrganizationMutation]) { mut =>
+                          onSuccess(
+                            OrganizationShard.ref(id).ask(Update(_, mut))
+                          ) {
+                              case UpdateSuccess(o) =>
+                                  complete(StatusCodes.NoContent)
+                              case UpdateFailure() =>
+                                  complete(StatusCodes.InternalServerError)
+                          }
                       }
                   }
               },
               // delete organization
               delete {
-                  path(Segment) { _: String =>
-                      complete(StatusCodes.NotImplemented)
+                  path(Segment) { id: String =>
+                      onSuccess(
+                        OrganizationShard.ref(id).ask(Delete(_))
+                      ) {
+                          case DeleteSuccess() =>
+                              complete(StatusCodes.NoContent)
+                          case DeleteFailure() =>
+                              complete(StatusCodes.InternalServerError)
+                      }
                   }
               }
             )
