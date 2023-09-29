@@ -2,22 +2,18 @@ package io.agamis.fusion.api.rest.controller
 
 import akka.actor.typed.ActorSystem
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationApiJsonSupport
-import io.agamis.fusion.api.rest.model.dto.organization.OrganizationApiResponse
-import io.agamis.fusion.api.rest.model.dto.organization.OrganizationDto
 import io.agamis.fusion.core.actor.entity.Organization
+import scala.util.Try
+import java.util.UUID
 
 class OrganizationController()(implicit system: ActorSystem[_])
-    extends BehaviorBoundController[
-      Organization.Command,
-      OrganizationDto
-    ]
+    extends ActorSystemController
     with OrganizationApiJsonSupport {
+    import io.agamis.fusion.core.actor.entity.Organization._
 
-    override protected def mapToApiResponse(
-        c: Organization.Command
-    ): OrganizationApiResponse = ???
-
-    override protected def excludeFields(
-        user: OrganizationDto
-    ): OrganizationDto = ???
+    // def getSingleOrganization(id: String): Directive[State] = {
+    //     Try {
+    //         UUID.fromString(id)
+    //     }
+    // }
 }

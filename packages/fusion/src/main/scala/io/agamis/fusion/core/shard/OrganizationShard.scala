@@ -14,7 +14,7 @@ object OrganizationShard {
           Entity(typeKey = Organization.TypeKey) { entityCtx =>
               implicit val wrapper: IgniteClientNodeWrapper =
                   IgniteClientNodeWrapper(system)
-              Organization(entityCtx.entityId)
+              Organization(entityCtx.shard, entityCtx.entityId)
           }
         )
     }
