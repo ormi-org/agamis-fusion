@@ -8,17 +8,9 @@ import java.util.UUID
 
 /** Organization DTO with JSON
   *
-  * @param id
   * @param label
-  * @param type
   * @param queryable
-  * @param profiles
-  * @param groups
-  * @param defaultFileSystem
-  * @param fileSystems
-  * @param applications
-  * @param createdAt
-  * @param updatedAt
+  * @param organizationTypeId
   */
 final case class OrganizationMutation(
     label: String,

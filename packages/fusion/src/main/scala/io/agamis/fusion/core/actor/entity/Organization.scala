@@ -6,6 +6,7 @@ import akka.actor.typed.DispatcherSelector
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.StashBuffer
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation
 import io.agamis.fusion.core.actor.common.enum.Dispatcher
@@ -24,7 +25,6 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 
 object Organization {
     trait Command
@@ -41,8 +41,8 @@ object Organization {
         org: OrganizationMutation
     ) extends Command
     sealed trait UpdateResult
-    final case class UpdateSuccess(o: model.Organization) extends UpdateResult
-    final case class UpdateFailure()                      extends UpdateResult
+    final case class UpdateSuccess(o: model.Organization)  extends UpdateResult
+    final case class UpdateFailure(cause: Some[Throwable]) extends UpdateResult
     final case class WrappedUpdateResult(
         replyTo: ActorRef[UpdateResult],
         result: UpdateResult
@@ -50,8 +50,8 @@ object Organization {
 
     final case class Delete(replyTo: ActorRef[DeleteResult]) extends Command
     sealed trait DeleteResult
-    final case class DeleteSuccess() extends DeleteResult
-    final case class DeleteFailure() extends DeleteResult
+    final case class DeleteSuccess()                       extends DeleteResult
+    final case class DeleteFailure(cause: Some[Throwable]) extends DeleteResult
     final case class WrappedDeleteResult(
         replyTo: ActorRef[DeleteResult],
         result: DeleteResult
@@ -261,14 +261,14 @@ class Organization(
             case Success(value) =>
                 WrappedUpdateResult(replyTo, UpdateSuccess(o))
             case Failure(cause) =>
-                WrappedUpdateResult(replyTo, UpdateFailure())
+                WrappedUpdateResult(replyTo, UpdateFailure(Some(cause)))
         }
         Behaviors.receiveMessage {
             case WrappedUpdateResult(replyTo, result) =>
                 // return final result
                 replyTo ! result
                 result match {
-                    case UpdateSuccess(_) | UpdateFailure() =>
+                    case UpdateSuccess(_) | UpdateFailure(_) =>
                         // transition to a stable state and unstash
                         buffer.unstashAll(
                           if (o.queryable) queryable(o) else shadow(o)
@@ -286,8 +286,8 @@ class Organization(
         o: model.Organization
     ): Behavior[Command] = {
         ctx.pipeToSelf(store.delete(o)) {
-            case Failure(exception) =>
-                WrappedDeleteResult(replyTo, DeleteFailure())
+            case Failure(cause) =>
+                WrappedDeleteResult(replyTo, DeleteFailure(Some(cause)))
             case Success(_) =>
                 WrappedDeleteResult(replyTo, DeleteSuccess())
         }
@@ -300,7 +300,7 @@ class Organization(
                         buffer.unstashAll(
                           idle()
                         )
-                    case DeleteFailure() =>
+                    case DeleteFailure(_) =>
                         buffer.unstashAll(
                           if (o.queryable) queryable(o) else shadow(o)
                         )
