@@ -2,6 +2,7 @@ package io.agamis.fusion.api.rest.controller
 
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Location
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
@@ -18,9 +19,8 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import akka.http.scaladsl.model.headers.Location
 
-class OrganizationController()(implicit
+class OrganizationController(shard: OrganizationShard)(implicit
     system: ActorSystem[_],
     ec: ExecutionContext
 ) extends ActorSystemController
@@ -50,7 +50,7 @@ class OrganizationController()(implicit
         // Get ref to an organization
         onSuccess(
           // Ask Get command to get the organization
-          OrganizationShard.ref(id).ask(Get(_))
+          shard.ref(id).ask(Get(_))
         ) {
             case Queryable(org) =>
                 // Org is queryable
@@ -66,7 +66,7 @@ class OrganizationController()(implicit
 
     def createOrganization(mut: OrganizationMutation): Route = {
         onSuccess(
-          OrganizationShard.ref(UUID.randomUUID().toString).ask(Update(_, mut))
+          shard.ref(UUID.randomUUID().toString).ask(Update(_, mut))
         ) {
             case UpdateFailure(cause) =>
                 log.debug(
@@ -108,7 +108,7 @@ class OrganizationController()(implicit
             case Success(value) =>
         }
         // Get ref to an organization and check if it already exists
-        val ref = OrganizationShard.ref(id)
+        val ref = shard.ref(id)
         onComplete(ref.ask(Get(_))) {
             case Failure(exception) =>
                 // Handle actor conversation failure
@@ -166,7 +166,7 @@ class OrganizationController()(implicit
                 )
             case Success(value) =>
         }
-        val ref = OrganizationShard.ref(id)
+        val ref = shard.ref(id)
         onComplete(ref.ask(Get(_))) {
             case Failure(exception) =>
                 // Handle actor conversation failure

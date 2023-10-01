@@ -11,7 +11,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.PrivateMethodTester
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -22,7 +21,6 @@ class UserRoutesSpec
     with BeforeAndAfterAll
     with Matchers
     with ScalatestRouteTest
-    with MockitoSugar
     with UserJsonSupport
     with PrivateMethodTester {
 

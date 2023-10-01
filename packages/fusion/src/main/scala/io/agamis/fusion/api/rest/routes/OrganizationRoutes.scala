@@ -16,15 +16,12 @@ import scala.concurrent.duration._
   * @param buildOrganizationRepository
   * @param system
   */
-class OrganizationRoutes(implicit system: ActorSystem[_])
-    extends OrganizationJsonSupport
+class OrganizationRoutes(organizationController: OrganizationController)(
+    implicit system: ActorSystem[_]
+) extends OrganizationJsonSupport
     with OrganizationMutationJsonSupport {
 
-    implicit val ec = system.executionContext
-
-    private val organizationController = new OrganizationController()
-
-    implicit val timeout = Timeout(3.seconds)
+    implicit val DEFAULT_TIMEOUT = Timeout(2.seconds)
 
     lazy val routes: Route =
         concat(
@@ -35,11 +32,7 @@ class OrganizationRoutes(implicit system: ActorSystem[_])
                   entity(as[OrganizationMutation]) { mut =>
                       organizationController.createOrganization(mut)
                   }
-              }
-            )
-          ),
-          pathPrefix("organization")(
-            concat(
+              },
               // get by id
               get {
                   path(Segment) { id: String =>

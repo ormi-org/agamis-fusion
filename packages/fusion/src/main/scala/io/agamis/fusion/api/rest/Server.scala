@@ -13,6 +13,8 @@ import io.agamis.fusion.api.rest.routes.apps.AppRoutes
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Future
+import io.agamis.fusion.api.rest.controller.OrganizationController
+import io.agamis.fusion.core.shard.OrganizationShard
 
 object Server {
 
@@ -39,7 +41,8 @@ object Server {
         ): Future[ServerBinding] = {
             implicit val system   = parentSystem
             implicit val sharding = ClusterSharding(system)
-            // implicit val userService: UserService = new UserService
+
+            implicit val ec = system.executionContext
 
             val topLevel: Route =
                 concat(
@@ -58,7 +61,9 @@ object Server {
                       get {
                           complete("Fusion API Route")
                       },
-                      new OrganizationRoutes().routes
+                      new OrganizationRoutes(
+                        new OrganizationController(OrganizationShard)
+                      ).routes
                       // new UserRoutes().routes
                     )
                   )

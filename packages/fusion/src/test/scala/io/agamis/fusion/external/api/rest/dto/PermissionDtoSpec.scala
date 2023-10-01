@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import io.agamis.fusion.api.rest.model.dto.permission.PermissionDto
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.mockito.MockitoSugar
 
 import java.io.FileNotFoundException
 import java.io.InputStream
@@ -14,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class PermissionDtoSpec extends AnyFlatSpec with Matchers with MockitoSugar {
+class PermissionDtoSpec extends AnyFlatSpec with Matchers {
 
     private val permissionDtoJson: String = {
         val permissionDtoFileName = "permissionDto.json"

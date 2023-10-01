@@ -7,7 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.EntityRef
 import io.agamis.fusion.core.actor.entity.Organization
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
 
-object OrganizationShard {
+class OrganizationShard extends EntityShard {
 
     def init(implicit system: ActorSystem[_]): Unit = {
         ClusterSharding(system).init(
@@ -20,8 +20,10 @@ object OrganizationShard {
     }
 
     def ref(
-        orgId: String
+        id: String
     )(implicit system: ActorSystem[_]): EntityRef[Organization.Command] = {
-        ClusterSharding(system).entityRefFor(Organization.TypeKey, orgId)
+        ClusterSharding(system).entityRefFor(Organization.TypeKey, id)
     }
 }
+
+object OrganizationShard extends OrganizationShard

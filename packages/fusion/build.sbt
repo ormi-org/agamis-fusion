@@ -61,14 +61,13 @@ lazy val fusion = (project in file("."))
         "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
         // Testing
         "org.scalactic" %% "scalactic" % "3.2.7",
-        "org.scalatest" %% "scalatest" % "3.2.7" % "test",
+        "org.scalatest" %% "scalatest" % "3.2.7" % Test,
+        "org.scalamock" %% "scalamock" % "5.1.0" % Test,
         // JWT
         "com.github.jwt-scala" %% "jwt-core"       % "7.1.5",
         "com.github.jwt-scala" %% "jwt-spray-json" % "7.1.5",
         // Jackson
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-        // Mockito
-        "org.scalatestplus" %% "mockito-4-6" % "3.2.15.0" % "test",
         // Bcrypt
         "at.favre.lib" % "bcrypt" % "0.9.0",
         // JAVET
