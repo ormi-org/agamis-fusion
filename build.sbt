@@ -3,4 +3,4 @@ onLoad in Global := {
     Command.process("project fusion", _: State)
 } compose (onLoad in Global).value
 
-lazy val fusion = (project in file("./packages/fusion"))
+lazy val fusion = (project in file("./apps/fusion"))

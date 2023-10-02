@@ -1,0 +1,210 @@
+{
+  "name": "fusion-explorer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/fusion-explorer/src",
+  "i18n": {
+    "sourceLocale": "en-US",
+    "locales": {
+      "fr-FR": "apps/fusion-explorer/src/locales/messages.fr-FR.xlf"
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/fusion-explorer",
+        "index": "apps/fusion-explorer/src/index.html",
+        "main": "apps/fusion-explorer/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/fusion-explorer/tsconfig.app.json",
+        "assets": [
+          "apps/fusion-explorer/src/favicon.ico",
+          "apps/fusion-explorer/src/assets"
+        ],
+        "styles": ["apps/fusion-explorer/src/styles.css"],
+        "scripts": [],
+        "stylePreprocessorOptions": {
+          "includePaths": ["apps/fusion-explorer/src/styles"]
+        },
+        "i18nMissingTranslation": "error"
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "apps/fusion-explorer/src/environments/environment.ts",
+              "with": "apps/fusion-explorer/src/environments/environment.prod.ts"
+            }
+          ]
+        },
+        "en-US": {
+          "localize": ["en-US"]
+        },
+        "fr-FR": {
+          "localize": ["fr-FR"]
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        },
+        "with-mock": {
+          "assets": [
+            "apps/fusion-explorer/src/favicon.ico",
+            "apps/fusion-explorer/src/assets",
+            "apps/fusion-explorer/src/mockServiceWorker.js"
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "fusion-explorer:build:production"
+        },
+        "development.en-US": {
+          "browserTarget": "fusion-explorer:build:development,en-US"
+        },
+        "development.fr-FR": {
+          "browserTarget": "fusion-explorer:build:development,fr-FR"
+        },
+        "development.fr-FR.with-mock": {
+          "browserTarget": "fusion-explorer:build:development,fr-FR,with-mock"
+        }
+      },
+      "defaultConfiguration": "development.en"
+    },
+    "gen-data": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "all",
+      "options": {
+        "cwd": "apps/fusion-explorer/src/mocks/data"
+      },
+      "configurations": {
+        "all": {
+          "commands": [
+            "nx run fusion-explorer:gen-data:organizations",
+            "nx run fusion-explorer:gen-data:profiles",
+            "nx run fusion-explorer:gen-data:users"
+          ]
+        },
+        "organizations": {
+          "command": "synth generate collections/organizations | jq > dist/organizations.json"
+        },
+        "profiles": {
+          "command": "synth generate collections/profiles | jq > dist/profiles.json"
+        },
+        "users": {
+          "command": "synth generate collections/users | jq > dist/users.json"
+        }
+      }
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "fusion-explorer:build",
+        "outputPath": "apps/fusion-explorer/src/locales"
+      }
+    },
+    "gen-i18n": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/fusion-explorer",
+        "command": "xliffmerge --profile xliffmerge.json fr-FR"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/fusion-explorer/**/*.ts",
+          "apps/fusion-explorer/**/*.html"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/fusion-explorer/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "fusion-explorer:build"
+      }
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/fusion-explorer/.storybook",
+        "browserTarget": "fusion-explorer:build",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/fusion-explorer",
+        "configDir": "apps/fusion-explorer/.storybook",
+        "browserTarget": "fusion-explorer:build",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "static-storybook": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "fusion-explorer:build-storybook",
+        "staticFilePath": "dist/storybook/fusion-explorer"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "fusion-explorer:build-storybook:ci"
+        }
+      }
+    }
+  }
+}
