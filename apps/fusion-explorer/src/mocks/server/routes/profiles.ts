@@ -1,6 +1,6 @@
 import { rest } from 'msw';
 import { from, lastValueFrom, of, switchMap } from 'rxjs';
-import { default as profiles } from '../../data/dist/profiles.json';
+import profiles from '../../data/dist/profiles.json';
 
 const collection = profiles.org_profiles_sample_with_user;
 

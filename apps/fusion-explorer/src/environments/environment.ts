@@ -1,8 +1,7 @@
-import { baseEnvironment } from "./environment.base"
-import { Env } from "./typed/environment"
-import '../mocks/server/rest'
+import { baseEnvironment } from './environment.base';
+import { Env } from './typed/environment';
 
 export const environment: Env = {
-    ...baseEnvironment,
-    enableMock: true
-}
+  ...baseEnvironment,
+  enableMock: false,
+};

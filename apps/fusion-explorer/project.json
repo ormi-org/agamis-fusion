@@ -69,6 +69,12 @@
           "namedChunks": true
         },
         "with-mock": {
+          "fileReplacements": [
+            {
+              "replace": "apps/fusion-explorer/src/environments/environment.ts",
+              "with": "apps/fusion-explorer/src/environments/environment.mock.ts"
+            }
+          ],
           "assets": [
             "apps/fusion-explorer/src/favicon.ico",
             "apps/fusion-explorer/src/assets",
