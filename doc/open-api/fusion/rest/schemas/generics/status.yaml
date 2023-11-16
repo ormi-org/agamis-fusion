@@ -1,9 +1,0 @@
-type: object
-required: [ "code" ]
-properties:
-  code:
-    type: integer
-    example: 200
-  message:
-    type: string
-    example: "An eventual descriptor"

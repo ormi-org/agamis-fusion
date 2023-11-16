@@ -1,7 +1,0 @@
-name: include
-in: query
-schema:
-  type: array
-  items:
-    - type: string
-description: A list of optional relation fields to include to search and result

@@ -1,6 +1,0 @@
-description: Internal server error
-content:
-  text:
-    schema:
-      type: string
-      example: 'An internal error occured caused by : {reason}'

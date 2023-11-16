@@ -1,8 +1,0 @@
-allOf:
-  - $ref: "./0.user.yaml"
-  - type: object
-    properties:
-      profiles:
-        type: array
-        items:
-          $ref: "./1.profile-dto.yaml"

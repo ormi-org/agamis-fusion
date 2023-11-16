@@ -52,3 +52,7 @@ testem.log
 Thumbs.db
 
 .angular
+
+# ignite run
+ignite/README.txt
+ignite/work

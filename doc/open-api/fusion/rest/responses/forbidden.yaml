@@ -1,6 +1,0 @@
-description: Forbidden
-content:
-  text:
-    schema:
-      type: string
-      example: You don't have the permission to access this resource
