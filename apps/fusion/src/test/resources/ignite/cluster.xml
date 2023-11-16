@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="workDirectory" value="/opt/storage"/>
+		<property name="igniteInstanceName" value="Fusion" />
+
+		<!-- Enable peer class loading. -->
+		<property name="peerClassLoadingEnabled" value="true"/>
+		<!-- Set deployment mode. -->
+		<property name="deploymentMode" value="CONTINUOUS"/>
+		<property name="authenticationEnabled" value="true"/>
+		
+		<property name="dataStorageConfiguration">
+			<bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+				<property name="defaultDataRegionConfiguration">
+					<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+						<property name="name" value="DefaultRegion"/>
+						<property name="maxSize" value="#{100L * 1024 * 1024}"/>
+						<property name="persistenceEnabled" value="true"/>
+					</bean>
+				</property>
+				<property name="dataRegionConfigurations">
+					<list>
+						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+							<property name="name" value="Fusion"/>
+							<property name="persistenceEnabled" value="true"/>
+							<property name="initialSize" value="#{20L * 1024 * 1024}"/>
+							<property name="maxSize" value="#{70L * 1024 * 1024}"/>
+						</bean>
+						<bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+							<property name="name" value="FusionFS"/>
+							<property name="persistenceEnabled" value="true"/>
+							<property name="initialSize" value="#{50L * 1024 * 1024}"/>
+							<property name="maxSize" value="#{300L * 1024 * 1024}"/>
+						</bean>
+					</list>
+				</property>
+			</bean>
+		</property>
+
+        <property name="cacheConfiguration">
+			<list>
+				<bean abstract="true" class="org.apache.ignite.configuration.CacheConfiguration">
+				<!-- SQL cache template for tables -->
+					<property name="name" value="FusionSQL*"/>
+					<property name="dataRegionName" value="Fusion"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="atomicityMode" value="TRANSACTIONAL"/>
+				</bean>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="FusionFS"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="dataRegionName" value="FusionFS"/>
+				</bean>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="FusionStaging"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="dataRegionName" value="FusionFS"/>
+					<property name="expiryPolicyFactory">
+						<bean class="javax.cache.expiry.AccessedExpiryPolicy" factory-method="factoryOf">
+							<constructor-arg>
+								<bean class="javax.cache.expiry.Duration">
+									<constructor-arg value="DAYS"/>
+									<constructor-arg value="30"/>
+								</bean>
+							</constructor-arg>
+						</bean>
+					</property>
+				</bean>
+				<bean class="org.apache.ignite.configuration.CacheConfiguration">
+					<property name="name" value="Cache"/>
+					<property name="cacheMode" value="PARTITIONED"/>
+					<property name="backups" value="2"/>
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+					<property name="dataRegionName" value="CacheRegion"/>
+					<property name="expiryPolicyFactory">
+						<bean class="javax.cache.expiry.AccessedExpiryPolicy" factory-method="factoryOf">
+							<constructor-arg>
+								<bean class="javax.cache.expiry.Duration">
+									<constructor-arg value="MINUTES"/>
+									<constructor-arg value="15"/>
+								</bean>
+							</constructor-arg>
+						</bean>
+					</property>
+				</bean>
+			</list>
+        </property>
+
+		<property name="clientConnectorConfiguration">
+				<bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+						<property name="sslEnabled" value="false"/>
+				</bean>
+		</property>
+    </bean>
+</beans>

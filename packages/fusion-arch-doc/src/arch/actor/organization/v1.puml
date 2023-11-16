@@ -1,0 +1,29 @@
+@startuml fusion-org-v1
+
+state bootstrap <<sdlreceive>>
+
+[*] --> bootstrap : bootstrap
+
+bootstrap --> StoreError
+StoreError --> [*] : Error
+
+state "InitialState" as init
+init : stash all
+
+bootstrap --> init : StoreSuccess
+
+state c1 <<choice>>
+
+init --> c1
+c1 --> Shadow : [queryable = false]
+Shadow : unstash all
+c1 --> Queryable : [queryable = true]
+Queryable : unstash all
+
+state j1 <<join>>
+Shadow --> j1 : shutdown
+Queryable --> j1 : shutdown
+
+j1 --> [*]
+
+@enduml
