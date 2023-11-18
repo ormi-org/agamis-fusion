@@ -1,29 +1,80 @@
 @startuml fusion-org-v1
 
-state bootstrap <<sdlreceive>>
+[*] -> bootstrap
 
-[*] --> bootstrap : bootstrap
+state bootstrap <<sdlreceive>> {
+    bootstrap : stash all
+    state "StoreGetPipeBranch" as sgpb
+    sgpb : try to get existing internal data from database
+    [*] --> sgpb : pipeToSelf
+    state sgpResultb <<choice>>
+    sgpb --> sgpResultb : StoreError
+    sgpResultb --> [*] : [Duplicate || Other]
+    sgpResultb --> Idle : [NotFound]
+}
 
-bootstrap --> StoreError
-StoreError --> [*] : Error
+state Idle {
+    Idle : stash all
+}
 
-state "InitialState" as init
-init : stash all
+Idle -> Updated : Update
 
-bootstrap --> init : StoreSuccess
+state ib <<choice>>
 
-state c1 <<choice>>
-
-init --> c1
-c1 --> Shadow : [queryable = false]
+sgpb --> ib : Init
+ib --> Shadow : [queryable = false]
 Shadow : unstash all
-c1 --> Queryable : [queryable = true]
+ib --> Queryable : [queryable = true]
 Queryable : unstash all
 
-state j1 <<join>>
-Shadow --> j1 : shutdown
-Queryable --> j1 : shutdown
+state Updated  {
+    Updated : stash all
+    state "StorePutPipeBranch" as sppb
+    sppb : try to put and replace internal data in the database
+    [*] --> sppb
+    state sppResultb <<choice>>
+    sppb --> sppResultb : WrappedUpdateResult
+    sppResultb --> ib
+}
 
-j1 --> [*]
+Queryable -> Updated : Update
+
+state Deleted {
+    Deleted : stash all
+    state "StoreDeletePipeBranch" as srpb
+    srpb : try to delete internal data in the database
+    [*] --> srpb
+    state srpResultb <<choice>>
+    srpb --> srpResultb : WrappedDeleteResult
+    srpResultb --> ib : [DeleteFailure]
+    srpResultb --> [*] : [DeleteSuccess]
+}
+
+Deleted -> Queryable : Delete
+
+Shadow --> [*] : Passivate
+Queryable --> [*] : Passivate
+Idle --> [*] : Passivate
+
+' bootstrap --> init : StoreError
+
+' state "InitialState" as init
+' init : stash all
+
+' bootstrap --> init : StoreSuccess
+
+' state c1 <<choice>>
+
+' init --> c1
+' c1 --> Shadow : [queryable = false]
+' Shadow : unstash all
+' c1 --> Queryable : [queryable = true]
+' Queryable : unstash all
+
+' state j1 <<join>>
+' Shadow --> j1 : shutdown
+' Queryable --> j1 : shutdown
+
+' j1 --> [*]
 
 @enduml

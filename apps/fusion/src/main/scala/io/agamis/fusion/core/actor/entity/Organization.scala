@@ -204,6 +204,9 @@ class Organization(
       */
     private def shadow(o: model.Organization): Behavior[Command] = {
         Behaviors.receiveMessage {
+            case Get(replyTo) =>
+                replyTo ! Shadow()
+                Behaviors.same
             case Passivate =>
                 shard ! ClusterSharding.Passivate(ctx.self)
                 Behaviors.same
