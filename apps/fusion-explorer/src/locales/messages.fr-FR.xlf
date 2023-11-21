@@ -57,7 +57,7 @@
         <source> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </source><target state="new"> <x id="INTERPOLATION" equiv-text="{{ &quot;last updated&quot; | capitalizeFirst }}"/> </target>
         
       <context-group purpose="location"><context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context><context context-type="linenumber">123</context></context-group></trans-unit><trans-unit id="ui.classic.admin.pages.users.profile.details.save:save" datatype="html">
-        <source>Save</source><target state="new">Save</target>
+        <source>Save</source><target state="new">Enregistrer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">packages/fusion-explorer/src/app/admin/pages/users/profile-form/profile-form.component.html</context>
           <context context-type="linenumber">132</context>
