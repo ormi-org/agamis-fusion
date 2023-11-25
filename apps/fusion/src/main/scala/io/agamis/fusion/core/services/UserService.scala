@@ -1,14 +1,14 @@
 // package io.agamis.fusion.core.services
 
-// import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+// import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
 // import java.util.UUID
 // import scala.concurrent.Future
 // import io.agamis.fusion.core.actor.data.entities.UserDataBehavior
-// import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
+// import org.apache.pekko.cluster.sharding.typed.scaladsl.EntityTypeKey
 // import io.agamis.fusion.core.actor.data.DataActor
 // import scala.concurrent.duration._
-// import akka.util.Timeout
-// import akka.actor.typed.ActorRef
+// import org.apache.pekko.util.Timeout
+// import org.apache.pekko.actor.typed.ActorRef
 
 // class UserService()(implicit sharding: ClusterSharding) {
 

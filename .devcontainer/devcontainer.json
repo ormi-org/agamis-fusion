@@ -3,28 +3,34 @@
 {
 	"name": "agamis-fusion-jdk17lts-node18lts-dev:0923",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"build": { "dockerfile": "Dockerfile" },
-
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "uname -a",
-    "mounts": [
-        "source=${localEnv:HOME}/.ssh/id_rsa,target=/root/.ssh/id_rsa,type=bind,consistency=cached"
-    ],
-
+	"mounts": [
+		"source=${localEnv:HOME}/.ssh/id_rsa,target=/root/.ssh/id_rsa,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/.Xauthority,target=/root/.Xauthority,type=bind,consistency=cached"
+	],
 	// Configure tool-specific properties.
 	"customizations": {
-        "vscode": {
-            "extensions": []
-        }
-    },
-
+		"vscode": {
+			"extensions": [
+				"angular.ng-template",
+				"jebbs.plantuml",
+				"nrwl.angular-console",
+				"orta.vscode-jest",
+				"firsttris.vscode-jest-runner",
+				"dbaeumer.vscode-eslint",
+				"scalameta.metals",
+				"esbenp.prettier-vscode"
+			]
+		}
+	},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	"remoteUser": "root"
 }
-

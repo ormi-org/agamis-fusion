@@ -1,24 +1,24 @@
 package io.agamis.fusion
 
-import akka.Done
-import akka.NotUsed
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.typed.Cluster
-import akka.event.slf4j.Logger
-import akka.management.cluster.bootstrap.ClusterBootstrap
-import akka.management.scaladsl.AkkaManagement
 import com.typesafe.config.Config
 import io.agamis.fusion.api.rest.Server
+import org.apache.pekko.Done
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.Behavior
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.cluster.typed.Cluster
+import org.apache.pekko.event.slf4j.Logger
+import org.apache.pekko.management.cluster.bootstrap.ClusterBootstrap
+import org.apache.pekko.management.scaladsl.PekkoManagement
 import org.slf4j
 
+import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
-import scala.annotation.nowarn
 
 object Core {
 
@@ -37,7 +37,7 @@ object Core {
             .getLines()
             .foreach(logger.info(_))
         logger.info(
-          "Starting Agamis Fusion v0.1.0 - © 2021-2023 The Open Rich Media Initiative"
+          "Starting Agamis Fusion v0.1.0 - Copyright 2021-2023 The Open Rich Media Initiative"
         )
         val system = ActorSystem(behavior, clusterName, appConfig)
         logger.info(s"Started Agamis Fusion !")
@@ -60,17 +60,17 @@ object Core {
                         logger.info(s"Bootstrapping cluster...")
                         implicit lazy val ec: ExecutionContext =
                             context.system.executionContext;
-                        AkkaManagement(context.system)
+                        PekkoManagement(context.system)
                             .start()
                             .onComplete({
                                 case Success(uri) => {
                                     logger.info(
-                                      s"Successfuly started akka-management on URI { ${uri} }"
+                                      s"Successfuly started pekko-management on URI { ${uri} }"
                                     )
                                 }
                                 case Failure(exception) => {
                                     logger.info(
-                                      s"Failed to start akka-management due to : ${exception.toString}"
+                                      s"Failed to start pekko-management due to : ${exception.toString}"
                                     )
                                 }
                             })
@@ -101,6 +101,8 @@ object Core {
                         //             .withRole("fusion-node-data")
                         //       )
                         // )
+                        // implicit val system = context.system
+                        // OrganizationShard.init
                     }
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {
                         // TODO
@@ -120,7 +122,9 @@ object Core {
                         implicit val system = context.system
                         implicit val log    = context.log
                         val httpPort = context.system.settings.config
-                            .getString("akka.http.server.default-http-port")
+                            .getString(
+                              "org.apache.pekko.http.server.default-http-port"
+                            )
                         val interface =
                             if (cluster.selfMember.hasRole("cluster")) {
                                 "0.0.0.0"

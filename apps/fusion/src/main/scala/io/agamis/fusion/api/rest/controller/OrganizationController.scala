@@ -1,11 +1,11 @@
 package io.agamis.fusion.api.rest.controller
 
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.Location
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.util.Timeout
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.headers.Location
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.util.Timeout
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatus
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatusJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationApiJsonSupport

@@ -5,7 +5,7 @@ It is based on :
 - JVM runtime
 - Scala language
 - sbt compiler
-- akka.io framework
+- Apache Pekko framework
 - Apache Ignite Datagrid
 - MongoDB
 

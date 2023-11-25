@@ -1,7 +1,7 @@
 package io.agamis.fusion.api.rest.model.dto.common
 
-import akka.http.scaladsl.model.StatusCode
-import akka.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.StatusCode
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 import reactivemongo.api.bson.BSONObjectID
 import spray.json.DeserializationException
 import spray.json.JsString

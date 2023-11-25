@@ -1,7 +1,7 @@
 package io.agamis.fusion.api.rest.model.dto.organization
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters._
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 import java.util.UUID

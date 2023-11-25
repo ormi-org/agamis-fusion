@@ -1,11 +1,11 @@
 package io.agamis.fusion.core.shard
 
-import akka.actor.typed.ActorSystem
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import akka.cluster.sharding.typed.scaladsl.Entity
-import akka.cluster.sharding.typed.scaladsl.EntityRef
 import io.agamis.fusion.core.actor.entity.Organization
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
+import org.apache.pekko.cluster.sharding.typed.scaladsl.Entity
+import org.apache.pekko.cluster.sharding.typed.scaladsl.EntityRef
 
 class OrganizationShard extends EntityShard {
 

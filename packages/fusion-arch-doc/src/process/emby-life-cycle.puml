@@ -2,7 +2,7 @@
 actor user
 boundary client
 control "HttpServer (A)" as server
-collections AkkaHttpRoutes as routes
+collections PekkoHttpRoutes as routes
 control "ContainerRegistry (SA)" as reg
 control "Container (A)" as app
 database FusionFS as fs
@@ -34,7 +34,7 @@ client -> client : redirect to app
 actor user
 boundary client
 control "HttpServer (A)" as server
-collections AkkaHttpRoutes as routes
+collections PekkoHttpRoutes as routes
 control "ContainerRegistry (SA)" as reg
 control "Container (A)" as app
 collections "SessionManager (SA)" as session
@@ -72,7 +72,7 @@ user <-- client : Update state
 actor user
 boundary client
 control "HttpServer (A)" as server
-collections AkkaHttpRoutes as routes
+collections PekkoHttpRoutes as routes
 control "ContainerRegistry (SA)" as reg
 control "Container (A)" as app
 

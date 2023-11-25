@@ -1,13 +1,13 @@
 package io.agamis.fusion.core.actor
 
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.ClusterEvent.ClusterDomainEvent
-import akka.cluster.ClusterEvent.MemberRemoved
-import akka.cluster.ClusterEvent.MemberUp
-import akka.cluster.ClusterEvent.UnreachableMember
-import akka.cluster.typed.Cluster
-import akka.cluster.typed.Subscribe
+import org.apache.pekko.actor.typed.Behavior
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.cluster.ClusterEvent.ClusterDomainEvent
+import org.apache.pekko.cluster.ClusterEvent.MemberRemoved
+import org.apache.pekko.cluster.ClusterEvent.MemberUp
+import org.apache.pekko.cluster.ClusterEvent.UnreachableMember
+import org.apache.pekko.cluster.typed.Cluster
+import org.apache.pekko.cluster.typed.Subscribe
 
 object ClusterListenerActor {
     def apply(): Behavior[ClusterDomainEvent] =

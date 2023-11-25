@@ -1,7 +1,7 @@
 package io.agamis.fusion.api.rest.routes.apps
 
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.server.Directives._
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.server.Directives._
 
 /** Class User Routes
   *
