@@ -1,13 +1,13 @@
 package io.agamis.fusion.core.actor.entity
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.DispatcherSelector
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.scaladsl.StashBuffer
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
+import org.apache.pekko.actor.typed.ActorRef
+import org.apache.pekko.actor.typed.Behavior
+import org.apache.pekko.actor.typed.DispatcherSelector
+import org.apache.pekko.actor.typed.scaladsl.ActorContext
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.actor.typed.scaladsl.StashBuffer
+import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
+import org.apache.pekko.cluster.sharding.typed.scaladsl.EntityTypeKey
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation
 import io.agamis.fusion.core.actor.common.enum.Dispatcher
 import io.agamis.fusion.core.db.datastore.cache.OrganizationStore

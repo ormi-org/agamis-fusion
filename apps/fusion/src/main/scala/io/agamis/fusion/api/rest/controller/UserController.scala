@@ -1,10 +1,10 @@
 // package io.agamis.fusion.api.rest.controller
 
-// import akka.actor.typed.ActorSystem
-// import akka.http.scaladsl.model.StatusCodes
-// import akka.http.scaladsl.model.headers.Location
-// import akka.http.scaladsl.server.Directives._
-// import akka.http.scaladsl.server.Route
+// import org.apache.pekko.actor.typed.ActorSystem
+// import org.apache.pekko.http.scaladsl.model.StatusCodes
+// import org.apache.pekko.http.scaladsl.model.headers.Location
+// import org.apache.pekko.http.scaladsl.server.Directives._
+// import org.apache.pekko.http.scaladsl.server.Route
 // import io.agamis.fusion.api.rest.model.dto.common.ApiResponse
 // import io.agamis.fusion.api.rest.model.dto.common.ApiStatus
 // import io.agamis.fusion.api.rest.model.dto.user.SingleUserResponse
@@ -38,7 +38,7 @@
 //       * @param query
 //       *   the query to execute
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def getManyUsers(query: UserQuery): Route = {
 //         val serviceQuery: UserDataBehavior.Query =
@@ -92,7 +92,7 @@
 //       * @param uMut
 //       *   the mutation to execute
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def createUser(uMut: UserMutation): Route = {
 //         onComplete(
@@ -130,7 +130,7 @@
 //       * @param username
 //       *   the username to query on
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def getUserByUsername(username: String): Route = {
 //         onComplete(userService.getUserByUsername(username)) {
@@ -157,7 +157,7 @@
 //       * @param include
 //       *   a list of fields to include
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def getSingleUser(id: String, include: List[String]): Route = {
 //         onComplete(
@@ -195,7 +195,7 @@
 //       * @param uMut
 //       *   the mutation to execute
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def updateUser(id: String, uMut: UserMutation): Route = {
 //         onComplete(
@@ -236,7 +236,7 @@
 //       * @param uMut
 //       *   the mutation to execute
 //       * @return
-//       *   Akka Http Route
+//       *   Pekko Http Route
 //       */
 //     def deleteUser(id: String): Route = {
 //         onComplete(

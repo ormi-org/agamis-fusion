@@ -1,9 +1,7 @@
 package io.agamis.fusion.api.rest.routes
 
-import akka.actor.testkit.typed.scaladsl.ActorTestKit
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.apache.pekko.actor.testkit.typed.scaladsl.ActorTestKit
+import org.apache.pekko.actor.typed.ActorSystem
 import io.agamis.fusion.api.rest.model.dto.user.UserDto
 import io.agamis.fusion.api.rest.model.dto.user.UserJsonSupport
 import io.agamis.fusion.api.rest.model.dto.user.UserMutation
@@ -15,6 +13,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.duration._
+
+import org.apache.pekko.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 
 class UserRoutesSpec
     extends AnyWordSpec

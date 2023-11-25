@@ -1,6 +1,6 @@
 package io.agamis.fusion.api.rest.model.dto.permission
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.api.rest.model.dto.common.ApiResponse
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatus
 import spray.json.DefaultJsonProtocol

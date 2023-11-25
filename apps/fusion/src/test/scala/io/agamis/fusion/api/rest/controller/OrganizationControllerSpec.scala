@@ -1,12 +1,5 @@
 package io.agamis.fusion.api.rest.controller
 
-import akka.actor.testkit.typed.scaladsl.ActorTestKit
-import akka.actor.typed.ActorSystem
-import akka.cluster.sharding.typed.testkit.scaladsl.TestEntityRef
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.Location
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatus
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatusJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationDto
@@ -16,6 +9,13 @@ import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutationJson
 import io.agamis.fusion.api.rest.routes.OrganizationRoutes
 import io.agamis.fusion.core.model
 import io.agamis.fusion.core.shard.OrganizationShard
+import org.apache.pekko.actor.testkit.typed.scaladsl.ActorTestKit
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.cluster.sharding.typed.testkit.scaladsl.TestEntityRef
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.headers.Location
+import org.apache.pekko.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers

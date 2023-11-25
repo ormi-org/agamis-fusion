@@ -1,8 +1,8 @@
 // package io.agamis.fusion.api.rest.routes
 
-// import akka.actor.typed.ActorSystem
-// import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-// import akka.http.scaladsl.server.Directives._
+// import org.apache.pekko.actor.typed.ActorSystem
+// import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
+// import org.apache.pekko.http.scaladsl.server.Directives._
 // import io.agamis.fusion.api.rest.common.marshalling.StringArrayUnmarshaller
 // import io.agamis.fusion.api.rest.controller.UserController
 // import io.agamis.fusion.api.rest.model.dto.user.UserApiJsonSupport

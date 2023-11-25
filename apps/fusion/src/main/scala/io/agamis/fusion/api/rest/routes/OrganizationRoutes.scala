@@ -1,9 +1,9 @@
 package io.agamis.fusion.api.rest.routes
 
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.util.Timeout
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.util.Timeout
 import io.agamis.fusion.api.rest.controller.OrganizationController
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation

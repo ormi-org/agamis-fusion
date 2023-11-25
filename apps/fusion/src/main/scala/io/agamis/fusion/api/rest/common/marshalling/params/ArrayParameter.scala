@@ -1,8 +1,8 @@
 package io.agamis.fusion.api.rest.common.marshalling.params
 
-import akka.http.scaladsl.unmarshalling.Unmarshaller
-import akka.http.scaladsl.util.FastFuture
-import akka.stream.Materializer
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshaller
+import org.apache.pekko.http.scaladsl.util.FastFuture
+import org.apache.pekko.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

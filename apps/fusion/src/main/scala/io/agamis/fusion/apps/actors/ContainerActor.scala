@@ -1,11 +1,11 @@
 package io.agamis.fusion.apps.actors
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.DispatcherSelector
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import org.apache.pekko.actor.typed.ActorRef
+import org.apache.pekko.actor.typed.Behavior
+import org.apache.pekko.actor.typed.DispatcherSelector
+import org.apache.pekko.actor.typed.scaladsl.ActorContext
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
 import com.caoccao.javet.enums.JSRuntimeType
 import com.caoccao.javet.interop.engine.JavetEngineConfig
 import io.agamis.fusion.apps.actors.enums.ContainerType

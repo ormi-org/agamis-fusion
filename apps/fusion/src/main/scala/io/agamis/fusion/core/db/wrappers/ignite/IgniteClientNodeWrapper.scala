@@ -1,8 +1,8 @@
 package io.agamis.fusion.core.db.wrappers.ignite
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.Extension
-import akka.actor.typed.ExtensionId
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.Extension
+import org.apache.pekko.actor.typed.ExtensionId
 import com.typesafe.config.ConfigException
 import io.agamis.fusion.core.db.wrappers.ignite.exceptions.MissingIgniteConfException
 import io.agamis.fusion.env.EnvContainer

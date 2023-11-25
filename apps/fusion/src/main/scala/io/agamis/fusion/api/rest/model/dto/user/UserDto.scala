@@ -1,6 +1,6 @@
 package io.agamis.fusion.api.rest.model.dto.user
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.agamis.fusion.api.rest.model.dto.common.JsonFormatters._
 import io.agamis.fusion.core.model.User
 import spray.json._

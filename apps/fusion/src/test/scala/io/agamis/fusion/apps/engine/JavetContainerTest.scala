@@ -1,18 +1,18 @@
 package io.agamis.fusion.apps.engine
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import ch.qos.logback.classic
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.caoccao.javet.enums.JSRuntimeType
 import com.caoccao.javet.interop.engine.JavetEngineConfig
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
