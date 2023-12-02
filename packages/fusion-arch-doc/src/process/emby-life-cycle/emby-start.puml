@@ -1,0 +1,31 @@
+@startuml emby-start
+actor user
+boundary client
+control "HttpServer (A)" as server
+collections PekkoHttpRoutes as routes
+control "ContainerRegistry (SA)" as reg
+control "Container (A)" as app
+database FusionFS as fs
+
+user -> client : launch application
+client -> server : HTTP Request\n(/app/<appId>/bootstrap)
+server -> routes : route request
+routes -> reg : Boostrap app with Id(<appId>)
+group "Application bootstrap process"
+    create app
+    reg -> app : bootstrap an app
+    activate app
+    app -> fs : get app files
+    app <-- fs : app files
+    app -> app : create socket at the right place (if needed and specified)
+    app -> app : run emby
+    activate app
+    reg <-- app : notif back to registry
+    reg -> reg : register app instance
+    server <-- reg : notify back server
+    server -> routes : clone & update routes to include app instance
+    client <- server : HTTP Response
+    server -> server : update behavior
+end
+client -> client : redirect to app
+@enduml

@@ -1,0 +1,37 @@
+@startuml emby-classic-interact
+actor user
+boundary client
+control "HttpServer (A)" as server
+collections PekkoHttpRoutes as routes
+control "ContainerRegistry (SA)" as reg
+control "Container (A)" as app
+collections "SessionManager (SA)" as session
+database FusionFS as fs
+
+activate session
+activate reg
+activate app
+
+user -> client : interact with app
+client -> server : HTTP Request\n(/app/routing/<sessionId>/...{internal_route})
+server -> routes : receive request and route it
+routes -> reg : get ActorRef
+routes <-- reg : ActorRef
+note left
+    Getting IP and finally proxying the request directly
+    might be tricky, so software may forward the request
+    object to container (Actor) that would subsequently
+    act as the local proxy (to local UNIX socket)
+end note
+routes <-- app : port
+routes -> app : forward local request\nto local container
+app -> app : forward local request to right port/socket
+activate app
+app --> session : [optionaly] save session state
+session --> fs : flush to file
+routes <-- app : Proxied HTTP Response
+deactivate app
+server <-- routes
+client <-- server : HTTP Response
+user <-- client : Update state
+@enduml
