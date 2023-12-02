@@ -45,22 +45,28 @@ export class RowComponent<T extends object>
   }
 
   ngOnInit(): void {
-    // populate cells
-    this.cells = this.templating.reduce((acc, { key, compute, template }, i) => {
-      const computedValue = compute(this.model)
-      acc.push(
-        new Cell(
-          i.toString(),
-          i,
-          computedValue,
-          template,
-          this.cellsWidths().find(_ => _[0] === key)?.[1] || new BehaviorSubject(0)
-        )
-      )
-      return acc
-    }, <Cell[]>[])
-  }
+    // Calculate the widths of cells
+    const cellsWidths = this.cellsWidths();
 
+    // Create a Map to store cell widths for faster look
+    const cellsWidthsMap = new Map(cellsWidths.map(([key, width]) => [key, width]));
+
+    // Initialize the cells array
+    this.cells = [];
+
+    // Iterate through the templating data
+    this.templating.forEach(({ key, compute, template }, i) => {
+
+      // Calculate the computed value for the current cell
+      const computedValue = compute(this.model);
+
+      // Retrieve the corresponding cell width from the Map or create a new BehaviorSubject if not found
+      const widthSubject = cellsWidthsMap.get(key) ?? new BehaviorSubject(0);
+
+      // Create a new Cell object with the calculated values
+      this.cells.push(new Cell(i.toString(), i, computedValue, template, widthSubject));
+    });
+  }
   protected select(): void {
     this.selectedSubject.next([true, this.model])
   }
