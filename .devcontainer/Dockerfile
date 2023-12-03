@@ -26,12 +26,13 @@ RUN apt update && apt install nodejs -y
 RUN curl -fsSL https://get.pnpm.io/install.sh | sh -
 # Install Plantuml JAR
 RUN mkdir -p /root/bin/plantuml &&\
-curl -fsSL https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar \
---output /root/bin/plantuml/plantuml.jar
+    curl -fsSL https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar \
+    --output /root/bin/plantuml/plantuml.jar
 # Install Bruno
 RUN mkdir -p /etc/apt/keyrings 
 RUN mkdir -p /root/.gnupg
-RUN gpg --no-default-keyring --keyring /etc/apt/keyrings/bruno.gpg --keyserver keyserver.ubuntu.com --recv-keys 9FA6017ECABE0266 
+RUN chmod 700 /root/.gnupg
+RUN gpg --no-default-keyring --keyring /etc/apt/keyrings/bruno.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 9FA6017ECABE0266 
 RUN echo "deb [signed-by=/etc/apt/keyrings/bruno.gpg] http://debian.usebruno.com/ bruno stable" | tee /etc/apt/sources.list.d/bruno.list 
 RUN apt update
 RUN apt install bruno libgbm-dev -y
