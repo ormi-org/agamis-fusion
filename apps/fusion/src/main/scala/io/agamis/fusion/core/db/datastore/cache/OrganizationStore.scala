@@ -1,6 +1,5 @@
 package io.agamis.fusion.core.db.datastore.cache
 
-import io.agamis.fusion.core.db.datastore.cache.exceptions.DuplicateEntityException
 import io.agamis.fusion.core.db.datastore.cache.exceptions.NotFoundException
 import io.agamis.fusion.core.db.datastore.typed.CacheStore
 import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
@@ -8,8 +7,6 @@ import io.agamis.fusion.core.model.Organization
 import org.apache.ignite.IgniteCache
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.query.ScanQuery
-import org.apache.ignite.lang.IgniteBiPredicate
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -26,7 +23,7 @@ class OrganizationStore(implicit
     override protected var igniteCache: IgniteCache[UUID, Organization] =
         wrapper.cacheExists(cache) match {
             case true =>
-                wrapper.getCache[UUID, Organization](cache).withKeepBinary()
+                wrapper.getCache[UUID, Organization](cache)
             case false =>
                 wrapper
                     .createCache[UUID, Organization](
@@ -37,7 +34,6 @@ class OrganizationStore(implicit
                           .setDataRegionName("Fusion")
                           .setName(cache)
                     )
-                    .withKeepBinary()
         }
 
     protected def key(subject: Organization): UUID = {
@@ -50,20 +46,16 @@ class OrganizationStore(implicit
       *   to filter on
       */
     def getById(id: UUID): Future[Organization] = {
-        val filter: IgniteBiPredicate[UUID, Organization] = (k, o) => {
-            k.equals(id)
-        }
         Future {
-            val result = this.igniteCache.query(new ScanQuery(filter)).getAll
-            result.size match {
-                case 0 =>
-                    throw NotFoundException(
-                      s"Organisation ${id} not found"
-                    )
-                case 1 => result.get(0).getValue()
-                case size =>
-                    throw DuplicateEntityException(
-                      s"Found ${size} organisation with ${id}"
+            this.igniteCache.getAsync(id).get()
+        } transformWith { o =>
+            Option.apply(o.get) match {
+                case Some(value) => Future.successful(value)
+                case None =>
+                    Future.failed(
+                      NotFoundException(
+                        s"Organisation ${id} not found"
+                      )
                     )
             }
         }

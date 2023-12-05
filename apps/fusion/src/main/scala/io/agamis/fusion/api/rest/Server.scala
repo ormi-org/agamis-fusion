@@ -1,5 +1,9 @@
 package io.agamis.fusion.api.rest
 
+import io.agamis.fusion.api.rest.controller.OrganizationController
+import io.agamis.fusion.api.rest.routes.OrganizationRoutes
+import io.agamis.fusion.api.rest.routes.apps.AppRoutes
+import io.agamis.fusion.core.shard.OrganizationShard
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.cluster.sharding.typed.scaladsl.ClusterSharding
 import org.apache.pekko.http.scaladsl.Http
@@ -7,14 +11,9 @@ import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.server.Directives._
 import org.apache.pekko.http.scaladsl.server.Route
-import io.agamis.fusion.api.rest.routes.OrganizationRoutes
-// import io.agamis.fusion.api.rest.routes.UserRoutes
-import io.agamis.fusion.api.rest.routes.apps.AppRoutes
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Future
-import io.agamis.fusion.api.rest.controller.OrganizationController
-import io.agamis.fusion.core.shard.OrganizationShard
 
 object Server {
 
@@ -58,13 +57,9 @@ object Server {
                   ),
                   pathPrefix("api")(
                     concat(
-                      get {
-                          complete("Fusion API Route")
-                      },
                       new OrganizationRoutes(
                         new OrganizationController(OrganizationShard)
                       ).routes
-                      // new UserRoutes().routes
                     )
                   )
                 )

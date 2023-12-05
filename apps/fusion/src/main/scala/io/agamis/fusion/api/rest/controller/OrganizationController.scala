@@ -1,17 +1,19 @@
 package io.agamis.fusion.api.rest.controller
 
-import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.http.scaladsl.model.StatusCodes
-import org.apache.pekko.http.scaladsl.model.headers.Location
-import org.apache.pekko.http.scaladsl.server.Directives._
-import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.util.Timeout
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatus
 import io.agamis.fusion.api.rest.model.dto.common.ApiStatusJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationApiJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationDto
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation
+import io.agamis.fusion.core.db.datastore.cache.exceptions.NotFoundException
 import io.agamis.fusion.core.shard.OrganizationShard
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.headers.Location
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.util.Timeout
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -48,17 +50,30 @@ class OrganizationController(shard: OrganizationShard)(implicit
             case Success(value) =>
         }
         // Get ref to an organization
-        onSuccess(
+        onComplete(
           // Ask Get command to get the organization
-          shard.ref(id).ask(Get(_))
+          shard.ref(id).askWithStatus(Get(_))
         ) {
-            case Queryable(org) =>
+            case Failure(exception) =>
+                exception match {
+                    case NotFoundException(_, _) =>
+                        complete(StatusCodes.NotFound)
+                    case other =>
+                        // Handle actor conversation failure
+                        complete(StatusCodes.InternalServerError)
+                }
+
+            case Success(state: Queryable) =>
                 // Org is queryable
-                complete(
-                  StatusCodes.OK,
-                  OrganizationDto.from(org)
-                )
-            case Shadow() =>
+                respondWithHeader(
+                  RawHeader(
+                    "Content-Type",
+                    "application/json; version=1"
+                  )
+                ) {
+                    complete(OrganizationDto.from(state.org))
+                }
+            case Success(state: Shadow) =>
                 // Org is not queryable
                 complete(StatusCodes.NotFound)
         }
@@ -79,9 +94,13 @@ class OrganizationController(shard: OrganizationShard)(implicit
             case UpdateSuccess(created) =>
                 extractRequest { req =>
                     val baseUrl =
-                        req.uri.scheme + "://" + req.uri.authority.host.address
+                        req.uri.scheme + "://" + req.uri.authority.host.address + (if (
+                                                                                     req.uri.authority.port != 0
+                                                                                   ) ":" + req.uri.authority.port
+                                                                                   else
+                                                                                       "")
                     val resourceUrl =
-                        s"$baseUrl/api/organization/${created.id.toString}"
+                        s"$baseUrl/api/organizations/${created.id.toString}"
                     log.debug(
                       s"<< Successfully created organization with id ${created.id.toString} and answered with location $resourceUrl"
                     )
@@ -109,10 +128,15 @@ class OrganizationController(shard: OrganizationShard)(implicit
         }
         // Get ref to an organization and check if it already exists
         val ref = shard.ref(id)
-        onComplete(ref.ask(Get(_))) {
+        onComplete(ref.askWithStatus(Get(_))) {
             case Failure(exception) =>
-                // Handle actor conversation failure
-                complete(StatusCodes.InternalServerError)
+                exception match {
+                    case NotFoundException(_, _) =>
+                        complete(StatusCodes.NotFound)
+                    case other =>
+                        // Handle actor conversation failure
+                        complete(StatusCodes.InternalServerError)
+                }
             case Success(state: Queryable) =>
                 // Handle update
                 onSuccess(ref.ask(Update(_, mut))) {
@@ -167,13 +191,18 @@ class OrganizationController(shard: OrganizationShard)(implicit
             case Success(value) =>
         }
         val ref = shard.ref(id)
-        onComplete(ref.ask(Get(_))) {
+        onComplete(ref.askWithStatus(Get(_))) {
             case Failure(exception) =>
-                // Handle actor conversation failure
-                complete(StatusCodes.InternalServerError)
+                exception match {
+                    case NotFoundException(_, _) =>
+                        complete(StatusCodes.NotFound)
+                    case other =>
+                        // Handle actor conversation failure
+                        complete(StatusCodes.InternalServerError)
+                }
             case Success(state: Queryable) =>
                 // Handle deletion
-                onSuccess(ref.ask(Delete(_))) {
+                onSuccess(ref.askWithStatus(Delete(_))) {
                     case DeleteSuccess() =>
                         log.debug(
                           s"<< Successfully deleted organization with id $id"

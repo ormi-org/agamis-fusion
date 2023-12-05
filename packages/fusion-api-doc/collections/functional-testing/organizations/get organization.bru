@@ -1,0 +1,19 @@
+meta {
+  name: get organization
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/organizations/{{entityId}}
+  body: none
+  auth: none
+}
+
+body:json {
+  {
+    "label": "toto",
+    "queryable": true,
+    "organizationTypeId": "46eeb7e0-6bae-40ae-8831-c886a922cc41"
+  }
+}

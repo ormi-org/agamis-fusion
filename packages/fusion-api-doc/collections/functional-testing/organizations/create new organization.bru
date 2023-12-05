@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/api/organizations
+  url: {{baseUrl}}/api/organizations
   body: json
   auth: none
 }
@@ -16,4 +16,8 @@ body:json {
     "queryable": true,
     "organizationTypeId": "46eeb7e0-6bae-40ae-8831-c886a922cc41"
   }
+}
+
+vars:post-response {
+  entityId: res.headers['location'].split('/').pop()
 }
