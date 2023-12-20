@@ -76,6 +76,7 @@ object Organization {
         applications: Vector[model.Application]
     ) extends Response
     final case class FilesystemsAggregate(filesystems: Vector[model.Filesystem])
+        extends Response
 
     val TypeKey: EntityTypeKey[Command] =
         EntityTypeKey[Command](getClass().getSimpleName())
