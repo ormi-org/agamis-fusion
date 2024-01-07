@@ -36,7 +36,8 @@ lazy val fusion = (project in file("."))
         "--add-opens=java.base/java.io=ALL-UNNAMED",
         "--add-opens=java.base/java.nio=ALL-UNNAMED",
         "--add-opens=java.base/java.util=ALL-UNNAMED",
-        "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.time=ALL-UNNAMED"
       ),
       libraryDependencies ++= Seq(
         "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2",

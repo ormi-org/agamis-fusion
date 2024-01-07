@@ -1,0 +1,88 @@
+## Profile resource [/api/organizations/{orgId}/profiles]
+### Profile creation [POST]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+
++ Request (application/json; version=1)
+        
+    + Body
+
+            {
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true,
+                "userId": "2baee990-e868-f027-cfd3-b498bcbf58b5"
+            }
+
++ Response 204 (version=1)
+
+    + Headers
+
+            Location: /api/organizations/{orgId}/profiles/{id}
+
+### Profile unitary read [GET /api/organizations/{orgId}/profiles/{id}]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+    + id: `8b087593-fcba-4047-a1c7-945ea22e8e84` (uuid, required) - id of the profile to get
+
++ Request
+
+    + Headers
+            
+            Accept: application/json; version=1
+
+    + Body
+
++ Response 200 (application/json; version=1)
+
+    + Body
+
+            {
+                "id": "c304e2f4-4fd9-d256-6eb2-5bdb844857c8",
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true,
+                "lastLogin": "2023-06-21 17:45:53",
+                "createdAt": "2022-11-05 11:09:44",
+                "updatedAt": "2023-02-16 21:42:04",
+            }
+
+### Profile unitary update [PUT /api/organizations/{orgId}/profiles/{id}]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+    + id: `8b087593-fcba-4047-a1c7-945ea22e8e84` (uuid, required) - id of the profile to update
+
++ Request (application/json; version=1)
+
+    + Headers
+            
+            Accept: application/json; version=1
+
+    + Body
+
+            {
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true
+            }
+
++ Response 200 (application/json; version=1)
+
+    + Body
+
+            {
+                "id": "c304e2f4-4fd9-d256-6eb2-5bdb844857c8",
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true,
+                "lastLogin": "2023-06-21 17:45:53",
+                "createdAt": "2022-11-05 11:09:44",
+                "updatedAt": "2023-02-16 21:42:04",
+            }

@@ -30,7 +30,8 @@
         "firsttris.vscode-jest-runner",
         "dbaeumer.vscode-eslint",
         "scalameta.metals",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "vncz.vscode-apielements"
       ]
     }
   },

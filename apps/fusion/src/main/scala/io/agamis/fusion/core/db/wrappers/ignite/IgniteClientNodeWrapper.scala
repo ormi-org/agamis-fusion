@@ -1,8 +1,5 @@
 package io.agamis.fusion.core.db.wrappers.ignite
 
-import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.actor.typed.Extension
-import org.apache.pekko.actor.typed.ExtensionId
 import com.typesafe.config.ConfigException
 import io.agamis.fusion.core.db.wrappers.ignite.exceptions.MissingIgniteConfException
 import io.agamis.fusion.env.EnvContainer
@@ -15,6 +12,9 @@ import org.apache.ignite.configuration.DeploymentMode
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi
 import org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.Extension
+import org.apache.pekko.actor.typed.ExtensionId
 import org.slf4j.Logger
 
 import scala.concurrent.ExecutionContext
@@ -28,7 +28,13 @@ class IgniteClientNodeWrapper(system: ActorSystem[_]) extends Extension {
     cfg.setClientMode(Try {
         EnvContainer.getString("fusion.core.db.ignite.client-mode")
     } match {
-        case Success(value)     => value.toBoolean
+        case Success(value) => {
+            if (value.toBoolean == false) {
+                // init data region
+                cfg.setDataStorageConfiguration(DataStorageConfig.getDefault)
+            }
+            value.toBoolean
+        }
         case Failure(exception) => true
     })
     // doit aussi être activé dans les noeuds serveurs

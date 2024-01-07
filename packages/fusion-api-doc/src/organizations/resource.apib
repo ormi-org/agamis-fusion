@@ -1,0 +1,87 @@
+## Organization resource [/api/organizations]
+### Organization creation [POST]
+
++ Request (application/json; version=1)
+        
+    + Body
+
+            {
+                "label": "Tyria's heroes",
+                "queryable": true,
+                "organizationTypeId": "46eeb7e0-6bae-40ae-8831-c886a922cc41"
+            }
+
++ Response 204
+
+    + Headers
+
+            Location: {{baseUrl}}/api/organizations/{orgId}
+
+### Organization unitary read [GET /api/organizations/{orgId}]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+
++ Request
+
+    + Headers
+            
+            Accept: application/json; version=1
+
++ Response 200 (application/json; version=1)
+
+    + Body
+
+            {
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true,
+                "lastLogin": "2023-06-21 17:45:53",
+                "createdAt": "2022-11-05 11:09:44",
+                "updatedAt": "2023-02-16 21:42:04",
+            }
+
+### Organization unitary update [PUT /api/organizations/{orgId}]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+
++ Request (application/json; version=1)
+
+    + Headers
+            
+            Accept: application/json; version=1
+
+    + Body
+
+            {
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true
+            }
+
++ Response 204
+
+### Organization unitary delete [DELETE /api/organizations/{orgId}]
+
++ Parameters
+    + orgId: `d9951d15-d446-442a-868e-2404d23fb445` (uuid, required) - id of the parent organization
+
++ Request (application/json; version=1)
+
+    + Headers
+            
+            Accept: application/json; version=1
+
+    + Body
+
+            {
+                "alias": "eryn_et",
+                "lastName": "Wilderman",
+                "firstName": "Juliana",
+                "isActive": true
+            }
+
++ Response 204
