@@ -2,11 +2,14 @@ package io.agamis.fusion
 
 import com.typesafe.config.Config
 import io.agamis.fusion.api.rest.Server
+import io.agamis.fusion.core.db.wrappers.ignite.IgniteClientNodeWrapper
+import io.agamis.fusion.core.shard.OrganizationShard
 import org.apache.pekko.Done
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.cluster.sharding.typed.ClusterShardingSettings
 import org.apache.pekko.cluster.typed.Cluster
 import org.apache.pekko.event.slf4j.Logger
 import org.apache.pekko.management.cluster.bootstrap.ClusterBootstrap
@@ -84,25 +87,17 @@ object Core {
                     ) {
                         // Node type for handling datastore operations, resolving and caching queries results
                         // Start database connection at startup (only on data node; excluding proxies)
-                        // implicit var wrapper: IgniteClientNodeWrapper = null
-                        // if (cluster.selfMember.hasRole("fusion-node-data")) {
-                        //     wrapper = IgniteClientNodeWrapper(context.system)
-                        // }
-                        // // Check role
-                        // val TypeKey = EntityTypeKey[DataActor.Command](
-                        //   DataActor.DataShardName
-                        // )
-                        // ClusterSharding(context.system).init(
-                        //   Entity(TypeKey)(createBehavior =
-                        //       ctx => DataActor(ctx.shard, ctx.entityId)
-                        //   )
-                        //       .withSettings(
-                        //         ClusterShardingSettings(context.system)
-                        //             .withRole("fusion-node-data")
-                        //       )
-                        // )
-                        // implicit val system = context.system
-                        // OrganizationShard.init
+                        implicit var wrapper: IgniteClientNodeWrapper = null
+                        if (cluster.selfMember.hasRole("fusion-node-data")) {
+                            wrapper = IgniteClientNodeWrapper(context.system)
+                        }
+                        implicit val system = context.system
+                        OrganizationShard.init(
+                          ClusterShardingSettings(system).withRole(
+                            "fusion-node-data"
+                          ),
+                          wrapper
+                        )
                     }
                     if (cluster.selfMember.hasRole("fusion-node-fs")) {
                         // TODO

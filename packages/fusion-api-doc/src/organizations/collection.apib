@@ -1,0 +1,30 @@
+## Organizations collection [/api/organizations?order_by={order_by}&offset={offset}&limit={limit}&include={include}]
+### Organizations lookup [GET]
+
++ Parameters
+    + order_by: label,1 (string, required) - comma separated field name to sort on and direction either DESC[-1]|ASC[1]
+    + offset: 0 (number, required) - number of items to skip (>= 0)
+    + limit: 50 (number, required) - number of items to retrieve (< 500 & > 0)
+    + include: label (enum[string], optional) - optional fields to eagerly fetch
+        - list of optional fields:
+            - label
+
++ Request
+
+    + Headers
+            
+            Accept: application/json; version=1
+
++ Response 200 (application/json; version=1)
+
+    + Body
+
+            [
+                {
+                    "id": "c0119c89-1acd-4762-b5de-9220caa229d2",
+                    "label": "toto",
+                    "queryable": true,
+                    "createdAt": "2023-12-05T20:26:33.231153273",
+                    "updatedAt": "2023-12-05T20:26:33.231169954"
+                }
+            ]

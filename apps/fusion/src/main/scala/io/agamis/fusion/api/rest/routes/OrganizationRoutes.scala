@@ -1,13 +1,13 @@
 package io.agamis.fusion.api.rest.routes
 
-import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.http.scaladsl.server.Directives._
-import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.util.Timeout
 import io.agamis.fusion.api.rest.controller.OrganizationController
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationJsonSupport
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutation
 import io.agamis.fusion.api.rest.model.dto.organization.OrganizationMutationJsonSupport
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.util.Timeout
 
 import scala.concurrent.duration._
 
@@ -20,8 +20,6 @@ class OrganizationRoutes(organizationController: OrganizationController)(
     implicit system: ActorSystem[_]
 ) extends OrganizationJsonSupport
     with OrganizationMutationJsonSupport {
-
-    implicit val DEFAULT_TIMEOUT = Timeout(2.seconds)
 
     lazy val routes: Route =
         concat(

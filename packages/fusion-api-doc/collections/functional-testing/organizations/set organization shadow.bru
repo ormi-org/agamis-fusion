@@ -1,0 +1,19 @@
+meta {
+  name: set organization shadow
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/organizations/{{entityId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "label": "toto",
+    "queryable": false,
+    "organizationTypeId": "46eeb7e0-6bae-40ae-8831-c886a922cc41"
+  }
+}

@@ -1,25 +1,39 @@
 {
-    "name": "fusion-api-doc",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "doc",
-    "sourceRoot": "packages/fusion-api-doc",
-    "targets": {
-      "gen-apib": {
-        "executor": "nx:run-commands",
-        "defaultConfiguration": "rest-api-v1",
-        "options": {
-          "cwd": "packages/fusion-api-doc",
-          "color": true,
-          "parallel": true
-        },
-        "configurations": {
-          "rest-api": {
-            "commands": [
-              "mkdir -p dist",
-              "aglio -i src/rest.apib -o dist/rest.html"
-            ]
-          }
+  "name": "fusion-api-doc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "doc",
+  "sourceRoot": "packages/fusion-api-doc",
+  "targets": {
+    "gen-apib": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "rest-api",
+      "options": {
+        "cwd": "packages/fusion-api-doc",
+        "color": true,
+        "parallel": true
+      },
+      "configurations": {
+        "rest-api": {
+          "commands": [
+            "mkdir -p dist",
+            "aglio -i src/rest.apib -o dist/rest.html"
+          ]
+        }
+      }
+    },
+    "serve-apib": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "rest-api",
+      "options": {
+        "cwd": "packages/fusion-api-doc",
+        "color": true,
+        "parallel": true
+      },
+      "configurations": {
+        "rest-api": {
+          "command": "aglio -i src/rest.apib --server"
         }
       }
     }
   }
+}
